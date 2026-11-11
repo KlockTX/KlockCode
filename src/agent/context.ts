@@ -2,16 +2,155 @@ import { resolveOutputBudget } from "./output-budget.js";
 import type { ChatMessage, ProviderConfig, ToolCall, ToolDocument } from "./types.js";
 
 /**
- * 粗略的 token 估算：CJK（中日韩）字符按 1 字 ≈ 1 token，其余按 4 字符 ≈ 1 token。
- * 目的是给上下文窗口做裁剪，不是精确计费；宁可高估（多裁）不可低估（溢出）。
+ * token 估算：给上下文窗口裁剪用，不是精确计费。原则是**宁可高估（多裁）不可低估（溢出）**。
+ *
+ * 按"无空白字符段"逐段计权，四类字符四套权重（token/字符）：
+ *  - CJK（中日韩 + 全角标点）1.0 —— BPE 里基本一字一 token；
+ *  - 其它非拉丁文（西里尔 / 阿拉伯 / 希伯来 / 天城文 / 泰文 / emoji）0.5 ——
+ *    这些文字的 BPE 合并很少，实测 1.5–3 字符/token。旧版把它们按 ASCII 一起除以 4，
+ *    俄语/印地语会被低估到实际值的 1/2 —— 上下文一满就直接 400 溢出；
+ *  - 长且几乎全是字母数字的串（base64 / hex / 长 id）0.6 —— 这类串几乎没有可合并的
+ *    子词，实测 ~1.6 字符/token，按散文口径除以 4 会低估 2.4 倍；
+ *  - 其余 ASCII 0.25（4 字符/token）—— 拉丁散文、代码、JSON 都在这个量级附近。
+ *
+ * 为什么 JSON 不算 blob：JSON 里的长串带大量标点，BPE 会把 `{"type":"function",`
+ * 这类结构合并掉（实测 ~3.3 字符/token）。所以 blob 判定额外要求"字母数字占比 ≥ 90%"，
+ * 否则 `{"type":"function","function":{"name":` 这种串会被误判成 base64 而高估一倍。
+ *
+ * 实现上按 code point 单次扫描，不分配中间数组：这个函数在每次请求、每段工具输出上都会跑，
+ * 200k 字符的输出是常见输入。
  */
-const CJK_CHAR_PATTERN =
-  /[\u1100-\u11ff\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/g;
+const WEIGHT_CJK = 1;
+const WEIGHT_WIDE = 0.5;
+const WEIGHT_ASCII = 0.25;
+const WEIGHT_BLOB = 0.6;
+/** 连续 ASCII 段达到这个长度才可能是 base64 / hash（普通单词很少超过 40） */
+const BLOB_RUN_CHARS = 40;
+/** blob 判定要求字母数字占比达到这个比例（JSON / 代码的长串会低于它） */
+const BLOB_ALNUM_RATIO = 0.9;
+/**
+ * blob 判定还要求"相邻字符变化率"达到这个比例。base64 / hash 几乎每一位都不同，
+ * 而 `aaaa…`、`----`、markdown 表格的 `|---|`、CSV 的空字段是高度可压缩的重复串，
+ * 按 0.6/字符计会把一张表格估成三倍——这类输入在工具输出里很常见。
+ */
+const BLOB_TRANSITION_RATIO = 0.5;
+
+/** 代码点是否落在 CJK 区间（与历史正则区间一字不差，改这里就等于改 CJK 口径）。 */
+function isCjkCode(code: number): boolean {
+  return (
+    (code >= 0x1100 && code <= 0x11ff) ||
+    (code >= 0x3000 && code <= 0x30ff) ||
+    (code >= 0x3400 && code <= 0x4dbf) ||
+    (code >= 0x4e00 && code <= 0x9fff) ||
+    (code >= 0xac00 && code <= 0xd7af) ||
+    (code >= 0xf900 && code <= 0xfaff) ||
+    (code >= 0xff00 && code <= 0xffef)
+  );
+}
 
 export function estimateTokens(text: string): number {
   if (!text) return 0;
-  const cjk = text.match(CJK_CHAR_PATTERN)?.length ?? 0;
-  return cjk + Math.ceil((text.length - cjk) / 4);
+  // 单次扫描同时给出总成本与切点，两个调用方共用一套口径
+  return Math.ceil(scanTokens(text, Number.POSITIVE_INFINITY).total);
+}
+
+/**
+ * 前缀成本不超过 budget 的最大下标（不会劈开 surrogate pair）。
+ *
+ * 与 `estimateTokens` 共用同一次扫描逻辑：预算裁剪（tool-budget）必须和上下文估算
+ * 用同一把尺子，否则会出现"按 4 字符/token 切片、按 0.6 token/字符复核"的错位 ——
+ * base64 那种长串会被切到预算的 2.4 倍。
+ */
+export function indexAtTokenBudget(text: string, budget: number): number {
+  if (!text || budget <= 0) return 0;
+  return scanTokens(text, budget).cut;
+}
+
+interface TokenScan {
+  /** 全串成本（含空白字符） */
+  total: number;
+  /** 成本首次超过 budget 的下标；没超过就是 text.length */
+  cut: number;
+}
+
+/**
+ * 单次左→右扫描，同时算出总成本与"预算切点"。
+ * `cut` 落在某一段内部时按该段自己的平均密度内插，避免整段丢掉（长 base64 段尤其明显）。
+ */
+function scanTokens(text: string, budget: number): TokenScan {
+  let total = 0;
+  let cut = text.length;
+  let cutFound = false;
+  let runStart = 0;
+  let runCjk = 0;
+  let runWide = 0;
+  let runAscii = 0;
+  let runAlnum = 0;
+  let runTransitions = 0;
+  let runPrevCode = -1;
+
+  const flush = (): void => {
+    if (runCjk === 0 && runWide === 0 && runAscii === 0) return;
+    const runChars = runCjk + runWide + runAscii;
+    const blob =
+      runAscii >= BLOB_RUN_CHARS &&
+      runCjk === 0 &&
+      runWide === 0 &&
+      runAlnum >= runAscii * BLOB_ALNUM_RATIO &&
+      runTransitions >= runChars * BLOB_TRANSITION_RATIO;
+    const cost =
+      runCjk * WEIGHT_CJK + runWide * WEIGHT_WIDE + runAscii * (blob ? WEIGHT_BLOB : WEIGHT_ASCII);
+    if (!cutFound && total + cost > budget) {
+      const remaining = Math.max(0, budget - total);
+      // 段内按平均密度内插：cost 为 0 时（不可能，但别除零）保守取整段
+      const take = cost <= 0 ? runChars : Math.floor((remaining / cost) * runChars);
+      cut = runStart + Math.min(runChars, Math.max(0, take));
+      cutFound = true;
+    }
+    total += cost;
+    runCjk = 0;
+    runWide = 0;
+    runAscii = 0;
+    runAlnum = 0;
+    runTransitions = 0;
+    runPrevCode = -1;
+  };
+
+  for (let index = 0; index < text.length; index += 1) {
+    const code = text.charCodeAt(index);
+    if (code === 0x20 || code === 0x09 || code === 0x0a || code === 0x0d) {
+      flush();
+      if (!cutFound && total + WEIGHT_ASCII > budget) {
+        cut = index;
+        cutFound = true;
+      }
+      total += WEIGHT_ASCII;
+      continue;
+    }
+    if (runCjk === 0 && runWide === 0 && runAscii === 0) runStart = index;
+    if (code !== runPrevCode) runTransitions += 1;
+    runPrevCode = code;
+    if (code < 0x80) {
+      runAscii += 1;
+      if (
+        (code >= 0x30 && code <= 0x39) ||
+        (code >= 0x41 && code <= 0x5a) ||
+        (code >= 0x61 && code <= 0x7a)
+      ) {
+        runAlnum += 1;
+      }
+      continue;
+    }
+    if (isCjkCode(code)) runCjk += 1;
+    else runWide += 1;
+  }
+  flush();
+  // 代理对不劈开：cut 落在低位代理上就往前退一格
+  if (cut > 0 && cut < text.length) {
+    const atCut = text.charCodeAt(cut);
+    if (atCut >= 0xdc00 && atCut <= 0xdfff) cut -= 1;
+  }
+  return { total, cut };
 }
 
 /** 单张图片的 token 估算：按主流 1280–1568px 截图口径取 1500，宁可高估。 */

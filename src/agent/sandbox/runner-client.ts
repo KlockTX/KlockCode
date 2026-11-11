@@ -34,31 +34,31 @@ function unavailable(code: SandboxConfigErrorCode, detail: string): {
 }
 
 export function defaultSandboxTempRoot(): string {
-  return join(process.env.LOCALAPPDATA ?? tmpdir(), "MeowCode", "sandbox-temp");
+  return join(process.env.LOCALAPPDATA ?? tmpdir(), "KlockCode", "sandbox-temp");
 }
 
 export function sandboxRunnerPath(): string {
   return (
-    process.env.MEOWCODE_SANDBOX_RUNNER ??
+    process.env.KLOCKCODE_SANDBOX_RUNNER ??
     fileURLToPath(new URL("./windows/runner.js", import.meta.url))
   );
 }
 
 function sandboxNodePath(): string {
-  return process.env.MEOWCODE_SANDBOX_NODE ?? process.execPath;
+  return process.env.KLOCKCODE_SANDBOX_NODE ?? process.execPath;
 }
 
 function runnerEnv(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return {
     ...base,
-    // 桌面端 process.execPath 是 MeowCode.exe；没有它 runner 会再弹一个应用窗口
+    // 桌面端 process.execPath 是 KlockCode.exe；没有它 runner 会再弹一个应用窗口
     ELECTRON_RUN_AS_NODE: "1",
     NODE_NO_WARNINGS: "1",
-    ...(process.env.MEOWCODE_SANDBOX_KOFFI
-      ? { MEOWCODE_SANDBOX_KOFFI: process.env.MEOWCODE_SANDBOX_KOFFI }
+    ...(process.env.KLOCKCODE_SANDBOX_KOFFI
+      ? { KLOCKCODE_SANDBOX_KOFFI: process.env.KLOCKCODE_SANDBOX_KOFFI }
       : {}),
-    ...(process.env.MEOWCODE_SANDBOX_DEBUG
-      ? { MEOWCODE_SANDBOX_DEBUG: process.env.MEOWCODE_SANDBOX_DEBUG }
+    ...(process.env.KLOCKCODE_SANDBOX_DEBUG
+      ? { KLOCKCODE_SANDBOX_DEBUG: process.env.KLOCKCODE_SANDBOX_DEBUG }
       : {}),
   };
 }
@@ -95,6 +95,15 @@ function cleanupOldTempDirsOnce(): void {
 }
 
 /**
+ * 私有 temp 只在 workspace-write 下发放：read-only 连自己的 temp 都不给，
+ * 否则「只读」就漏了一个可写洞（而且 TEMP 指向不可写目录只会让命令更莫名其妙）。
+ */
+function privateTempRoot(settings: SandboxSettings): string | null {
+  if (settings.mode === "read-only") return null;
+  return settings.allowTemp ? defaultSandboxTempRoot() : null;
+}
+
+/**
  * 把普通 PowerShell ExecSpec 换成「node runner.js -- ... pwsh」。
  * runner 缺失 / 不可解析时返回 unavailable：绝不回退无沙箱执行。
  */
@@ -114,8 +123,8 @@ export function wrapExecSpec(
     action: "run",
     workspace: spec.cwd,
     writableRoots: settings.writableRoots,
-    tempRoot: settings.allowTemp ? defaultSandboxTempRoot() : null,
-    mode: "workspace-write",
+    tempRoot: privateTempRoot(settings),
+    mode: settings.mode,
     executable,
     args: spec.args,
   });
@@ -187,8 +196,8 @@ export async function probeSandbox(options: {
     action: "run",
     workspace: options.workspace,
     writableRoots: options.settings.writableRoots,
-    tempRoot: options.settings.allowTemp ? defaultSandboxTempRoot() : null,
-    mode: "workspace-write",
+    tempRoot: privateTempRoot(options.settings),
+    mode: options.settings.mode,
     executable: cmd,
     args: ["/d", "/s", "/c", "exit 0"],
   });

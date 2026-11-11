@@ -35,7 +35,7 @@ export type PluginSystem = {
 export type CreatePluginSystemOptions = {
   workspace: string;
   homeDir: string;
-  /** 禁用插件 id 列表（MEOWCODE_PLUGINS / desktop settings） */
+  /** 禁用插件 id 列表（KLOCKCODE_PLUGINS / desktop settings） */
   disabled?: readonly string[];
   /** AI 自建能力宿主（server 注入；插件通过 api.host 调用） */
   host?: ExtensionHost;

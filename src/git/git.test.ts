@@ -158,7 +158,7 @@ const hasGit = await isGitAvailable();
 const describeGit = hasGit ? describe : describe.skip;
 
 async function makeRepo(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-git-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-git-"));
   await runGit(root, ["init", "-q", "-b", "main"]).catch(async () => {
     // 老 git 不支持 -b
     await runGit(root, ["init", "-q"]);
@@ -177,9 +177,9 @@ describeGit("git service integration", () => {
 
   beforeAll(() => {
     // 提交身份：不走全局配置，避免 CI 上 identity_missing
-    process.env.GIT_AUTHOR_NAME = "MeowCode Test";
+    process.env.GIT_AUTHOR_NAME = "KlockCode Test";
     process.env.GIT_AUTHOR_EMAIL = "test@example.com";
-    process.env.GIT_COMMITTER_NAME = "MeowCode Test";
+    process.env.GIT_COMMITTER_NAME = "KlockCode Test";
     process.env.GIT_COMMITTER_EMAIL = "test@example.com";
   });
 
@@ -192,7 +192,7 @@ describeGit("git service integration", () => {
   });
 
   slow("reports a non-repo workspace without throwing", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-notgit-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-notgit-"));
     dirs.push(dir);
     const status = await getStatus(dir);
     expect(status.isRepo).toBe(false);

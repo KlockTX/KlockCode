@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 async function makeSession() {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-export-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-export-"));
   tempDirs.push(dir);
   const filePath = path.join(dir, "session.jsonl");
   const session = await SessionStore.create(filePath, "D:/repo");
@@ -192,7 +192,7 @@ describe("renderJson / renderHtml", () => {
       turns: Array<{ items: unknown[] }>;
     };
 
-    expect(payload.format).toBe("meowcode.session.export");
+    expect(payload.format).toBe("klockcode.session.export");
     expect(payload.version).toBe(1);
     expect(payload.turns[0]!.items.length).toBeGreaterThan(0);
   });

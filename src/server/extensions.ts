@@ -52,7 +52,7 @@ function within(root: string, target: string): boolean {
 
 /**
  * AI 自建技能/插件的宿主实现：内置创作插件只负责调工具，落盘、标记与热更新全在这里。
- * 技能写到 ~/.meowcode/skills/<id>/SKILL.md，插件写到 ~/.meowcode/plugins/<id>.ts，
+ * 技能写到 ~/.klockcode/skills/<id>/SKILL.md，插件写到 ~/.klockcode/plugins/<id>.ts，
  * 两者都写 manual 标记（「我的」可见、可卸载）。覆盖只允许针对本机制创建的产物。
  */
 export function createExtensionHost(options: {
@@ -62,7 +62,7 @@ export function createExtensionHost(options: {
   /** 插件落盘后重载插件系统，返回该 id 的加载结果 */
   onPluginsChanged: (id: string) => Promise<{ toolNames?: string[]; error?: string }>;
 }): ExtensionHost {
-  const root = path.join(options.homeDir, ".meowcode");
+  const root = path.join(options.homeDir, ".klockcode");
   const skillsDir = path.join(root, "skills");
   const pluginsDir = path.join(root, "plugins");
   const markerDir = path.join(root, ".marketplace");
@@ -255,8 +255,8 @@ export function createExtensionHost(options: {
         permissions,
       };
       const indexContent = [
-        `// @meowcode name: ${name}`,
-        `// @meowcode description: ${description}`,
+        `// @klockcode name: ${name}`,
+        `// @klockcode description: ${description}`,
         code,
         "",
       ].join("\n");

@@ -43,6 +43,25 @@ describe("runner argv round-trip", () => {
     expect(parseRunnerArgv(buildRunnerArgv(invocation))).toEqual(invocation);
   });
 
+  it("round-trips read-only with --no-temp", () => {
+    const invocation = {
+      action: "run" as const,
+      workspace: "C:\\work",
+      writableRoots: [],
+      tempRoot: null,
+      mode: "read-only" as const,
+      executable: "cmd.exe",
+      args: ["/c", "exit 0"],
+    };
+    expect(parseRunnerArgv(buildRunnerArgv(invocation))).toEqual(invocation);
+  });
+
+  it("rejects an unknown mode instead of guessing", () => {
+    expect(() =>
+      parseRunnerArgv(["--workspace", "C:\\work", "--no-temp", "--mode", "readonly", "--", "cmd.exe"]),
+    ).toThrow(SandboxRunnerArgumentError);
+  });
+
   it("rejects malformed argv", () => {
     expect(() => parseRunnerArgv([])).toThrow(SandboxRunnerArgumentError);
     expect(() => parseRunnerArgv(["--workspace", "C:\\w", "--mode", "workspace-write"])).toThrow(
@@ -90,6 +109,6 @@ describe("resolveExecutableOnPath", () => {
   });
 
   it("returns undefined for a missing file", () => {
-    expect(resolveExecutableOnPath("meowcode-definitely-missing-binary")).toBeUndefined();
+    expect(resolveExecutableOnPath("klockcode-definitely-missing-binary")).toBeUndefined();
   });
 });

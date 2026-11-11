@@ -113,7 +113,7 @@ describe("McpOAuthProvider", () => {
   };
 
   it("全流程：发现 → 动态注册 → 回环回调 → 换 token 落盘", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     const { provider, captured } = makeProvider();
     await provider.ensureAuthorized();
 
@@ -140,14 +140,14 @@ describe("McpOAuthProvider", () => {
     expect((await second.tokens())?.access_token).toBe("access-1");
 
     const stored = await readJsonFile<{ issuer?: string; tokens?: { access_token?: string } }>(
-      path.join(homeDir, ".meowcode", "mcp-oauth", "test-server.json"),
+      path.join(homeDir, ".klockcode", "mcp-oauth", "test-server.json"),
     );
     expect(stored?.issuer).toBe(`${fakeOrigin}/mcp`);
     expect(stored?.tokens?.access_token).toBe("access-1");
   });
 
   it("state 不匹配拒绝（CSRF 防护），错误回调也送达等待方", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     const provider = new McpOAuthProvider({
       serverName: "csrf",
       serverUrl: `${fakeOrigin}/mcp`,
@@ -162,7 +162,7 @@ describe("McpOAuthProvider", () => {
   });
 
   it("issuer 换了就作废本地注册信息与 token", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     const { provider } = makeProvider();
     await provider.ensureAuthorized();
 
@@ -176,7 +176,7 @@ describe("McpOAuthProvider", () => {
   });
 
   it("close() 后回环端口释放", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     const { provider, captured } = makeProvider();
     await provider.ensureAuthorized();
     // ensureAuthorized 收尾自带 close；显式再关一次也幂等
@@ -186,7 +186,7 @@ describe("McpOAuthProvider", () => {
   });
 
   it("prepare() 后 redirectUrl 有真实回环端口（默认 53683，占用则随机）", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     const { provider } = makeProvider();
     await provider.prepare();
     const redirect = provider.redirectUrl;
@@ -196,7 +196,7 @@ describe("McpOAuthProvider", () => {
   });
 
   it("CIMD-only AS（无 registration_endpoint）：用 clientMetadataUrl 当 client_id，不走 DCR", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     cimdOnly = true;
     const { provider, captured } = makeProvider({
       clientMetadataUrl: "https://meowcode.cn/.well-known/oauth-client",
@@ -212,7 +212,7 @@ describe("McpOAuthProvider", () => {
   });
 
   it("DCR AS（有 registration_endpoint）：即使开着 CIMD 探测也走 DCR，不拿外部文档当 client_id", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     // Cloudflare 这类 AS 只认自己 /register 发的 client_id；用 CIMD 文档会被判 invalid_client，
     // 表现就是授权页压根不出现。所以 DCR 可用时必须压过 CIMD 探测。
     const { provider, captured } = makeProvider({ probeCimd: true });
@@ -226,7 +226,7 @@ describe("McpOAuthProvider", () => {
   });
 
   it("显式关掉 CIMD 后，本地残留的 CIMD client_id 被作废并重新走 DCR", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     // 复现真实故障：之前用 CIMD 授权过，缓存里 client_id 是 HTTPS 文档地址；后来配置改成 DCR，
     // SDK 见到 clientInformation 就不重注册，把文档地址当 client_id 发给 AS → "client_id is required"
     await fs.writeFile(
@@ -244,17 +244,17 @@ describe("McpOAuthProvider", () => {
   });
 
   it("预注册 clientId：跳过 DCR，授权 URL 用静态 client_id", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
-    const { provider, captured } = makeProvider({ clientId: "meowcode-pre-registered" });
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
+    const { provider, captured } = makeProvider({ clientId: "klockcode-pre-registered" });
     await provider.ensureAuthorized();
     expect(registerRequests).toHaveLength(0);
     const authorizeUrl = new URL(captured[0]);
-    expect(authorizeUrl.searchParams.get("client_id")).toBe("meowcode-pre-registered");
+    expect(authorizeUrl.searchParams.get("client_id")).toBe("klockcode-pre-registered");
     expect((await provider.tokens())?.access_token).toBe("access-1");
   });
 
   it("transport 401 先 auth() 再 ensureAuthorized：浏览器只开一次，state/PKCE 不重置", async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-mcp-oauth-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-mcp-oauth-"));
     const { provider, captured } = makeProvider();
     // 工厂真序：先 prepare() 起回环，再让 transport 401 触发 auth()
     await provider.prepare();
@@ -262,7 +262,7 @@ describe("McpOAuthProvider", () => {
     expect(first).toBe("REDIRECT");
     expect(captured).toHaveLength(1);
     const firstState = new URL(captured[0]).searchParams.get("state");
-    // MeowCode 工厂捕获 UnauthorizedError 后调 ensureAuthorized：不得再开浏览器 / 换 state
+    // KlockCode 工厂捕获 UnauthorizedError 后调 ensureAuthorized：不得再开浏览器 / 换 state
     await provider.ensureAuthorized();
     expect(captured).toHaveLength(1);
     expect((await provider.tokens())?.access_token).toBe("access-1");

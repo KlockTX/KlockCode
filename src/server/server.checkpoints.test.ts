@@ -62,14 +62,14 @@ async function makeSourceSession(): Promise<{ filePath: string; checkpointId: st
 }
 
 beforeAll(async () => {
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-server-"));
-  workspace = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-ws-"));
-  process.env.MEOWCODE_SESSIONS_DIR = sessionsDir;
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-server-"));
+  workspace = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-ws-"));
+  process.env.KLOCKCODE_SESSIONS_DIR = sessionsDir;
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     { id: "p", name: "P", baseUrl: "http://127.0.0.1:1", model: "m" },
   ]);
-  process.env.MEOWCODE_PROVIDER_ID = "";
-  process.env.MEOWCODE_WORKSPACE = workspace;
+  process.env.KLOCKCODE_PROVIDER_ID = "";
+  process.env.KLOCKCODE_WORKSPACE = workspace;
   running = await startServer({ port: 0, token: TOKEN });
   const address = running.address();
   if (!address || typeof address === "string") throw new Error("Server has no TCP port.");
@@ -84,10 +84,10 @@ afterAll(async () => {
   }
   await rm(sessionsDir, { recursive: true, force: true });
   await rm(workspace, { recursive: true, force: true });
-  delete process.env.MEOWCODE_SESSIONS_DIR;
-  delete process.env.MEOWCODE_PROVIDERS;
-  delete process.env.MEOWCODE_PROVIDER_ID;
-  delete process.env.MEOWCODE_WORKSPACE;
+  delete process.env.KLOCKCODE_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_PROVIDERS;
+  delete process.env.KLOCKCODE_PROVIDER_ID;
+  delete process.env.KLOCKCODE_WORKSPACE;
 });
 
 describe("session checkpoints api", () => {

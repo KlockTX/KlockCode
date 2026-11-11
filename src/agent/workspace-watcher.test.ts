@@ -16,7 +16,7 @@ async function waitFor<T>(probe: () => T | null | undefined, timeoutMs = 5000): 
 
 describe("createWorkspaceWatcher", () => {
   it("合并文件变化并忽略依赖目录", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-watch-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-watch-"));
     const changes: WorkspaceChange[] = [];
     const watcher = createWorkspaceWatcher({
       root,
@@ -41,7 +41,7 @@ describe("createWorkspaceWatcher", () => {
   });
 
   it("close 后不再收到事件", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-watch-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-watch-"));
     const changes: WorkspaceChange[] = [];
     const watcher = createWorkspaceWatcher({
       root,

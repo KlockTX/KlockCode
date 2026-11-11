@@ -23,7 +23,7 @@ export type LspServerRef =
   | { kind: "typescript" }
   | { kind: "server"; name: string; config: LspServerConfig };
 
-const CONFIG_RELATIVE = path.join(".meowcode", "lsp.json");
+const CONFIG_RELATIVE = path.join(".klockcode", "lsp.json");
 const DEFAULT_TIMEOUT_MS = 4_000;
 const TYPESCRIPT_EXTENSIONS = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts"];
 
@@ -104,7 +104,7 @@ function normalizeServer(raw: unknown): LspServerConfig | undefined {
   };
 }
 
-/** 读 .meowcode/lsp.json；坏配置/缺文件都回退到内置探测，绝不 throw。 */
+/** 读 .klockcode/lsp.json；坏配置/缺文件都回退到内置探测，绝不 throw。 */
 export async function loadLspConfig(workspace: string): Promise<LspConfig> {
   const config: LspConfig = {
     disabled: false,
@@ -122,7 +122,7 @@ export async function loadLspConfig(workspace: string): Promise<LspConfig> {
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
       console.warn(
-        `[lsp] ignored .meowcode/lsp.json: ${
+        `[lsp] ignored .klockcode/lsp.json: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

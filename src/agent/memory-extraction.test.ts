@@ -174,8 +174,8 @@ describe("cleanExtractionOps", () => {
 
 describe("applyMemoryOps", () => {
   it("writes to both scopes, syncs indexes and reports created vs updated", async () => {
-    const workspace = await makeDir("meowcode-extract-ws-");
-    const home = await makeDir("meowcode-extract-home-");
+    const workspace = await makeDir("klockcode-extract-ws-");
+    const home = await makeDir("klockcode-extract-home-");
     const first = await applyMemoryOps(
       [
         {
@@ -209,8 +209,8 @@ describe("applyMemoryOps", () => {
   });
 
   it("deletes existing entries and skips missing ones", async () => {
-    const workspace = await makeDir("meowcode-extract-ws-");
-    const home = await makeDir("meowcode-extract-home-");
+    const workspace = await makeDir("klockcode-extract-ws-");
+    const home = await makeDir("klockcode-extract-home-");
     await applyMemoryOps(
       [{ op: "write", scope: "user", name: "gone-soon", description: "d", content: "c" }],
       workspace,
@@ -292,7 +292,7 @@ describe("buildExtractionUserPrompt", () => {
 
 describe("writeMemoryFile via applyMemoryOps is name-safe", () => {
   it("never escapes the memory directory", async () => {
-    const workspace = await makeDir("meowcode-extract-ws-");
+    const workspace = await makeDir("klockcode-extract-ws-");
     await mkdir(workspace, { recursive: true });
     const result = await applyMemoryOps(
       [

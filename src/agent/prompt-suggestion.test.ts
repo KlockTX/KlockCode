@@ -35,7 +35,7 @@ describe("usableSuggestion", () => {
 
   it("accepts normal Chinese suggestions and domains", () => {
     expect(usableSuggestion("把 SEO 收尾做完并提交 sitemap")).toBe("把 SEO 收尾做完并提交 sitemap");
-    expect(usableSuggestion("部署 meowcode.cn")).toBe("部署 meowcode.cn");
+    expect(usableSuggestion("部署 klockcode.cn")).toBe("部署 klockcode.cn");
   });
 
   it("extracts a candidate from a verbose or formatted reply", () => {

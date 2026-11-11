@@ -126,7 +126,7 @@ export function createHttpComputerHostClient(options: {
 export function createComputerHostFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): ComputerHostClient | undefined {
-  const baseUrl = env.MEOWCODE_COMPUTER_HOST?.trim();
+  const baseUrl = env.KLOCKCODE_COMPUTER_HOST?.trim();
   if (!baseUrl) {
     return undefined;
   }
@@ -143,7 +143,7 @@ export function createComputerHostFromEnv(
   }
   return createHttpComputerHostClient({
     baseUrl: baseUrl.replace(/\/$/, ""),
-    token: env.MEOWCODE_COMPUTER_HOST_TOKEN?.trim() || undefined,
+    token: env.KLOCKCODE_COMPUTER_HOST_TOKEN?.trim() || undefined,
   });
 }
 

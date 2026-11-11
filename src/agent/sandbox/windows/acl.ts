@@ -1,6 +1,6 @@
 /**
  * Ported from deepseek-harness packages/sandbox/sandbox-windows-acl/src/acl.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: OS-level run_command isolation.
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: OS-level run_command isolation.
  *
  * 每次授权在 ONE SetNamedSecurityInfoW 里做三件事：能力 SID 写/删 ACE、
  * DENY Everyone FILE_DELETE_CHILD（只继承子目录）、Low no-write-up 标签。
@@ -51,7 +51,7 @@ export function buildExplicitAccess(
 /** 一个受保护目录一把锁；锁根必须来自稳定的 GetTempPathW，不能是私有 temp。 */
 export function lockFilePath(api: Win32Bindings, path: string): string {
   const digest = createHash("sha256").update(path.toLowerCase()).digest("hex").slice(0, 16);
-  return join(getTempPath(api), "meowcode-acl-locks", `${digest}.lock`);
+  return join(getTempPath(api), "klockcode-acl-locks", `${digest}.lock`);
 }
 
 /** 用 LockFileEx 单字节排他锁串行化 get-merge-set，避免并发授权互相覆盖。 */

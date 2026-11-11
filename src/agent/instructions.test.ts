@@ -5,14 +5,14 @@ import { afterAll, describe, expect, it } from "vitest";
 import { loadWorkspaceInstructions, loadWorkspaceInstructionsDetail } from "./instructions";
 import { saveMemory } from "./memory";
 
-const emptyHome = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-home-"));
+const emptyHome = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-home-"));
 
 afterAll(async () => {
   await rm(emptyHome, { recursive: true, force: true });
 });
 
 async function makeWorkspace(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), "meowcode-instructions-"));
+  return mkdtemp(path.join(tmpdir(), "klockcode-instructions-"));
 }
 
 describe("loadWorkspaceInstructions", () => {
@@ -28,12 +28,12 @@ describe("loadWorkspaceInstructions", () => {
     }
   });
 
-  it("combines root and .meowcode instructions", async () => {
+  it("combines root and .klockcode instructions", async () => {
     const workspace = await makeWorkspace();
     try {
       await writeFile(path.join(workspace, "AGENTS.md"), "ROOT RULE");
-      await mkdir(path.join(workspace, ".meowcode"), { recursive: true });
-      await writeFile(path.join(workspace, ".meowcode", "AGENTS.md"), "LOCAL RULE");
+      await mkdir(path.join(workspace, ".klockcode"), { recursive: true });
+      await writeFile(path.join(workspace, ".klockcode", "AGENTS.md"), "LOCAL RULE");
       const instructions = await loadWorkspaceInstructions(workspace, emptyHome);
       expect(instructions).toContain("ROOT RULE");
       expect(instructions).toContain("LOCAL RULE");
@@ -70,7 +70,7 @@ describe("loadWorkspaceInstructions", () => {
 
   it("ignores AGENTS.md symlinks that escape the workspace", async () => {
     const workspace = await makeWorkspace();
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-outside-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-outside-"));
     try {
       await writeFile(path.join(outside, "secret.md"), "OUTSIDE SECRET");
       try {
@@ -90,9 +90,9 @@ describe("loadWorkspaceInstructions", () => {
 
   it("appends the global skill index from homeDir", async () => {
     const workspace = await makeWorkspace();
-    const home = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-home2-"));
+    const home = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-home2-"));
     try {
-      const skillDir = path.join(home, ".meowcode", "skills", "demo-global-skill");
+      const skillDir = path.join(home, ".klockcode", "skills", "demo-global-skill");
       await mkdir(skillDir, { recursive: true });
       await writeFile(
         path.join(skillDir, "SKILL.md"),
@@ -111,7 +111,7 @@ describe("loadWorkspaceInstructions", () => {
   });
 
   it("merges ancestor AGENTS.md files outer-to-inner before workspace rules", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-nested-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-nested-"));
     const workspace = path.join(root, "packages", "app");
     await mkdir(workspace, { recursive: true });
     try {
@@ -131,9 +131,9 @@ describe("loadWorkspaceInstructions", () => {
   });
 
   it("skips ancestor AGENTS.md symlinks", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-nested2-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-nested2-"));
     const workspace = path.join(root, "app");
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-out2-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-out2-"));
     await mkdir(workspace, { recursive: true });
     try {
       await writeFile(path.join(outside, "secret.md"), "ANCESTOR SECRET");
@@ -153,7 +153,7 @@ describe("loadWorkspaceInstructions", () => {
   });
 
   it("truncates oversized ancestor rules per level", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-big-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-big-"));
     const workspace = path.join(root, "app");
     await mkdir(workspace, { recursive: true });
     try {
@@ -170,7 +170,7 @@ describe("loadWorkspaceInstructions", () => {
   });
 
   it("drops ancestors first when the workspace rules fill the budget", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-budget-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-budget-"));
     const workspace = path.join(root, "app");
     await mkdir(workspace, { recursive: true });
     try {
@@ -187,15 +187,15 @@ describe("loadWorkspaceInstructions", () => {
 
   it("appends the memory index after workspace instructions", async () => {
     const workspace = await makeWorkspace();
-    const home = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-home3-"));
+    const home = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-home3-"));
     try {
       await writeFile(path.join(workspace, "AGENTS.md"), "ROOT RULE");
-      await saveMemory(path.join(home, ".meowcode", "memory"), "user-pref", {
+      await saveMemory(path.join(home, ".klockcode", "memory"), "user-pref", {
         description: "用户级偏好",
         content: "body",
       });
-      await mkdir(path.join(workspace, ".meowcode", "memory"), { recursive: true });
-      await saveMemory(path.join(workspace, ".meowcode", "memory"), "project-fact", {
+      await mkdir(path.join(workspace, ".klockcode", "memory"), { recursive: true });
+      await saveMemory(path.join(workspace, ".klockcode", "memory"), "project-fact", {
         description: "项目级事实",
         content: "body",
       });
@@ -214,9 +214,9 @@ describe("loadWorkspaceInstructions", () => {
 
   it("returns the memory section alone when no AGENTS.md exists", async () => {
     const workspace = await makeWorkspace();
-    const home = await mkdtemp(path.join(tmpdir(), "meowcode-instructions-home4-"));
+    const home = await mkdtemp(path.join(tmpdir(), "klockcode-instructions-home4-"));
     try {
-      await saveMemory(path.join(home, ".meowcode", "memory"), "only-memory", {
+      await saveMemory(path.join(home, ".klockcode", "memory"), "only-memory", {
         description: "只有记忆",
         content: "body",
       });
@@ -273,10 +273,10 @@ describe("loadWorkspaceInstructions", () => {
     }
   });
 
-  it("injects project rules from .meowcode/rules", async () => {
+  it("injects project rules from .klockcode/rules", async () => {
     const workspace = await makeWorkspace();
     try {
-      const rulesDir = path.join(workspace, ".meowcode", "rules");
+      const rulesDir = path.join(workspace, ".klockcode", "rules");
       await mkdir(rulesDir, { recursive: true });
       await writeFile(path.join(rulesDir, "code-style.md"), "# Style\n\nUSE TABS");
       const detail = await loadWorkspaceInstructionsDetail(workspace, emptyHome);

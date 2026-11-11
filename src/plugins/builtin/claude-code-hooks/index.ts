@@ -1,15 +1,15 @@
 /**
  * Claude Code hooks 桥接（内置插件）。
  *
- * 读取 Claude Code 的 settings.json 里的 `hooks` 配置并翻译成 MeowCode 的
+ * 读取 Claude Code 的 settings.json 里的 `hooks` 配置并翻译成 KlockCode 的
  * 插件 hook，让 CC 生态里现成的 hook 脚本尽量零改动可用：
  *
  *   ~/.claude/settings.json                  （user 级，默认参与）
  *   <workspace>/.claude/settings.json        （project 级，默认不执行）
  *   <workspace>/.claude/settings.local.json  （project 本地，默认不执行）
  *
- * 工作区配置是否执行由 MEOWCODE_CC_HOOKS_SCOPE 控制（默认 user=true,
- * workspace=false）；每次询问模式由 MEOWCODE_HOOKS_RUN_MODE=auto|ask 控制。
+ * 工作区配置是否执行由 KLOCKCODE_CC_HOOKS_SCOPE 控制（默认 user=true,
+ * workspace=false）；每次询问模式由 KLOCKCODE_HOOKS_RUN_MODE=auto|ask 控制。
  *
  * 事件映射：
  *   PreToolUse       → tool_call          （deny → 阻止；ask → 强制人工确认；allow 不预批准）
@@ -131,7 +131,7 @@ function joinText(first: string | undefined, second: string | undefined): string
 }
 
 /**
- * 退出码 + stdout/stderr → MeowCode 判定。
+ * 退出码 + stdout/stderr → KlockCode 判定。
  * 退出码 2 的 block/deny 优先于 stdout JSON（CC 语义：2 立即阻断）。
  */
 export function translateOutcome(
@@ -423,10 +423,10 @@ export const shellRunner: HookCommandRunner = (command, { payload, cwd, timeoutM
 
 export const claudeCodeHooksPlugin: PluginFactory = (api: PluginAPI): void => {
   const workspace = api.workspace;
-  const homeDir = process.env.MEOWCODE_CC_HOOKS_HOME || os.homedir();
+  const homeDir = process.env.KLOCKCODE_CC_HOOKS_HOME || os.homedir();
   // 每次执行都读 env：设置页改「询问模式 / 工作区范围」后 server 热更新 env，不重启进程
-  const currentScope = () => parseHooksScope(process.env.MEOWCODE_CC_HOOKS_SCOPE);
-  const currentRunMode = () => parseRunMode(process.env.MEOWCODE_HOOKS_RUN_MODE);
+  const currentScope = () => parseHooksScope(process.env.KLOCKCODE_CC_HOOKS_SCOPE);
+  const currentRunMode = () => parseRunMode(process.env.KLOCKCODE_HOOKS_RUN_MODE);
   const runner = shellRunner;
   const log = (message: string) => api.logger.info(`[claude-code-hooks] ${message}`);
 
@@ -536,7 +536,7 @@ export const claudeCodeHooksPlugin: PluginFactory = (api: PluginAPI): void => {
       result.permission = "ask";
       result.reason = verdict.reason ?? "The PreToolUse hook requests approval.";
     } else if (verdict.permission === "allow") {
-      // 门禁单调性：allow 只表示 CC 的"跳过提示"，在 MeowCode 不预批准。
+      // 门禁单调性：allow 只表示 CC 的"跳过提示"，在 KlockCode 不预批准。
       log("PreToolUse allow ignored (allow does not bypass approvals)");
     }
     if (verdict.input) result.input = fromClaudeToolInput(event.tool, verdict.input);

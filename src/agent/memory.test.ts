@@ -109,7 +109,7 @@ describe("parseMemoryFile", () => {
 
 describe("saveMemory / readMemory / deleteMemory", () => {
   it("creates the file and registers the index entry", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     const result = await saveMemory(dir, "docker-cli", {
       description: "Docker 常用命令",
       content: "用户偏好 docker compose 而不是裸 docker run。",
@@ -132,7 +132,7 @@ describe("saveMemory / readMemory / deleteMemory", () => {
   });
 
   it("keeps the previous type when an update omits it", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await saveMemory(dir, "pnpm", { description: "首选 pnpm", content: "v1", type: "feedback" });
     await saveMemory(dir, "pnpm", { description: "包管理器首选 pnpm", content: "v2" });
     const record = await readMemory(dir, "pnpm");
@@ -140,7 +140,7 @@ describe("saveMemory / readMemory / deleteMemory", () => {
   });
 
   it("overwrites in place, dedupes index lines and keeps the original created date", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await saveMemory(dir, "pnpm", { description: "首选 pnpm", content: "v1" });
     const first = await readMemory(dir, "pnpm");
 
@@ -157,7 +157,7 @@ describe("saveMemory / readMemory / deleteMemory", () => {
   });
 
   it("deletes the file and the index entry", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await saveMemory(dir, "gone", { description: "d", content: "c" });
     expect(await deleteMemory(dir, "gone")).toBe(true);
     expect(await readMemory(dir, "gone")).toBeNull();
@@ -166,7 +166,7 @@ describe("saveMemory / readMemory / deleteMemory", () => {
   });
 
   it("clears every memory and the index but keeps unrelated files", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await saveMemory(dir, "alpha", { description: "a", content: "a" });
     await saveMemory(dir, "beta", { description: "b", content: "b" });
     await writeFile(path.join(dir, "notes.txt"), "keep");
@@ -178,7 +178,7 @@ describe("saveMemory / readMemory / deleteMemory", () => {
   });
 
   it("rejects invalid names", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await expect(
       saveMemory(dir, "../evil", { description: "d", content: "c" }),
     ).rejects.toThrow(/Invalid memory name/);
@@ -188,7 +188,7 @@ describe("saveMemory / readMemory / deleteMemory", () => {
 
 describe("index maintenance edge cases", () => {
   it("merges unindexed hand-dropped files and preserves non-entry lines", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await mkdir(dir, { recursive: true });
     await writeFile(
       path.join(dir, MEMORY_INDEX_NAME),
@@ -211,7 +211,7 @@ describe("index maintenance edge cases", () => {
   });
 
   it("collapses multi-line descriptions in the index entry", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await saveMemory(dir, "multiline", {
       description: "第一行\n第二行",
       content: "body",
@@ -223,7 +223,7 @@ describe("index maintenance edge cases", () => {
 
 describe("listMemoryItems", () => {
   it("adds file metadata and survives a broken entry", async () => {
-    const dir = await makeDir("meowcode-memory-");
+    const dir = await makeDir("klockcode-memory-");
     await saveMemory(dir, "ok", { description: "desc", content: "body" });
     // 索引里登记一个没有对应文件的条目
     await writeFile(
@@ -240,8 +240,8 @@ describe("listMemoryItems", () => {
 
 describe("loadMemorySection", () => {
   it("still injects the guide when no memories exist (cold start)", async () => {
-    const workspace = await makeDir("meowcode-memory-ws-");
-    const home = await makeDir("meowcode-memory-home-");
+    const workspace = await makeDir("klockcode-memory-ws-");
+    const home = await makeDir("klockcode-memory-home-");
     const section = await loadMemorySection(workspace, home);
     expect(section).toContain("## Memory");
     expect(section).toContain("memory_write");
@@ -250,8 +250,8 @@ describe("loadMemorySection", () => {
   });
 
   it("injects both scopes with the guide", async () => {
-    const workspace = await makeDir("meowcode-memory-ws-");
-    const home = await makeDir("meowcode-memory-home-");
+    const workspace = await makeDir("klockcode-memory-ws-");
+    const home = await makeDir("klockcode-memory-home-");
     await saveMemory(memoryDirFor("user", workspace, home), "user-pref", {
       description: "用户级偏好",
       content: "body",
@@ -273,8 +273,8 @@ describe("loadMemorySection", () => {
   });
 
   it("truncates an oversized scope index", async () => {
-    const workspace = await makeDir("meowcode-memory-ws-");
-    const home = await makeDir("meowcode-memory-home-");
+    const workspace = await makeDir("klockcode-memory-ws-");
+    const home = await makeDir("klockcode-memory-home-");
     const dir = memoryDirFor("user", workspace, home);
     for (let index = 0; index < 15; index += 1) {
       await saveMemory(dir, `memory-${index}`, {

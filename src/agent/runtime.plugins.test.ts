@@ -33,8 +33,8 @@ type Harness = {
 };
 
 async function setup(plugins: PluginRegistry | null): Promise<Harness> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-rt-plugins-"));
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-rt-ws-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-rt-plugins-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-rt-ws-"));
   const runtime = new AgentRuntime({
     providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
     sessionsDir: dir,
@@ -97,8 +97,8 @@ describe("插件工具接入（P2）", () => {
   it("allowedTools 白名单过滤插件工具", async () => {
     const registry = new PluginRegistry();
     registry.addTool("p1", makeTool("plugin_echo"));
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-rt-plugins-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-rt-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-rt-plugins-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-rt-ws-"));
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
       sessionsDir: dir,

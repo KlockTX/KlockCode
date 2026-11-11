@@ -3,7 +3,7 @@
  *
  * 职责边界：
  *  - 本模块只管「拿 token / 刷 token / 存 token」；连不上、工具注册等仍归 mcp.ts。
- *  - token 落盘在 `<homeDir>/.meowcode/mcp-oauth/<server>.json`（0600）：agent 服务是
+ *  - token 落盘在 `<homeDir>/.klockcode/mcp-oauth/<server>.json`（0600）：agent 服务是
  *    独立进程，桌面 safeStorage 通道覆盖不到它；与 codex/ZCode 的 auth.json 同款做法。
  *  - 授权码经 127.0.0.1 回环回调接收，浏览器由本模块直接拉起 —— 不依赖桌面端 IPC。
  *
@@ -23,7 +23,7 @@
  *     `https://meowcode.cn/.well-known/oauth-client`（当前未发布）。
  *
  * 双开浏览器：StreamableHTTP transport 收到 401 会自己调一次 auth()（拉浏览器后抛
- * UnauthorizedError），MeowCode 再调 ensureAuthorized 又会 auth() 一次。这里用
+ * UnauthorizedError），KlockCode 再调 ensureAuthorized 又会 auth() 一次。这里用
  * `authFlowActive` 冻结 state/PKCE/浏览器，第二次 auth() 复用第一次的授权 URL。
  *
  * 回环时序：必须在首次 auth() 之前 `prepare()` 起好回环监听。否则 redirectUrl 为
@@ -43,18 +43,18 @@ import type {
 } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { readJsonFile, writeJsonAtomic } from "../agent/atomic-json.js";
 
-const OAUTH_DIR = path.join(".meowcode", "mcp-oauth");
+const OAUTH_DIR = path.join(".klockcode", "mcp-oauth");
 /** 等用户在浏览器完成授权的窗口；超时按连接失败走既有 failed 标记。 */
 const AUTHORIZATION_TIMEOUT_MS = 5 * 60_000;
 const CALLBACK_PATH = "/callback";
 
 /**
  * 默认 CIMD 文档地址（可选发布）：AS 侧拉取的公开客户端元数据（SEP-991）。
- * meowcode.cn 未发布时也能用仓库文件推到 GitHub 后的 jsDelivr / raw。
+ * klockcode.cn 未发布时也能用仓库文件推到 GitHub 后的 jsDelivr / raw。
  */
 export const DEFAULT_MCP_CLIENT_METADATA_URL =
-  process.env.MEOWCODE_MIMD_URL ||
-  process.env.MEOWCODE_MCP_CIMD_URL ||
+  process.env.KLOCKCODE_MIMD_URL ||
+  process.env.KLOCKCODE_MCP_CIMD_URL ||
   "https://meowcode.cn/.well-known/oauth-client";
 
 /**
@@ -65,12 +65,12 @@ export const DEFAULT_MCP_CALLBACK_PORT = 53683;
 
 /** CIMD 候选：按序探测，第一个能拉到合法客户端元数据的当选 client_id。 */
 export const MCP_CIMD_CANDIDATES = [
-  process.env.MEOWCODE_MCP_CIMD_URL || DEFAULT_MCP_CLIENT_METADATA_URL,
+  process.env.KLOCKCODE_MCP_CIMD_URL || DEFAULT_MCP_CLIENT_METADATA_URL,
   "https://cdn.jsdelivr.net/gh/MuLiuSaMa/MeowCode@main/resources/well-known/oauth-client.json",
   "https://raw.githubusercontent.com/MuLiuSaMa/MeowCode/main/resources/well-known/oauth-client.json",
-  // 临时兜底：MeowCode 自己的 CIMD 还没发布时，借 OpenCode 的公开文档跑通 Undermind。
+  // 临时兜底：KlockCode 自己的 CIMD 还没发布时，借 OpenCode 的公开文档跑通 Undermind。
   // OpenCode 文档允许 127.0.0.1/callback 不带端口（RFC 8252 任意本机端口），跟我们 53683 回调兼容。
-  // 授权页可能显示 opencode；正式方案仍是发布 meowcode.cn 的文档。
+  // 授权页可能显示 opencode；正式方案仍是发布 klockcode.cn 的文档。
   "https://opencode.ai/oauth/opencode/client.json",
 ].filter((url) => url.length > 0);
 
@@ -148,7 +148,7 @@ export type McpOAuthOptions = {
   openBrowser?: (url: string) => void;
   /** 授权等待窗口（测试用）；缺省 5 分钟 */
   authorizationTimeoutMs?: number;
-  /** 自动探测官方 CIMD 候选（meowcode.cn / jsDelivr / raw）。测试默认关，免打外网。 */
+  /** 自动探测官方 CIMD 候选（klockcode.cn / jsDelivr / raw）。测试默认关，免打外网。 */
   probeCimd?: boolean;
   log?: (level: "info" | "warn" | "error", message: string) => void;
 };
@@ -157,7 +157,7 @@ export class McpOAuthProvider implements OAuthClientProvider {
   /** DCR 元数据：redirect_uris 必须含真实回环地址，惰性起监听后取。 */
   get clientMetadata(): OAuthClientMetadata {
     return {
-      client_name: "MeowCode",
+      client_name: "KlockCode",
       client_uri: "https://meowcode.cn",
       redirect_uris: [this.redirectUrl ?? "http://127.0.0.1/callback"],
       grant_types: ["authorization_code", "refresh_token"],
@@ -257,7 +257,7 @@ export class McpOAuthProvider implements OAuthClientProvider {
             if (picked.includes("opencode.ai")) {
               this.log(
                 "warn",
-                "MeowCode CIMD not published yet; falling back to OpenCode's public client metadata (consent page may say opencode). Publish resources/well-known/oauth-client.json to meowcode.cn to brand this as MeowCode.",
+                "KlockCode CIMD not published yet; falling back to OpenCode's public client metadata (consent page may say opencode). Publish resources/well-known/oauth-client.json to klockcode.cn to brand this as KlockCode.",
               );
             } else {
               this.log("info", `using CIMD document ${picked}`);
@@ -267,7 +267,7 @@ export class McpOAuthProvider implements OAuthClientProvider {
             this.resolvedCimdUrl = MCP_CIMD_CANDIDATES[0];
             this.log(
               "warn",
-              `no live CIMD document (tried ${MCP_CIMD_CANDIDATES.join(", ")}); publish resources/well-known/oauth-client.json to meowcode.cn, otherwise authorization will fail with invalid_client`,
+              `no live CIMD document (tried ${MCP_CIMD_CANDIDATES.join(", ")}); publish resources/well-known/oauth-client.json to klockcode.cn, otherwise authorization will fail with invalid_client`,
             );
           }
         }
@@ -356,7 +356,7 @@ export class McpOAuthProvider implements OAuthClientProvider {
       }
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(
-        "<!doctype html><meta charset=utf-8><title>MeowCode</title><p>授权完成，回到 MeowCode 即可。</p>",
+        "<!doctype html><meta charset=utf-8><title>KlockCode</title><p>授权完成，回到 KlockCode 即可。</p>",
       );
       this.resolveAuthorizationCode(url);
     };

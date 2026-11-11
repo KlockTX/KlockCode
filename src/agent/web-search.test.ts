@@ -229,12 +229,13 @@ describe("OpenAI native search", () => {
             content: [
               {
                 type: "output_text",
-                text: "MeowCode is great.",
+                text: "KlockCode is great.",
                 annotations: [
                   {
                     type: "url_citation",
                     start_index: 0,
-                    end_index: 8,
+                    // citation 区间必须跟文本等长，别再写死品牌名长度
+                    end_index: "KlockCode".length,
                     url: "https://example.com/a",
                     title: "A",
                   },
@@ -261,7 +262,7 @@ describe("OpenAI native search", () => {
     expect(body.store).toBe(false);
     expect(result.sources).toEqual([
       { url: "https://example.com/b" },
-      { url: "https://example.com/a", title: "A", snippet: "MeowCode" },
+      { url: "https://example.com/a", title: "A", snippet: "KlockCode" },
     ]);
     expect(result.usage).toEqual({ inputTokens: 5, outputTokens: 6, cacheReadTokens: 2 });
   });

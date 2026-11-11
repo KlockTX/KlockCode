@@ -5,8 +5,10 @@ import { describe, expect, it } from "vitest";
 import {
   builtinHarnessSeed,
   harnessFilePath,
+  harnessSourceSignature,
   legacyHarnessFilePath,
   loadHarnessDocument,
+  readHarnessSnapshot,
   saveHarnessDocument,
   validateHarnessDocument,
 } from "./harness-document.js";
@@ -229,7 +231,7 @@ describe("每个主 Agent 一张独立架构图", () => {
   });
 
   it("各档位的图存到各自文件，互不覆盖", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-harness-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
     const minimal = builtinHarnessSeed("minimal");
     minimal.metadata = { description: "minimal edited" };
     expect((await saveHarnessDocument(dir, minimal, "minimal")).valid).toBe(true);
@@ -242,7 +244,7 @@ describe("每个主 Agent 一张独立架构图", () => {
   });
 
   it("旧版单图作为标准档的兼容来源，其他档位不受影响", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-harness-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
     const legacy = builtinHarnessSeed("standard");
     legacy.metadata = { description: "legacy graph" };
     await mkdir(path.dirname(legacyHarnessFilePath(dir)), { recursive: true });
@@ -253,9 +255,61 @@ describe("每个主 Agent 一张独立架构图", () => {
   });
 });
 
+describe("来源签名（热重载的脏检测）", () => {
+  it("没有文件时是 seed 签名；新建文件后签名变化", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
+    const before = await harnessSourceSignature(dir, "standard");
+    expect(before).toBe("seed:standard");
+    expect((await readHarnessSnapshot(dir, "standard")).sourcePath).toBeNull();
+
+    await saveHarnessDocument(dir, builtinHarnessSeed("standard"), "standard");
+    const after = await harnessSourceSignature(dir, "standard");
+    expect(after).not.toBe(before);
+    expect(after).toContain("standard.json");
+    const snapshot = await readHarnessSnapshot(dir, "standard");
+    // 签名与装载结果必须自洽：同一时刻读到的那份，就是签名描述的那份
+    expect(snapshot.signature).toBe(after);
+    expect(snapshot.invalid).toBe(false);
+  });
+
+  it("内容改变后签名变化；内容不变时签名稳定", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
+    const doc = builtinHarnessSeed("standard");
+    await saveHarnessDocument(dir, doc, "standard");
+    const first = await harnessSourceSignature(dir, "standard");
+    expect(await harnessSourceSignature(dir, "standard")).toBe(first);
+
+    const edited = builtinHarnessSeed("standard");
+    edited.metadata = { description: "edited description changes the byte size" };
+    await saveHarnessDocument(dir, edited, "standard");
+    expect(await harnessSourceSignature(dir, "standard")).not.toBe(first);
+  });
+
+  it("文件存在但非法：返回 invalid 快照，且不再悄悄回退旧版单图", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
+    const legacy = builtinHarnessSeed("standard");
+    legacy.metadata = { description: "legacy graph" };
+    await mkdir(path.dirname(legacyHarnessFilePath(dir)), { recursive: true });
+    await writeFile(legacyHarnessFilePath(dir), JSON.stringify(legacy), "utf8");
+    await mkdir(path.dirname(harnessFilePath(dir)), { recursive: true });
+    await writeFile(harnessFilePath(dir), "{ broken", "utf8");
+
+    const snapshot = await readHarnessSnapshot(dir, "standard");
+    expect(snapshot.invalid).toBe(true);
+    expect(snapshot.sourcePath).toBe(harnessFilePath(dir));
+    // 旧行为是继续看下一个候选 → 用 legacy；那会让「配置改坏了」变成静默生效的旧图
+    expect(snapshot.document.metadata?.description).not.toBe("legacy graph");
+  });
+
+  it("custom-* 的签名按标准档的候选解析，不存在时回 seed:standard", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
+    expect(await harnessSourceSignature(dir, "custom-1")).toBe("seed:standard");
+  });
+});
+
 describe("架构图完整性（角色节点自动补齐）", () => {
   it("图上缺角色时补节点并接到根节点，只加不删", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-harness-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
     const partial = {
       version: 1,
       nodes: [
@@ -294,7 +348,7 @@ describe("架构图完整性（角色节点自动补齐）", () => {
   });
 
   it("极简档不会补出它派不出的角色", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-harness-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
     const doc = await loadHarnessDocument(dir, "minimal");
     expect(
       doc.nodes
@@ -317,7 +371,7 @@ describe("架构图完整性（角色节点自动补齐）", () => {
 
 describe("harness 读写", () => {
   it("文件缺失回退内置种子；非法文件告警回退", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-harness-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
     expect((await loadHarnessDocument(dir)).metadata?.description).toContain("内置");
     await mkdir(path.dirname(harnessFilePath(dir)), { recursive: true });
     await writeFile(harnessFilePath(dir), "{ broken", "utf8");
@@ -325,7 +379,7 @@ describe("harness 读写", () => {
   });
 
   it("保存合法文档；非法文档不落盘并返回错误", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-harness-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-harness-"));
     const doc = builtinHarnessSeed();
     doc.metadata = { description: "edited" };
     const saved = await saveHarnessDocument(dir, doc);

@@ -50,7 +50,7 @@ export function speechStylePrompt(style: SpeechStyle): string | null {
   return null;
 }
 
-/** 桌面端经 MEOWCODE_SPEECH_STYLE 注入；测试、缺省与未知值一律回落「普通」。 */
+/** 桌面端经 KLOCKCODE_SPEECH_STYLE 注入；测试、缺省与未知值一律回落「普通」。 */
 export function readSpeechStyleFromEnv(): SpeechStyle {
-  return normalizeSpeechStyle(process.env.MEOWCODE_SPEECH_STYLE?.trim().toLowerCase());
+  return normalizeSpeechStyle(process.env.KLOCKCODE_SPEECH_STYLE?.trim().toLowerCase());
 }

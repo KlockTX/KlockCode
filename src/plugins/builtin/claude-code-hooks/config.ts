@@ -14,7 +14,7 @@ export type HookMatcherGroup = {
 };
 export type ClaudeSettings = { hooks?: Record<string, HookMatcherGroup[]> };
 
-/** Claude Code 事件名 → MeowCode hook 名 */
+/** Claude Code 事件名 → KlockCode hook 名 */
 export const EVENT_MAP = {
   PreToolUse: "tool_call",
   PostToolUse: "tool_result",
@@ -87,7 +87,7 @@ export type HooksSummary = {
 // 工具名别名 / 输入形态映射
 // ---------------------------------------------------------------------------
 
-/** MeowCode 内部工具名 → Claude Code 别名（第一个用于 stdin 的 tool_name） */
+/** KlockCode 内部工具名 → Claude Code 别名（第一个用于 stdin 的 tool_name） */
 export const CC_TOOL_ALIASES: Record<string, readonly string[]> = {
   run_command: ["Bash"],
   read_file: ["Read"],
@@ -114,7 +114,7 @@ function recordOf(value: unknown): Record<string, unknown> {
 /**
  * 内部工具参数 → CC hook 里的 tool_input。
  * 同时保留内部字段和 CC 字段，CC 脚本读 file_path / old_string 等能直接工作，
- * MeowCode 自带脚本读 path / oldString 也不受影响。
+ * KlockCode 自带脚本读 path / oldString 也不受影响。
  */
 export function toClaudeToolInput(tool: string, input: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { ...input };

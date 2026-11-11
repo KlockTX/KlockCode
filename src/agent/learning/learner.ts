@@ -52,7 +52,7 @@ const SHARED_RULES = `Hard rules:
 1. Only these ops: "profile" | "guideline" | "skill" | "proposal". Never emit code, tool
    definitions, hooks, or configuration files.
 2. NEVER mention or modify: update_plan, ask_user, spawn_agent, approvalMode, approval_required,
-   harness.json, workflow.json, settings.json, providers.json, mcp.json, MEOWCODE_* env vars,
+   harness.json, workflow.json, settings.json, providers.json, mcp.json, KLOCKCODE_* env vars,
    verification gates, receipts, or anything that skips/bypasses verification.
    Violating this rejects the whole item.
 3. CHECK THE EXISTING LISTS FIRST. If an item already covers this signal, UPDATE IT IN PLACE
@@ -75,7 +75,7 @@ const OP_SCHEMA = `Output schema — a JSON array of objects:
   {"op":"proposal","scope":"...","name":"kebab-case","content":"a workflow change the user might want"}
 ]`;
 
-const TURN_SYSTEM_PROMPT = `You are MeowCode's turn learning pass. One conversation turn just finished.
+const TURN_SYSTEM_PROMPT = `You are KlockCode's turn learning pass. One conversation turn just finished.
 Decide what deserves to persist across sessions. Reply with ONLY a JSON array — no prose, no fences.
 
 ${OP_SCHEMA}
@@ -90,7 +90,7 @@ What each kind is for:
   and recovery steps go.
 - proposal: at most one, and only when the turn revealed a workflow worth changing.`;
 
-const IDLE_SYSTEM_PROMPT = `You are MeowCode's session consolidation pass. A whole finished session is below.
+const IDLE_SYSTEM_PROMPT = `You are KlockCode's session consolidation pass. A whole finished session is below.
 Your job is NOT to discover new things — the per-turn pass already did that. Your job is to
 merge, prune, and promote.
 

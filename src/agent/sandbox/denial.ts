@@ -16,7 +16,7 @@ const DELETE_CONTEXT =
 const WRITE_CONTEXT =
   /(set-content|out-file|new-item|copy-item|add-content|\bwrite\b|\bcreate\b|\bmkdir\b|\bcopy\b|\bcp\b|写入|创建|新建|复制|保存|生成)/i;
 
-const RUNNER_FAILURE_PREFIX = "meowcode-sandbox-run:";
+const RUNNER_FAILURE_PREFIX = "klockcode-sandbox-run:";
 
 export type SandboxDenialInput = {
   exitCode: number | null;

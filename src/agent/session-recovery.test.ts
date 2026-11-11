@@ -6,7 +6,7 @@ import { SessionStore } from "./session-store";
 import { recoverSession } from "./session-recovery";
 
 async function makeStore(): Promise<SessionStore> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-recovery-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-recovery-"));
   return SessionStore.create(path.join(dir, "session.jsonl"), "D:/work");
 }
 

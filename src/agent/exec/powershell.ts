@@ -47,7 +47,7 @@ let powershellProbe: Promise<string> | undefined;
 
 /** 探测结果在一次进程生命周期内不会变，避免每条命令都付一次 spawn（最坏 5 秒）。 */
 export function resolvePowerShell(): Promise<string> {
-  const override = process.env.MEOWCODE_POWERSHELL;
+  const override = process.env.KLOCKCODE_POWERSHELL;
   if (override) return Promise.resolve(override);
   powershellProbe ??= findPowerShell();
   return powershellProbe;

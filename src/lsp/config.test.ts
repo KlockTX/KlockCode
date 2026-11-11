@@ -13,7 +13,7 @@ import {
 const dirs: string[] = [];
 
 async function workspace(): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-lsp-config-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-lsp-config-"));
   dirs.push(dir);
   return dir;
 }
@@ -34,9 +34,9 @@ describe("LSP config", () => {
 
   it("normalizes a custom server and overrides/removes built-ins", async () => {
     const root = await workspace();
-    await mkdir(path.join(root, ".meowcode"), { recursive: true });
+    await mkdir(path.join(root, ".klockcode"), { recursive: true });
     await writeFile(
-      path.join(root, ".meowcode", "lsp.json"),
+      path.join(root, ".klockcode", "lsp.json"),
       JSON.stringify({
         disabled: true,
         timeoutMs: 99_000,

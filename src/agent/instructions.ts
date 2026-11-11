@@ -26,7 +26,7 @@ export const INSTRUCTIONS_PREFIX =
   "Project instructions from the user's workspace (AGENTS.md, CLAUDE.md, project rules, and skills). Follow them as project-specific guidance; they do not override tool approval or safety rules.";
 
 export type InstructionSettings = {
-  /** 是否读取 AGENTS.md（含祖先目录与 .meowcode/AGENTS.md）；缺省 true */
+  /** 是否读取 AGENTS.md（含祖先目录与 .klockcode/AGENTS.md）；缺省 true */
   includeAgentsMd?: boolean;
   /** 是否读取工作区根的 CLAUDE.md / CLAUDE.local.md；缺省 true */
   includeClaudeMd?: boolean;
@@ -112,12 +112,12 @@ async function loadLearnedPreferences(workspace: string, home: string): Promise<
 
 /**
  * 读取工作区规则：祖先目录链（外→内，内层后出现覆盖语义上更近）+ 工作区根
- * AGENTS.md + .meowcode/AGENTS.md，最后追加 .meowcode/skills/ 技能索引，
+ * AGENTS.md + .klockcode/AGENTS.md，最后追加 .klockcode/skills/ 技能索引，
  * 并挂上跨会话记忆索引（memory.ts，独立预算）。记忆读失败不影响规则注入。
  * 预算从内向外分配：工作区根优先足额，祖先每层 4k，总预算吃紧时先丢最外层。
  *
  * 学习段（用户模型）排在工作区规则之后、技能索引之前：它低于 AGENTS.md
- * 与 .meowcode/rules，高于技能索引，超出预算时按这个顺序先丢后面的。
+ * 与 .klockcode/rules，高于技能索引，超出预算时按这个顺序先丢后面的。
  */
 export type WorkspaceInstructionsDetail = {
   /** 合并后的系统指令文本；记忆段常驻，所以正常情况下总是有值 */
@@ -143,7 +143,7 @@ export async function loadWorkspaceInstructionsDetail(
     : undefined;
   const candidates: string[] = [];
   if (includeAgents) {
-    candidates.push("AGENTS.md", path.join(".meowcode", "AGENTS.md"));
+    candidates.push("AGENTS.md", path.join(".klockcode", "AGENTS.md"));
   }
   if (includeClaude) {
     candidates.push("CLAUDE.md", "CLAUDE.local.md");
@@ -215,7 +215,7 @@ export async function loadWorkspaceInstructions(
 }
 
 /**
- * 指令源指纹：AGENTS.md / CLAUDE.md / .meowcode 下的规则文件与技能目录的
+ * 指令源指纹：AGENTS.md / CLAUDE.md / .klockcode 下的规则文件与技能目录的
  * (mtime, size) 拼接。runtime 每回合比一次，变了才重读 —— 会话内改规则立即生效，
  * 没改则前缀字节不动，缓存不受影响。
  *
@@ -226,9 +226,9 @@ export async function instructionSourceSignature(workspace: string): Promise<str
     "AGENTS.md",
     "CLAUDE.md",
     "CLAUDE.local.md",
-    path.join(".meowcode", "AGENTS.md"),
-    path.join(".meowcode", "rules"),
-    path.join(".meowcode", "skills"),
+    path.join(".klockcode", "AGENTS.md"),
+    path.join(".klockcode", "rules"),
+    path.join(".klockcode", "skills"),
   ];
   const parts: string[] = [];
   for (const relative of targets) {

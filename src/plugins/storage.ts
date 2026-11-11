@@ -9,11 +9,11 @@ function sanitizeId(pluginId: string): string {
 }
 
 /**
- * 每插件一个 JSON 文件：~/.meowcode/plugin-data/<pluginId>.json。
+ * 每插件一个 JSON 文件：~/.klockcode/plugin-data/<pluginId>.json。
  * 整文件读写 + tmp/rename 原子替换；进程内缓存读，简单够用（插件量级很小）。
  */
 export function createPluginStorage(pluginId: string, homeDir: string): PluginStorage {
-  const file = path.join(homeDir, ".meowcode", "plugin-data", `${sanitizeId(pluginId)}.json`);
+  const file = path.join(homeDir, ".klockcode", "plugin-data", `${sanitizeId(pluginId)}.json`);
   let cache: Record<string, unknown> | null = null;
 
   async function read(): Promise<Record<string, unknown>> {

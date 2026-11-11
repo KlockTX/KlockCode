@@ -31,9 +31,9 @@ const MAX_RESULT_INDEX = 128;
 const DEDUPE_TOOLS = new Set(["list_dir", "glob", "grep", "read_many"]);
 
 const LOOP_REMINDER_3 =
-  "[meowcode] Note: this exact call (same tool and arguments) has already returned an identical result 3 times in a row. The output is deterministic — repeating it adds nothing. Change the arguments or move on.";
+  "[klockcode] Note: this exact call (same tool and arguments) has already returned an identical result 3 times in a row. The output is deterministic — repeating it adds nothing. Change the arguments or move on.";
 const LOOP_REMINDER_5 =
-  "[meowcode] Warning: 5th identical call in a row with identical output. You are in a loop. Use a different tool, different arguments, or summarize what you have and continue the task.";
+  "[klockcode] Warning: 5th identical call in a row with identical output. You are in a loop. Use a different tool, different arguments, or summarize what you have and continue the task.";
 const loopBlockedOutput = (tool: string, count: number): string =>
   `Blocked: ${tool} has been called with identical arguments and returned identical output ${count} times in a row. Repeating it is wasteful and it will not be executed again. Change the arguments (different offset/pattern/path) or take a different approach.`;
 

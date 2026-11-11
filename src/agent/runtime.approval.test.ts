@@ -61,8 +61,8 @@ beforeEach(() => {
 
 describe("approval decisions", () => {
   it("拒绝理由回灌模型", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-approval-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-approval-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-approval-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-approval-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("ask");
@@ -91,8 +91,8 @@ describe("approval decisions", () => {
   });
 
   it("批准时记住命令：同命令第二次不再弹窗", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-approval-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-approval-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-approval-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-approval-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("ask");
@@ -121,7 +121,7 @@ describe("approval decisions", () => {
     expect(approvalsAfter).toBe(approvalsBefore);
 
     const raw = JSON.parse(
-      await readFile(path.join(workspace, ".meowcode", "approvals.json"), "utf8"),
+      await readFile(path.join(workspace, ".klockcode", "approvals.json"), "utf8"),
     ) as { rules: Array<{ match: { kind: string } }> };
     expect(raw.rules[0].match.kind).toBe("command-exact");
   });

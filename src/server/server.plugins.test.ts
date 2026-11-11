@@ -16,11 +16,11 @@ let workspace = "";
 let home = "";
 
 beforeAll(async () => {
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-server-plugins-"));
-  workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-plugins-"));
-  home = await mkdtemp(path.join(tmpdir(), "meowcode-home-plugins-"));
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-server-plugins-"));
+  workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-plugins-"));
+  home = await mkdtemp(path.join(tmpdir(), "klockcode-home-plugins-"));
   // 一个可用插件 + 一个将被禁用的插件
-  const pluginsDir = path.join(workspace, ".meowcode", "plugins");
+  const pluginsDir = path.join(workspace, ".klockcode", "plugins");
   await mkdir(pluginsDir, { recursive: true });
   await writeFile(
     path.join(pluginsDir, "hello.ts"),
@@ -52,13 +52,13 @@ beforeAll(async () => {
     "<!doctype html><title>panel-plugin-ui</title>",
   );
 
-  process.env.MEOWCODE_SESSIONS_DIR = sessionsDir;
-  process.env.MEOWCODE_WORKSPACE = workspace;
-  process.env.MEOWCODE_PLUGINS = JSON.stringify({ disabled: ["off"] });
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  process.env.KLOCKCODE_SESSIONS_DIR = sessionsDir;
+  process.env.KLOCKCODE_WORKSPACE = workspace;
+  process.env.KLOCKCODE_PLUGINS = JSON.stringify({ disabled: ["off"] });
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     { id: "p1", name: "provider", baseUrl: "http://127.0.0.1:1", model: "m", apiKey: "secret" },
   ]);
-  process.env.MEOWCODE_SERVER_TOKEN = TOKEN;
+  process.env.KLOCKCODE_SERVER_TOKEN = TOKEN;
 
   server = await startServer({ port: 0 });
   const address = server.address();
@@ -73,11 +73,11 @@ afterAll(async () => {
     rm(workspace, { recursive: true, force: true }),
     rm(home, { recursive: true, force: true }),
   ]);
-  delete process.env.MEOWCODE_SESSIONS_DIR;
-  delete process.env.MEOWCODE_WORKSPACE;
-  delete process.env.MEOWCODE_PLUGINS;
-  delete process.env.MEOWCODE_GITHUB_TOKEN;
-  delete process.env.MEOWCODE_GITCODE_TOKEN;
+  delete process.env.KLOCKCODE_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_WORKSPACE;
+  delete process.env.KLOCKCODE_PLUGINS;
+  delete process.env.KLOCKCODE_GITHUB_TOKEN;
+  delete process.env.KLOCKCODE_GITCODE_TOKEN;
 });
 
 function get(pathname: string, init: RequestInit = {}): Promise<Response> {
@@ -126,7 +126,7 @@ describe("GET /plugins", () => {
 
 describe("GET /hooks/config", () => {
   it("返回三层文件摘要；工作区默认排除", async () => {
-    const hooksHome = await mkdtemp(path.join(tmpdir(), "meowcode-hooks-home-"));
+    const hooksHome = await mkdtemp(path.join(tmpdir(), "klockcode-hooks-home-"));
     try {
       await mkdir(path.join(hooksHome, ".claude"), { recursive: true });
       await writeFile(
@@ -150,9 +150,9 @@ describe("GET /hooks/config", () => {
           },
         }),
       );
-      process.env.MEOWCODE_CC_HOOKS_HOME = hooksHome;
-      process.env.MEOWCODE_CC_HOOKS_SCOPE = JSON.stringify({ user: true, workspace: false });
-      process.env.MEOWCODE_HOOKS_RUN_MODE = "ask";
+      process.env.KLOCKCODE_CC_HOOKS_HOME = hooksHome;
+      process.env.KLOCKCODE_CC_HOOKS_SCOPE = JSON.stringify({ user: true, workspace: false });
+      process.env.KLOCKCODE_HOOKS_RUN_MODE = "ask";
 
       const response = await get("/hooks/config");
       expect(response.status).toBe(200);
@@ -186,9 +186,9 @@ describe("GET /hooks/config", () => {
         true,
       );
     } finally {
-      delete process.env.MEOWCODE_CC_HOOKS_HOME;
-      delete process.env.MEOWCODE_CC_HOOKS_SCOPE;
-      delete process.env.MEOWCODE_HOOKS_RUN_MODE;
+      delete process.env.KLOCKCODE_CC_HOOKS_HOME;
+      delete process.env.KLOCKCODE_CC_HOOKS_SCOPE;
+      delete process.env.KLOCKCODE_HOOKS_RUN_MODE;
       await rm(hooksHome, { recursive: true, force: true });
       await rm(path.join(workspace, ".claude"), { recursive: true, force: true });
     }
@@ -221,47 +221,47 @@ describe("POST /config/hooks", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ runMode: "auto", includeWorkspace: false }),
     });
-    delete process.env.MEOWCODE_HOOKS_RUN_MODE;
-    delete process.env.MEOWCODE_CC_HOOKS_SCOPE;
+    delete process.env.KLOCKCODE_HOOKS_RUN_MODE;
+    delete process.env.KLOCKCODE_CC_HOOKS_SCOPE;
   });
 });
 
 describe("POST /plugins/mcp-credentials", () => {
   it("写入允许的 MCP 凭据 env 并重载插件", async () => {
-    delete process.env.MEOWCODE_GITHUB_TOKEN;
+    delete process.env.KLOCKCODE_GITHUB_TOKEN;
     const response = await get("/plugins/mcp-credentials", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ env: { MEOWCODE_GITHUB_TOKEN: "  gho_test_token  " } }),
+      body: JSON.stringify({ env: { KLOCKCODE_GITHUB_TOKEN: "  gho_test_token  " } }),
     });
     expect(response.status).toBe(200);
     const body = (await response.json()) as { ok: boolean };
     expect(body.ok).toBe(true);
-    expect(process.env.MEOWCODE_GITHUB_TOKEN).toBe("gho_test_token");
+    expect(process.env.KLOCKCODE_GITHUB_TOKEN).toBe("gho_test_token");
 
     const cleared = await get("/plugins/mcp-credentials", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ env: { MEOWCODE_GITHUB_TOKEN: null } }),
+      body: JSON.stringify({ env: { KLOCKCODE_GITHUB_TOKEN: null } }),
     });
     expect(cleared.status).toBe(200);
-    expect(process.env.MEOWCODE_GITHUB_TOKEN).toBeUndefined();
+    expect(process.env.KLOCKCODE_GITHUB_TOKEN).toBeUndefined();
   });
 
   it("允许 GitCode 凭据 env", async () => {
     const response = await get("/plugins/mcp-credentials", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ env: { MEOWCODE_GITCODE_TOKEN: "gitcode-token" } }),
+      body: JSON.stringify({ env: { KLOCKCODE_GITCODE_TOKEN: "gitcode-token" } }),
     });
     expect(response.status).toBe(200);
-    expect(process.env.MEOWCODE_GITCODE_TOKEN).toBe("gitcode-token");
+    expect(process.env.KLOCKCODE_GITCODE_TOKEN).toBe("gitcode-token");
     await get("/plugins/mcp-credentials", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ env: { MEOWCODE_GITCODE_TOKEN: null } }),
+      body: JSON.stringify({ env: { KLOCKCODE_GITCODE_TOKEN: null } }),
     });
-    expect(process.env.MEOWCODE_GITCODE_TOKEN).toBeUndefined();
+    expect(process.env.KLOCKCODE_GITCODE_TOKEN).toBeUndefined();
   });
 
   it("拒绝任意环境变量名", async () => {

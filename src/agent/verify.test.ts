@@ -20,13 +20,13 @@ vi.mock("./tools.js", () => ({ executeTool: executeToolMock }));
 const linkType = process.platform === "win32" ? "junction" : "dir";
 
 async function makeWorkspace(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), "meowcode-verify-"));
+  return mkdtemp(path.join(tmpdir(), "klockcode-verify-"));
 }
 
 async function writeConfig(workspace: string, config: unknown): Promise<void> {
-  await mkdir(path.join(workspace, ".meowcode"), { recursive: true });
+  await mkdir(path.join(workspace, ".klockcode"), { recursive: true });
   await writeFile(
-    path.join(workspace, ".meowcode", "verify.json"),
+    path.join(workspace, ".klockcode", "verify.json"),
     typeof config === "string" ? config : JSON.stringify(config),
     "utf8",
   );
@@ -103,8 +103,8 @@ describe("loadVerifyConfig", () => {
       await writeFile(path.join(workspace, "tsconfig.json"), "{}", "utf8");
       await writeFile(path.join(outside, "verify.json"), JSON.stringify({ typecheck: "evil" }), "utf8");
       vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      // .meowcode 整个目录是指向工作区外的链接（Windows 上 junction 不需要管理员权限）
-      await symlink(outside, path.join(workspace, ".meowcode"), linkType);
+      // .klockcode 整个目录是指向工作区外的链接（Windows 上 junction 不需要管理员权限）
+      await symlink(outside, path.join(workspace, ".klockcode"), linkType);
       const config = await loadVerifyConfig(workspace);
       expect(config.commands).toEqual([{ id: "typecheck", command: "npx --no-install tsc --noEmit" }]);
     } finally {

@@ -19,7 +19,7 @@ const DEFAULT_HOOK_TIMEOUT_MS = 5_000;
 class HookTimeoutError extends Error {}
 
 function hookTimeoutMs(): number {
-  const raw = Number(process.env.MEOWCODE_HOOK_TIMEOUT_MS);
+  const raw = Number(process.env.KLOCKCODE_HOOK_TIMEOUT_MS);
   return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_HOOK_TIMEOUT_MS;
 }
 

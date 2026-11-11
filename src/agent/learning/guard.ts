@@ -31,7 +31,7 @@ const FORBIDDEN_CONTROL_PLANE: RegExp[] = [
   /\bask_user\b/i,
   /\bspawn_agent\b/i,
   /\bharness\.json\b/i,
-  /\.meowcode[\\/]harness/i,
+  /\.klockcode[\\/]harness/i,
   /\bapprovalMode\b/i,
   /\bapproval_required\b/i,
   /\bpermission_?mode\b/i,
@@ -57,8 +57,8 @@ const FORBIDDEN_CONFIG: RegExp[] = [
   /(?:^|[\\/\s"'`])settings\.json/i,
   /(?:^|[\\/\s"'`])providers\.json/i,
   /(?:^|[\\/\s"'`])mcp\.json/i,
-  /(?:^|[\\/\s"'`])meowcode\.json/i,
-  /\bMEOWCODE_[A-Z0-9_]+\b/,
+  /(?:^|[\\/\s"'`])klockcode\.json/i,
+  /\bKLOCKCODE_[A-Z0-9_]+\b/,
 ];
 
 /** 脱敏规则：命中即替换，避免密钥被写进长期记忆。 */

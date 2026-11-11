@@ -27,13 +27,13 @@ const auth = {
 };
 
 beforeAll(async () => {
-  workspace = await mkdtemp(path.join(tmpdir(), "meowcode-sandbox-routes-"));
-  homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-sandbox-routes-home-"));
-  process.env.MEOWCODE_SERVER_TOKEN = TOKEN;
-  process.env.MEOWCODE_WORKSPACE = workspace;
-  process.env.MEOWCODE_SESSIONS_DIR = path.join(workspace, ".sessions");
-  process.env.MEOWCODE_HOME_DIR = homeDir;
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  workspace = await mkdtemp(path.join(tmpdir(), "klockcode-sandbox-routes-"));
+  homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-sandbox-routes-home-"));
+  process.env.KLOCKCODE_SERVER_TOKEN = TOKEN;
+  process.env.KLOCKCODE_WORKSPACE = workspace;
+  process.env.KLOCKCODE_SESSIONS_DIR = path.join(workspace, ".sessions");
+  process.env.KLOCKCODE_HOME_DIR = homeDir;
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     { id: "p", name: "P", baseUrl: "http://127.0.0.1:1", model: "m" },
   ]);
   server = await startServer({ port: 0 });
@@ -46,11 +46,11 @@ afterAll(async () => {
   await server.shutdown("test");
   await rm(workspace, { recursive: true, force: true });
   await rm(homeDir, { recursive: true, force: true });
-  delete process.env.MEOWCODE_SERVER_TOKEN;
-  delete process.env.MEOWCODE_WORKSPACE;
-  delete process.env.MEOWCODE_SESSIONS_DIR;
-  delete process.env.MEOWCODE_HOME_DIR;
-  delete process.env.MEOWCODE_PROVIDERS;
+  delete process.env.KLOCKCODE_SERVER_TOKEN;
+  delete process.env.KLOCKCODE_WORKSPACE;
+  delete process.env.KLOCKCODE_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_HOME_DIR;
+  delete process.env.KLOCKCODE_PROVIDERS;
 });
 
 describe("sandbox config routes", () => {
@@ -142,5 +142,40 @@ describe("sandbox config routes", () => {
     expect(response.status).toBe(400);
     const get = await fetch(`${baseUrl}/config/sandbox`, { headers: auth });
     expect(await get.json()).toMatchObject({ enabled: true, writableRoots: [] });
+  });
+
+  it("switches to read-only and re-probes (different token path)", async () => {
+    const before = probeMock.mock.calls.length;
+    const response = await fetch(`${baseUrl}/config/sandbox`, {
+      method: "PUT",
+      headers: auth,
+      body: JSON.stringify({ mode: "read-only" }),
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ enabled: true, mode: "read-only" });
+    // 只读走的是零授权的令牌路径，旧结论不能沿用
+    expect(probeMock.mock.calls.length).toBe(before + 1);
+    expect(probeMock.mock.calls.at(-1)?.[0]).toMatchObject({
+      settings: { mode: "read-only" },
+    });
+
+    const back = await fetch(`${baseUrl}/config/sandbox`, {
+      method: "PUT",
+      headers: auth,
+      body: JSON.stringify({ mode: "workspace-write" }),
+    });
+    expect(back.status).toBe(200);
+    expect(await back.json()).toMatchObject({ mode: "workspace-write" });
+  });
+
+  it("rejects an unknown sandbox mode instead of guessing", async () => {
+    const response = await fetch(`${baseUrl}/config/sandbox`, {
+      method: "PUT",
+      headers: auth,
+      body: JSON.stringify({ mode: "readonly" }),
+    });
+    expect(response.status).toBe(400);
+    const get = await fetch(`${baseUrl}/config/sandbox`, { headers: auth });
+    expect(await get.json()).toMatchObject({ mode: "workspace-write" });
   });
 });

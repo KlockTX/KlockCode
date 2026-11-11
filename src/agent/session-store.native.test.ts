@@ -15,7 +15,7 @@ const payload = (overrides: Partial<NativeCompactionPayload> = {}): NativeCompac
 });
 
 async function makeStore(): Promise<SessionStore> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-compaction-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-compaction-"));
   return SessionStore.create(path.join(dir, "session.jsonl"), "D:/work");
 }
 
@@ -65,7 +65,7 @@ describe("SessionStore native compaction", () => {
   });
 
   it("重载后原生压缩点仍可回放", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-compaction-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-compaction-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "before" });

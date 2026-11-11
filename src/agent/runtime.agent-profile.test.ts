@@ -81,9 +81,9 @@ beforeEach(() => {
 
 describe("AgentRuntime agent profiles", () => {
   it("minimal narrows the tool set to read_file / run_command plus the orchestration channel", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     await runtime.setAgentProfile("minimal");
 
     const captured = captureCalls();
@@ -96,23 +96,23 @@ describe("AgentRuntime agent profiles", () => {
   });
 
   it("standard keeps the full tool set and every subagent role", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
 
     const captured = captureCalls();
     await runtime.prompt("hello");
 
     expect(captured[0].tools).toContain("write_file");
     expect(captured[0].tools).toContain("multi_edit");
-    expect(captured[0].system).toContain("You are MeowCode, a local coding agent");
+    expect(captured[0].system).toContain("You are KlockCode, a local coding agent");
     expect(captured[0].taskDescription).toContain("at most 3 subagent starts per user turn");
   });
 
   it("complex keeps every tool and adds the orchestration prompt", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     await runtime.setAgentProfile("complex");
 
     const captured = captureCalls();
@@ -124,9 +124,9 @@ describe("AgentRuntime agent profiles", () => {
   });
 
   it("minimal narrows task.agent_type to general / explore", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     await runtime.setAgentProfile("minimal");
 
     let tools: ToolDefinition[] = [];
@@ -145,9 +145,9 @@ describe("AgentRuntime agent profiles", () => {
   });
 
   it("rejects roles the profile does not include", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     await runtime.setAgentProfile("minimal");
     await runtime.setApprovalMode("full");
 
@@ -187,9 +187,9 @@ describe("AgentRuntime agent profiles", () => {
   });
 
   it("intersects the profile tool set into subagent runtimes", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     await runtime.setAgentProfile("minimal");
     await runtime.setApprovalMode("full");
 
@@ -198,7 +198,7 @@ describe("AgentRuntime agent profiles", () => {
       async (options: { messages: ChatMessage[]; tools: ToolDefinition[] }) => {
         const system = options.messages.find((message) => message.role === "system");
         const prompt = typeof system?.content === "string" ? system.content : "";
-        if (prompt.includes("You are a subagent launched by MeowCode")) {
+        if (prompt.includes("You are a subagent launched by KlockCode")) {
           childTools.push(options.tools.map((tool) => tool.function.name));
           return {
             message: { role: "assistant", content: "child report" },
@@ -228,9 +228,9 @@ describe("AgentRuntime agent profiles", () => {
   });
 
   it("applies the profile concurrency budget per turn", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     await runtime.setAgentProfile("minimal");
     await runtime.setApprovalMode("full");
 
@@ -239,7 +239,7 @@ describe("AgentRuntime agent profiles", () => {
       async (options: { messages: ChatMessage[]; tools: ToolDefinition[] }) => {
         const system = options.messages.find((message) => message.role === "system");
         const prompt = typeof system?.content === "string" ? system.content : "";
-        if (prompt.includes("You are a subagent launched by MeowCode")) {
+        if (prompt.includes("You are a subagent launched by KlockCode")) {
           return {
             message: { role: "assistant", content: "child report" },
             usage: { inputTokens: 5, outputTokens: 2 },
@@ -277,9 +277,9 @@ describe("AgentRuntime agent profiles", () => {
   });
 
   it("persists the profile in the session and restores it on switch", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-profile-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-profile-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     const events: MeowEvent[] = [];
     runtime.onEvent((event) => events.push(event));
 
@@ -294,7 +294,7 @@ describe("AgentRuntime agent profiles", () => {
     expect(reopened.currentAgentProfile).toBe("complex");
 
     const fresh = makeRuntime(dir);
-    await fresh.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await fresh.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     expect(fresh.currentAgentProfile).toBe("standard");
   });
 });

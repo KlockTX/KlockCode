@@ -26,8 +26,8 @@ async function newRuntime(
   providers: ProviderConfig[],
   options: { providerFallback?: boolean } = {},
 ) {
-  const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-policy-"));
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-policy-ws-"));
+  const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-policy-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-policy-ws-"));
   const runtime = new AgentRuntime({
     providers,
     sessionsDir,

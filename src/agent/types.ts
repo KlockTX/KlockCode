@@ -50,6 +50,8 @@ export type ToolCatalogReason =
   | "plugin_reload"
   | "providers"
   | "cold_resume"
+  /** 架构图热重载：主 Agent 节点的工具白名单可能变了，必须重算目录 */
+  | "harness"
   /** 回合边界：目录里有下线的工具在继续被广告，宁可吃一次前缀重建也要撤下 */
   | "turn_boundary";
 
@@ -431,6 +433,24 @@ export type MeowEvent = AgentEventMeta &
         repairCount: number;
       }>;
     }
+  /**
+   * 架构图热重载：会话首次装载 / 切换架构 / PUT /harness 保存 / 磁盘文件被手改，
+   * 统一在回合边界生效。applied=false 表示治理 run 仍活跃、本次被延后（run 内快照冻结）。
+   */
+  | {
+      type: "harness_reloaded";
+      sessionId: string;
+      /** 生效的架构图 id（档位或 custom-*） */
+      architecture: string;
+      /** session=会话首次装载，switch=切档/切图，save=PUT /harness，file=磁盘签名变化 */
+      source: "session" | "switch" | "save" | "file";
+      /** true=已装载生效；false=延后或文件非法，当前图保持不变 */
+      applied: boolean;
+      /** 未生效时的原因；applied=true 时为 undefined */
+      reason?: "active-run" | "invalid-document";
+      /** 实际装载的文件；回退内置种子时为 null */
+      path?: string | null;
+    }
   /** 契约角色的宿主校验结果（implementer/reviewer/verifier 结算时） */
   | {
       type: "child_result";
@@ -706,6 +726,9 @@ export type ToolDocument = {
  */
 export type ApprovalMode = "read-only" | "ask" | "auto" | "full";
 
+/** 新会话与脏数据的唯一默认值来源：保守优先，不要在别处硬编码。 */
+export const DEFAULT_APPROVAL_MODE: ApprovalMode = "ask";
+
 /** 项目级「不再询问」的匹配范围；与 approval-rules 的规则 kind 一一对应。 */
 export type ApprovalRememberScope = "tool" | "path" | "command-exact" | "command-prefix";
 
@@ -726,7 +749,8 @@ export function normalizeApprovalMode(value: unknown): ApprovalMode {
   if (value === "read-only" || value === "ask" || value === "auto" || value === "full") {
     return value;
   }
-  return "auto";
+  // 未知 / 缺失值一律收敛到最保守的「每次询问」，避免新会话或脏数据悄悄获得自动批准。
+  return DEFAULT_APPROVAL_MODE;
 }
 
 export function isApprovalMode(value: unknown): value is ApprovalModeInput {

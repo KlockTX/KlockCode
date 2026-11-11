@@ -63,7 +63,7 @@ export async function runDiagnosticsTool(input: {
     if (config.disabled) {
       return {
         ok: true,
-        output: "[diagnostics] LSP diagnostics are disabled by .meowcode/lsp.json.",
+        output: "[diagnostics] LSP diagnostics are disabled by .klockcode/lsp.json.",
       };
     }
     let files: string[];

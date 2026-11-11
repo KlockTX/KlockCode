@@ -13,7 +13,7 @@ export type MarkdownCommand = {
 };
 
 /**
- * 发现 markdown 斜杠命令：`<root>/.meowcode/commands/*.md`，文件名即命令名。
+ * 发现 markdown 斜杠命令：`<root>/.klockcode/commands/*.md`，文件名即命令名。
  * project 同名覆盖 user；解析失败的文件跳过。
  */
 export async function discoverMarkdownCommands(
@@ -77,8 +77,8 @@ export async function loadCommandIndex(options: {
   registry: PluginRegistry;
 }): Promise<CommandIndex> {
   const markdown = await discoverMarkdownCommands([
-    { dir: path.join(options.workspace, ".meowcode", "commands"), source: "project" },
-    { dir: path.join(options.homeDir, ".meowcode", "commands"), source: "user" },
+    { dir: path.join(options.workspace, ".klockcode", "commands"), source: "project" },
+    { dir: path.join(options.homeDir, ".klockcode", "commands"), source: "user" },
   ]);
   const byName = new Map(markdown.map((cmd) => [cmd.name, cmd]));
 

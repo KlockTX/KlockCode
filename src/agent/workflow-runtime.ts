@@ -11,7 +11,7 @@ import type { AgentRole } from "./types.js";
  * 治理层状态机（参考 metis PerformanceRuntime，由可编辑架构图驱动）：
  * 纯内存、无 IO。门禁序列（tier→gate 带序边）、角色绑定（gate-role 边）、
  * 失败回跳（gate 节点 onFail: block | loop-to:<gate>）全部来自
- * `.meowcode/harness.json`（缺省用内置种子 = G4→G5→G6、失败回跳 G4）。
+ * `.klockcode/harness.json`（缺省用内置种子 = G4→G5→G6、失败回跳 G4）。
  * 证据一律来自宿主观测（ChildResult 的 filesChanged/commands 与根侧文件改动）。
  */
 
@@ -565,7 +565,14 @@ export class WorkflowRuntime {
       typeof pending.onFail === "string" && pending.onFail.startsWith("loop-to:")
         ? pending.onFail.slice("loop-to:".length).trim()
         : "";
+    // 配置的返工目标必须是本 lane 的门禁：跨 tier 的 loop-to 在结构校验里合法（节点存在），
+    // 但它不在这条泳道的 gateOrder 里，只能退回整条重来。退回要写在返回文案里——
+    // 静默改语义会让模型以为「只返工最后一道」，实际把整条泳道清空了。
+    const loopTargetDropped = Boolean(loopTarget) && !lane.gateOrder.includes(loopTarget);
     const resetFrom = loopTarget && lane.gateOrder.includes(loopTarget) ? loopTarget : lane.gateOrder[0];
+    const dropNote = loopTargetDropped
+      ? ` Note: onFail=loop-to:${loopTarget} is not a gate of lane "${laneId}"; the whole lane was rewound to ${resetFrom} instead.`
+      : "";
     if (overLimit || pending.onFail === "block") {
       lane.status = "blocked";
       for (const gateId of lane.gateOrder) {
@@ -593,7 +600,10 @@ export class WorkflowRuntime {
       verdict: "fail",
       laneId,
       gateId: pending.id,
-      message: `Gate ${pending.id} failed for lane "${laneId}" (reason: ${failReason(input.childResult)}). Rework: loop back to ${resetFrom} (repair ${lane.repairCount}/${this.maxRepairs}), then repeat the remaining gates.`,
+      message:
+        `Gate ${pending.id} failed for lane "${laneId}" (reason: ${failReason(input.childResult)}). ` +
+        `Rework: loop back to ${resetFrom} (repair ${lane.repairCount}/${this.maxRepairs}), then repeat the remaining gates.` +
+        dropNote,
     };
   }
 

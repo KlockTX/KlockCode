@@ -313,7 +313,7 @@ export async function runAgentLoop(host: AgentLoopHost): Promise<void> {
           if (Math.max(overflowBaseline, estimateMessagesTokens(messages)) < floor) throw error;
         }
         console.error(
-          `[meowcode] context overflow (stage ${escalation}): ${
+          `[klockcode] context overflow (stage ${escalation}): ${
             error instanceof Error ? error.message : String(error)
           }`,
         );

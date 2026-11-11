@@ -414,7 +414,7 @@ export type HookCommandApprovalRequest = {
 export type PluginHookContext = {
   requestApproval?: (request: HookCommandApprovalRequest) => Promise<boolean>;
   signal?: AbortSignal;
-  /** MeowCode 审批模式 / 会话模式，bridge 映射成 CC 的 permission_mode */
+  /** KlockCode 审批模式 / 会话模式，bridge 映射成 CC 的 permission_mode */
   permissionMode?: string;
   chatMode?: string;
 };
@@ -443,7 +443,7 @@ export type PluginCommandInfo = {
   source: string;
 };
 
-/** 插件命名空间化 KV 存储：~/.meowcode/plugin-data/<pluginId>.json */
+/** 插件命名空间化 KV 存储：~/.klockcode/plugin-data/<pluginId>.json */
 export type PluginStorage = {
   get<T>(key: string): Promise<T | undefined>;
   set(key: string, value: unknown): Promise<void>;
@@ -549,7 +549,7 @@ export type PluginManifest = {
   main?: string;
   client?: string;
   permissions: PluginPermission[];
-  engines?: { meowcode?: string };
+  engines?: { klockcode?: string };
 };
 
 /** RPC handler 的调用上下文：只带 server 侧可信任的信息。 */

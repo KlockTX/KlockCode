@@ -28,8 +28,8 @@ function isChildRequest(messages: ChatMessage[]): boolean {
   const system = messages.find((message) => message.role === "system")?.content;
   return (
     typeof system === "string" &&
-    (system.includes("You are a subagent launched by MeowCode") ||
-      system.includes("You are a read-only Explore subagent launched by MeowCode"))
+    (system.includes("You are a subagent launched by KlockCode") ||
+      system.includes("You are a read-only Explore subagent launched by KlockCode"))
   );
 }
 
@@ -77,8 +77,8 @@ beforeEach(() => {
 
 describe("AgentRuntime subagents", () => {
   it("runs a task in an isolated child session and returns its report", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -206,8 +206,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("injects plugins into the child runtime and scopes turn_stop with agentId", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const plugins = new PluginRegistry();
     const stops: Array<{ sessionId: string; agentId?: string }> = [];
     plugins.addHook("obs", "turn_stop", (event) => {
@@ -249,8 +249,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("builds the child prompt from the parent request when prompt is omitted", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -288,8 +288,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("starts tasks in parallel even when update_plan shares the same message", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -365,8 +365,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("runs several tasks from one assistant message in parallel", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -413,8 +413,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("caps subagent dispatches per turn to control token cost", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -467,8 +467,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("counts model-initiated resume against the per-turn budget", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -526,8 +526,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("runs explore agents with a read-only tool set and no AGENTS.md", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     await writeFile(path.join(workspace, "AGENTS.md"), "SECRET PROJECT RULE");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -594,8 +594,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("returns from a background task before the child finishes", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -657,8 +657,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("stops a single background subagent without touching the parent turn", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -716,8 +716,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("continues a completed subagent with a follow-up message", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -785,8 +785,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("routes a child approval to the parent session and aggregates file changes", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     // 子 Agent 继承父模式；验证"子审批上报"需要每次询问模式
@@ -854,8 +854,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("aborts every child when the parent turn is stopped", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -911,8 +911,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("spawns implementer/reviewer/verifier roles with registry prompts and tool sets", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -937,7 +937,7 @@ describe("AgentRuntime subagents", () => {
         .filter((message) => message.role === "system")
         .map((message) => message.content ?? "")
         .join("\n");
-      if (system.includes("launched by MeowCode's main agent")) {
+      if (system.includes("launched by KlockCode's main agent")) {
         const type = system.includes("Implementer")
           ? "implementer"
           : system.includes("Reviewer")
@@ -1023,9 +1023,9 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("applies harness role tool/prompt overrides to the child runtime", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
-    const harnessDir = path.join(workspace, ".meowcode");
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
+    const harnessDir = path.join(workspace, ".klockcode");
     await mkdir(harnessDir, { recursive: true });
     await writeFile(
       path.join(harnessDir, "harness.json"),
@@ -1096,8 +1096,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("collects host observations and appends a host-verified ChildResult for implementer", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -1171,8 +1171,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("steers a running subagent at the next safe step", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -1237,8 +1237,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("injects a steer after the current tool batch", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     await writeFile(path.join(workspace, "README.md"), "hello\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -1315,8 +1315,8 @@ describe("AgentRuntime subagents", () => {
   });
 
   it("drops a pending steer when the subagent is stopped", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-subagents-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-subws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-subagents-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-subws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");

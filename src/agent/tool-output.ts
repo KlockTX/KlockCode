@@ -10,7 +10,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { canonicalPathSync, resolveToolPath } from "./paths.js";
 
-export const TOOL_OUTPUT_DIR = path.join(".meowcode", "tool-output");
+export const TOOL_OUTPUT_DIR = path.join(".klockcode", "tool-output");
 export const TOOL_OUTPUT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** 超过预算的完整工具输出落到工作区，模型可用 read_file 继续读取。 */

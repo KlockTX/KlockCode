@@ -468,9 +468,9 @@ function createFakeApi(workspace: string): FakeApi {
 }
 
 const node = JSON.stringify(process.execPath);
-const originalHome = process.env.MEOWCODE_CC_HOOKS_HOME;
-const originalScope = process.env.MEOWCODE_CC_HOOKS_SCOPE;
-const originalRunMode = process.env.MEOWCODE_HOOKS_RUN_MODE;
+const originalHome = process.env.KLOCKCODE_CC_HOOKS_HOME;
+const originalScope = process.env.KLOCKCODE_CC_HOOKS_SCOPE;
+const originalRunMode = process.env.KLOCKCODE_HOOKS_RUN_MODE;
 
 async function writeSettings(dir: string, settings: unknown, file = "settings.json"): Promise<void> {
   await fs.mkdir(path.join(dir, ".claude"), { recursive: true });
@@ -482,11 +482,11 @@ async function makePlugin(
   home: string,
   options: { scope?: { user: boolean; workspace: boolean }; runMode?: "auto" | "ask" } = {},
 ): Promise<FakeApi> {
-  process.env.MEOWCODE_CC_HOOKS_HOME = home;
-  process.env.MEOWCODE_CC_HOOKS_SCOPE = JSON.stringify(
+  process.env.KLOCKCODE_CC_HOOKS_HOME = home;
+  process.env.KLOCKCODE_CC_HOOKS_SCOPE = JSON.stringify(
     options.scope ?? { user: true, workspace: true },
   );
-  if (options.runMode) process.env.MEOWCODE_HOOKS_RUN_MODE = options.runMode;
+  if (options.runMode) process.env.KLOCKCODE_HOOKS_RUN_MODE = options.runMode;
   clearHooksConfigCache();
   const api = createFakeApi(workspace);
   claudeCodeHooksPlugin(api);
@@ -499,12 +499,12 @@ beforeEach(() => {
 
 afterEach(() => {
   clearHooksConfigCache();
-  if (originalHome === undefined) delete process.env.MEOWCODE_CC_HOOKS_HOME;
-  else process.env.MEOWCODE_CC_HOOKS_HOME = originalHome;
-  if (originalScope === undefined) delete process.env.MEOWCODE_CC_HOOKS_SCOPE;
-  else process.env.MEOWCODE_CC_HOOKS_SCOPE = originalScope;
-  if (originalRunMode === undefined) delete process.env.MEOWCODE_HOOKS_RUN_MODE;
-  else process.env.MEOWCODE_HOOKS_RUN_MODE = originalRunMode;
+  if (originalHome === undefined) delete process.env.KLOCKCODE_CC_HOOKS_HOME;
+  else process.env.KLOCKCODE_CC_HOOKS_HOME = originalHome;
+  if (originalScope === undefined) delete process.env.KLOCKCODE_CC_HOOKS_SCOPE;
+  else process.env.KLOCKCODE_CC_HOOKS_SCOPE = originalScope;
+  if (originalRunMode === undefined) delete process.env.KLOCKCODE_HOOKS_RUN_MODE;
+  else process.env.KLOCKCODE_HOOKS_RUN_MODE = originalRunMode;
 });
 
 describe("claudeCodeHooksPlugin 集成", () => {

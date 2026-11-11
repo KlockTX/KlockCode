@@ -2,9 +2,9 @@
  * 自我学习子系统的类型契约。
  *
  * 设计来源是 metis 的 adaptations 软层（metis-main/docs/self-learning.md），
- * 但按 MeowCode 的约束做了三处裁剪：
+ * 但按 KlockCode 的约束做了三处裁剪：
  *  1. 学习产物只允许 Markdown 与自有 JSON —— 不产出可执行 tool / hook，
- *     因为 MeowCode 插件走 jiti 加载，让学习器写代码等于开提权口子；
+ *     因为 KlockCode 插件走 jiti 加载，让学习器写代码等于开提权口子；
  *  2. 召回不走关键词匹配器 —— 技能索引常驻 + 模型按需 read_file 已经够用；
  *  3. 所有制品都带 status（tentative/active/retired），退役不删文件。
  */

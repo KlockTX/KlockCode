@@ -651,7 +651,7 @@ function clipMessage(text: string): string {
 }
 
 /**
- * Codex rollout → MeowCode 消息。只取 user/assistant 的文本消息；
+ * Codex rollout → KlockCode 消息。只取 user/assistant 的文本消息；
  * developer 消息与 <environment_context>/<user_instructions> 这类包裹上下文跳过。
  * zst 用 zlib 原生解压；解析不出消息时由调用方落 stub。
  */
@@ -1304,7 +1304,7 @@ export async function planImport(
   appId: ImportAppId,
   groups: ImportGroupId[],
 ): Promise<ImportPlanItem[]> {
-  const meowRoot = path.join(homeDir, ".meowcode");
+  const meowRoot = path.join(homeDir, ".klockcode");
   const items: ImportPlanItem[] = [];
 
   if (groups.includes("mcp")) {
@@ -1520,14 +1520,14 @@ export async function planImport(
   return items;
 }
 
-/** 应用 plan 里的一条待导入项。写操作只落在 ~/.meowcode 与 sessionsDir。 */
+/** 应用 plan 里的一条待导入项。写操作只落在 ~/.klockcode 与 sessionsDir。 */
 export async function applyImportItem(
   homeDir: string,
   sessionsDir: string,
   cwd: string,
   item: ImportPlanItem,
 ): Promise<ImportItemResult> {
-  const meowRoot = path.join(homeDir, ".meowcode");
+  const meowRoot = path.join(homeDir, ".klockcode");
   try {
     if (item.group === "mcp" && item.entry) {
       const current = await readMeowMcp(meowRoot);

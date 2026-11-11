@@ -96,7 +96,7 @@ export function createAgentLogger(options: {
         if (!warned) {
           warned = true;
           console.warn(
-            `[meowcode] agent log write failed: ${error instanceof Error ? error.message : String(error)}`,
+            `[klockcode] agent log write failed: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
       });

@@ -56,7 +56,7 @@ describe("createSkill", () => {
     });
 
     expect(result).toMatchObject({ ok: true, id: "weekly-report" });
-    const file = path.join(home, ".meowcode", "skills", "weekly-report", "SKILL.md");
+    const file = path.join(home, ".klockcode", "skills", "weekly-report", "SKILL.md");
     const raw = await fs.readFile(file, "utf8");
     expect(raw).toContain("name: 周报助手");
     expect(raw).toContain("description: 用户要写周报时使用");
@@ -65,7 +65,7 @@ describe("createSkill", () => {
 
     const marker = JSON.parse(
       await fs.readFile(
-        path.join(home, ".meowcode", ".marketplace", "manual-skill-weekly-report.json"),
+        path.join(home, ".klockcode", ".marketplace", "manual-skill-weekly-report.json"),
         "utf8",
       ),
     );
@@ -90,13 +90,13 @@ describe("createSkill", () => {
       ok: false,
       stage: "validate",
     });
-    expect(await exists(path.join(home, ".meowcode", "skills", "ok-id"))).toBe(false);
+    expect(await exists(path.join(home, ".klockcode", "skills", "ok-id"))).toBe(false);
   });
 
   it("已存在且非 AI 创建的技能拒绝覆盖；AI 创建的允许覆盖", async () => {
     const home = await makeHome();
     const { host } = hostFor(home);
-    const dir = path.join(home, ".meowcode", "skills", "taken");
+    const dir = path.join(home, ".klockcode", "skills", "taken");
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(path.join(dir, "SKILL.md"), "---\nname: taken\ndescription: hand\n---\n");
 
@@ -108,7 +108,7 @@ describe("createSkill", () => {
     expect(first.ok).toBe(true);
     const second = await host.createSkill({ id: "mine", description: "v2", body: "two" });
     expect(second.ok).toBe(true);
-    expect(await fs.readFile(path.join(home, ".meowcode", "skills", "mine", "SKILL.md"), "utf8")).toContain(
+    expect(await fs.readFile(path.join(home, ".klockcode", "skills", "mine", "SKILL.md"), "utf8")).toContain(
       "two",
     );
   });
@@ -128,10 +128,10 @@ describe("createPlugin", () => {
     });
 
     expect(result).toMatchObject({ ok: true, id: "word-count", toolNames: ["word_count"] });
-    const dir = path.join(home, ".meowcode", "plugins", "word-count");
+    const dir = path.join(home, ".klockcode", "plugins", "word-count");
     const raw = await fs.readFile(path.join(dir, "index.ts"), "utf8");
-    expect(raw).toContain("// @meowcode name: 字数统计");
-    expect(raw).toContain("// @meowcode description: 统计文本字数");
+    expect(raw).toContain("// @klockcode name: 字数统计");
+    expect(raw).toContain("// @klockcode description: 统计文本字数");
     expect(raw).toContain("export default");
     const manifest = JSON.parse(await fs.readFile(path.join(dir, "plugin.json"), "utf8")) as {
       apiVersion: number;
@@ -146,10 +146,10 @@ describe("createPlugin", () => {
     });
     expect(onPluginsChanged).toHaveBeenCalledWith("word-count");
     expect(
-      await exists(path.join(home, ".meowcode", ".marketplace", "manual-plugin-word-count.json")),
+      await exists(path.join(home, ".klockcode", ".marketplace", "manual-plugin-word-count.json")),
     ).toBe(true);
     expect(
-      await exists(path.join(home, ".meowcode", ".marketplace", "ai-plugin-word-count.json")),
+      await exists(path.join(home, ".klockcode", ".marketplace", "ai-plugin-word-count.json")),
     ).toBe(true);
   });
 
@@ -171,7 +171,7 @@ describe("createPlugin", () => {
     });
 
     expect(result).toMatchObject({ ok: true, client: true });
-    const dir = path.join(home, ".meowcode", "plugins", "ui-plugin");
+    const dir = path.join(home, ".klockcode", "plugins", "ui-plugin");
     const manifest = JSON.parse(await fs.readFile(path.join(dir, "plugin.json"), "utf8")) as {
       client?: string;
       permissions: string[];
@@ -193,7 +193,7 @@ describe("createPlugin", () => {
     });
     expect(result).toMatchObject({ ok: false, stage: "validate" });
     expect(onPluginsChanged).not.toHaveBeenCalled();
-    expect(await exists(path.join(home, ".meowcode", "plugins", "bad-client"))).toBe(false);
+    expect(await exists(path.join(home, ".klockcode", "plugins", "bad-client"))).toBe(false);
   });
 
   it("校验：缺 export default / 内置 id / 非法 id", async () => {
@@ -224,7 +224,7 @@ describe("createPlugin", () => {
 
     expect(result).toMatchObject({ ok: false, stage: "reload" });
     expect(onPluginsChanged).toHaveBeenCalledTimes(2);
-    expect(await exists(path.join(home, ".meowcode", "plugins", "broken"))).toBe(false);
+    expect(await exists(path.join(home, ".klockcode", "plugins", "broken"))).toBe(false);
   });
 
   it("创建后 loadPlugins 直接识别 client 与 aiAuthored", async () => {
@@ -258,13 +258,13 @@ describe("createPlugin", () => {
     const home = await makeHome();
     const { host, onPluginsChanged } = hostFor(home);
     onPluginsChanged.mockResolvedValueOnce({ toolNames: ["word_count"] });
-    const pluginsDir = path.join(home, ".meowcode", "plugins");
+    const pluginsDir = path.join(home, ".klockcode", "plugins");
     const legacy = path.join(pluginsDir, "legacy-ai.ts");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(legacy, "export default () => {};\n", "utf8");
-    await fs.mkdir(path.join(home, ".meowcode", ".marketplace"), { recursive: true });
+    await fs.mkdir(path.join(home, ".klockcode", ".marketplace"), { recursive: true });
     await fs.writeFile(
-      path.join(home, ".meowcode", ".marketplace", "manual-plugin-legacy-ai.json"),
+      path.join(home, ".klockcode", ".marketplace", "manual-plugin-legacy-ai.json"),
       JSON.stringify({ id: "legacy-ai", type: "plugin", target: "plugins/legacy-ai.ts" }),
       "utf8",
     );

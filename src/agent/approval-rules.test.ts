@@ -13,7 +13,7 @@ import {
 } from "./approval-rules.js";
 
 async function workspace(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), "meowcode-rules-"));
+  return mkdtemp(path.join(tmpdir(), "klockcode-rules-"));
 }
 
 describe("approval rules storage", () => {
@@ -34,7 +34,7 @@ describe("approval rules storage", () => {
     expect(rules[0].id).toBe(second.id);
     expect(rules[0].id).not.toBe(first.id);
 
-    const raw = JSON.parse(await readFile(path.join(dir, ".meowcode", "approvals.json"), "utf8")) as {
+    const raw = JSON.parse(await readFile(path.join(dir, ".klockcode", "approvals.json"), "utf8")) as {
       version: number;
     };
     expect(raw.version).toBe(1);
@@ -54,9 +54,9 @@ describe("approval rules storage", () => {
   it("损坏文件按空规则处理", async () => {
     const dir = await workspace();
     await addApprovalRule(dir, { tool: "x", kind: "tool", value: "x" });
-    await readFile(path.join(dir, ".meowcode", "approvals.json"), "utf8");
+    await readFile(path.join(dir, ".klockcode", "approvals.json"), "utf8");
     const fs = await import("node:fs/promises");
-    await fs.writeFile(path.join(dir, ".meowcode", "approvals.json"), "{not json", "utf8");
+    await fs.writeFile(path.join(dir, ".klockcode", "approvals.json"), "{not json", "utf8");
     expect(await readApprovalRules(dir)).toEqual([]);
   });
 });

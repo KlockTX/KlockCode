@@ -1167,7 +1167,7 @@ export async function switchBranch(
   if (!branch) throw new GitError("git_failed", "Branch name must not be empty.");
   return withLock(async () => {
     if (input.stash) {
-      await runGit(root, ["stash", "push", "-u", "-m", `meowcode: switch to ${branch}`], {
+      await runGit(root, ["stash", "push", "-u", "-m", `klockcode: switch to ${branch}`], {
         timeoutMs: TIMEOUTS.write,
       }).catch(() => undefined);
     }

@@ -90,9 +90,9 @@ const CODEX_TOML = [
 ].join("\n");
 
 beforeAll(async () => {
-  home = await mkdtemp(path.join(tmpdir(), "meowcode-import-home-"));
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-import-sessions-"));
-  workspace = await mkdtemp(path.join(tmpdir(), "meowcode-import-ws-"));
+  home = await mkdtemp(path.join(tmpdir(), "klockcode-import-home-"));
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-import-sessions-"));
+  workspace = await mkdtemp(path.join(tmpdir(), "klockcode-import-ws-"));
 
   // ---- Qoder fixture ----
   const qoder = path.join(home, ".qoder");
@@ -301,17 +301,17 @@ beforeAll(async () => {
   insertOcMessage.run("om2", "ses_oc1", "system", 2, 1792245304000, 1792245304000, JSON.stringify({ text: "system note" }));
   ocDb.close();
 
-  // ---- MeowCode 目标：预置同 MCP 名与同记忆名，验证 skip ----
+  // ---- KlockCode 目标：预置同 MCP 名与同记忆名，验证 skip ----
   await put(
-    path.join(home, ".meowcode", "mcp.json"),
+    path.join(home, ".klockcode", "mcp.json"),
     JSON.stringify({ mcpServers: { github: { url: "https://existing.example/mcp" } } }),
   );
   await put(
-    path.join(home, ".meowcode", "memory", "MEMORY.md"),
+    path.join(home, ".klockcode", "memory", "MEMORY.md"),
     "- [Existing](existing.md) — 已有条目\n",
   );
-  await put(path.join(home, ".meowcode", "memory", "existing.md"), "existing\n");
-  await put(path.join(home, ".meowcode", "memory", "user-profile.md"), "已存在的同名记忆\n");
+  await put(path.join(home, ".klockcode", "memory", "existing.md"), "existing\n");
+  await put(path.join(home, ".klockcode", "memory", "user-profile.md"), "已存在的同名记忆\n");
 });
 
 afterAll(async () => {
@@ -384,7 +384,7 @@ describe("detectImportSources", () => {
   });
 
   it("目录不存在 → detected:false", async () => {
-    const empty = await mkdtemp(path.join(tmpdir(), "meowcode-import-none-"));
+    const empty = await mkdtemp(path.join(tmpdir(), "klockcode-import-none-"));
     try {
       const sources = await detectImportSources(empty);
       expect(sources.map((s) => s.detected)).toEqual([false, false, false, false, false, false, false, false]);
@@ -422,7 +422,7 @@ describe("applyImport mcp", () => {
     const report = await applyImport(home, sessionsDir, workspace, "qoder", ["mcp"]);
     expect(report.groups[0].imported).toEqual([]);
     expect(report.groups[0].skipped).toEqual([]);
-    const raw = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8")) as {
+    const raw = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8")) as {
       mcpServers: Record<string, { url?: string }>;
     };
     expect(raw.mcpServers.github.url).toBe("https://existing.example/mcp");
@@ -432,7 +432,7 @@ describe("applyImport mcp", () => {
     const report = await applyImport(home, sessionsDir, workspace, "codex", ["mcp"]);
     const mcp = report.groups[0];
     expect(mcp.imported).toEqual(["node_repl", "remote"]);
-    const raw = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8")) as {
+    const raw = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8")) as {
       mcpServers: Record<string, { command?: string; env?: Record<string, string>; url?: string }>;
     };
     expect(raw.mcpServers.node_repl).toEqual({
@@ -454,9 +454,9 @@ describe("applyImport memory", () => {
   it("Qoder：已存在的不进 plan，新记忆复制并保留来源索引行", async () => {
     const report = await applyImport(home, sessionsDir, workspace, "qoder", ["memory"]);
     expect(report.groups[0].imported).toEqual(["feedback-precision.md"]);
-    const copied = await readFile(path.join(home, ".meowcode", "memory", "feedback-precision.md"), "utf8");
+    const copied = await readFile(path.join(home, ".klockcode", "memory", "feedback-precision.md"), "utf8");
     expect(copied).toContain("要精确");
-    const index = await readFile(path.join(home, ".meowcode", "memory", "MEMORY.md"), "utf8");
+    const index = await readFile(path.join(home, ".klockcode", "memory", "MEMORY.md"), "utf8");
     expect(index).toContain("- [Precision](feedback-precision.md) — 要精确");
     expect(index).toContain("- [Existing](existing.md)");
   });
@@ -464,34 +464,34 @@ describe("applyImport memory", () => {
   it("WorkBuddy：单文件大记忆带前缀导入（personal 索引已在逐条用例导入）", async () => {
     const report = await applyImport(home, sessionsDir, workspace, "workbuddy", ["memory"]);
     expect(report.groups[0].imported).toEqual(["workbuddy-u1_memory.md"]);
-    const index = await readFile(path.join(home, ".meowcode", "memory", "MEMORY.md"), "utf8");
+    const index = await readFile(path.join(home, ".klockcode", "memory", "MEMORY.md"), "utf8");
     expect(index).toContain("[WorkBuddy memory](workbuddy-memory.md)");
   });
 
   it("Codex：来源索引行的链接改写成 codex- 前缀", async () => {
     const report = await applyImport(home, sessionsDir, workspace, "codex", ["memory"]);
     expect(report.groups[0].imported).toEqual(["codex-raw_memories.md"]);
-    const index = await readFile(path.join(home, ".meowcode", "memory", "MEMORY.md"), "utf8");
+    const index = await readFile(path.join(home, ".klockcode", "memory", "MEMORY.md"), "utf8");
     expect(index).toContain("- [Raw memories](codex-raw_memories.md) — 原始记忆");
   });
 });
 
 describe("applyImport skills", () => {
-  it("Qoder：技能目录复制进 ~/.meowcode/skills，重复导入跳过", async () => {
+  it("Qoder：技能目录复制进 ~/.klockcode/skills，重复导入跳过", async () => {
     const first = await applyImport(home, sessionsDir, workspace, "qoder", ["skills"]);
     expect(first.groups[0].imported).toEqual(["present-skill"]);
     const second = await applyImport(home, sessionsDir, workspace, "qoder", ["skills"]);
     expect(second.groups[0].imported).toEqual([]);
     expect(second.groups[0].skipped).toEqual([]);
     const copied = await readFile(
-      path.join(home, ".meowcode", "skills", "present-skill", "SKILL.md"),
+      path.join(home, ".klockcode", "skills", "present-skill", "SKILL.md"),
       "utf8",
     );
     expect(copied).toContain("body");
     // 导入同时写「我的」手动标记，否则技能页「我的」看不到
     const marker = JSON.parse(
       await readFile(
-        path.join(home, ".meowcode", ".marketplace", "manual-skill-present-skill.json"),
+        path.join(home, ".klockcode", ".marketplace", "manual-skill-present-skill.json"),
         "utf8",
       ),
     );
@@ -571,7 +571,7 @@ describe("applyImport tasks（真实会话导入）", () => {
     expect(content).not.toContain("想一想");
     expect(content).not.toContain("子代理会话");
     const raw = JSON.parse(
-      await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"),
+      await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"),
     ) as { mcpServers: Record<string, { command?: string; args?: string[]; env?: Record<string, string>; url?: string }> };
     expect(raw.mcpServers["local-tool"]).toEqual({ command: "node", args: ["server.js"], env: { FOO: "bar" } });
     expect(raw.mcpServers["remote-tool"]).toEqual({ url: "https://example.com/mcp" });
@@ -612,7 +612,7 @@ describe("applyImport tasks（真实会话导入）", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 路由集成：MEOWCODE_HOME_DIR 指向 fixture home
+// 路由集成：KLOCKCODE_HOME_DIR 指向 fixture home
 // ---------------------------------------------------------------------------
 
 describe("/import 路由", () => {
@@ -624,22 +624,22 @@ describe("/import 路由", () => {
   let routeWorkspace: string;
 
   beforeAll(async () => {
-    routeHome = await mkdtemp(path.join(tmpdir(), "meowcode-import-route-home-"));
-    routeSessions = await mkdtemp(path.join(tmpdir(), "meowcode-import-route-sessions-"));
-    routeWorkspace = await mkdtemp(path.join(tmpdir(), "meowcode-import-route-ws-"));
+    routeHome = await mkdtemp(path.join(tmpdir(), "klockcode-import-route-home-"));
+    routeSessions = await mkdtemp(path.join(tmpdir(), "klockcode-import-route-sessions-"));
+    routeWorkspace = await mkdtemp(path.join(tmpdir(), "klockcode-import-route-ws-"));
     await put(
       path.join(routeHome, ".qoder", "memory", "MEMORY.md"),
       "- [Profile](profile.md) — p\n",
     );
     await put(path.join(routeHome, ".qoder", "memory", "profile.md"), "profile body\n");
-    await put(path.join(routeHome, ".meowcode", "mcp.json"), JSON.stringify({ mcpServers: {} }));
-    process.env.MEOWCODE_HOME_DIR = routeHome;
-    process.env.MEOWCODE_SESSIONS_DIR = routeSessions;
-    process.env.MEOWCODE_WORKSPACE = routeWorkspace;
-    process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+    await put(path.join(routeHome, ".klockcode", "mcp.json"), JSON.stringify({ mcpServers: {} }));
+    process.env.KLOCKCODE_HOME_DIR = routeHome;
+    process.env.KLOCKCODE_SESSIONS_DIR = routeSessions;
+    process.env.KLOCKCODE_WORKSPACE = routeWorkspace;
+    process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
       { id: "p1", name: "provider", baseUrl: "http://127.0.0.1:1", model: "m", apiKey: "secret" },
     ]);
-    process.env.MEOWCODE_SERVER_TOKEN = TOKEN;
+    process.env.KLOCKCODE_SERVER_TOKEN = TOKEN;
     server = await startServer({ port: 0 });
     const address = server.address();
     if (!address || typeof address === "string") throw new Error("Server has no TCP address.");
@@ -648,11 +648,11 @@ describe("/import 路由", () => {
 
   afterAll(async () => {
     await server.shutdown("test");
-    delete process.env.MEOWCODE_HOME_DIR;
-    delete process.env.MEOWCODE_SESSIONS_DIR;
-    delete process.env.MEOWCODE_WORKSPACE;
-    delete process.env.MEOWCODE_PROVIDERS;
-    delete process.env.MEOWCODE_SERVER_TOKEN;
+    delete process.env.KLOCKCODE_HOME_DIR;
+    delete process.env.KLOCKCODE_SESSIONS_DIR;
+    delete process.env.KLOCKCODE_WORKSPACE;
+    delete process.env.KLOCKCODE_PROVIDERS;
+    delete process.env.KLOCKCODE_SERVER_TOKEN;
     await Promise.all([
       rm(routeHome, { recursive: true, force: true }),
       rm(routeSessions, { recursive: true, force: true }),

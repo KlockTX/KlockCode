@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { SessionStore } from "./session-store.js";
 
 async function tempFile(): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-session-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-session-"));
   return path.join(dir, "s.jsonl");
 }
 

@@ -29,7 +29,7 @@ const COMPUTER_CONTROL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0
 /** Claude 官方星标（与模型映射 model-provider-claude 同款 glyph，品牌橙 #ff7043）。 */
 const CLAUDE_MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#181818"/><g transform="translate(11.4,11.4) scale(1.575)"><g fill="#ff7043"><path d="m14.375 6.48.49.28v.209l-.14.489-5.937 1.397-.558-1.387zm0 0"/><path d="m12.155 2.373.683.143.182.224.173.535-.072.342-3.983 5.447L7.81 7.737l3.673-4.82z"/><path d="m8.719 1.522.419-.28.349.14.349.49-.957 5.748-.65-.441-.279-.769.49-4.33z"/><path d="m4.239 1.614.43-.55L4.95 1l.558.081.275.216 2.004 4.442.724 2.11-.848.471-3.231-5.864z"/><path d="m2.154 4.665-.14-.56.42-.488.488.07h.14l2.933 2.165.908.698 1.257.978-.698 1.187-.629-.489-.419-.419-4.05-2.863z"/><path d="M1.316 8.296 1 7.946v-.31l.316-.108 3.562.21 3.491.279-.113.695-6.66-.346z"/><path d="M3.411 11.931h-.698l-.278-.32v-.382l1.186-.838 4.82-3.068.487.833z"/><path d="m4.738 13.883-.28.07-.418-.21.07-.35 4.12-5.446.558.768-3.072 4.05z"/><path d="m8.23 14.581-.21.28-.419.14-.349-.28-.21-.42L8.09 8.646l.629.07z"/><path d="M11.791 13.045v.558l-.07.21-.279.14-.489-.066-3.356-4.996 1.331-1.014 1.117 2.025.105.733z"/><path d="m13.398 12.207.07.349-.21.279-.21-.07-1.187-.838-1.815-1.606-1.397-.978.419-1.326.698.419.42.768z"/><path d="m12.49 8.645 1.746.14.419.28.279.418v.302l-.768.327-3.911-.978-1.606-.07.419-1.466 1.117.838z"/></g></g></svg>`;
 
-const CC_HOOKS_DETAIL = `把 **Claude Code 生态的 hooks 脚本**桥接进 MeowCode：读取 Claude Code 的 settings.json，按相同的事件语义与退出码约定执行你现成的 hook 脚本，无需改写。
+const CC_HOOKS_DETAIL = `把 **Claude Code 生态的 hooks 脚本**桥接进 KlockCode：读取 Claude Code 的 settings.json，按相同的事件语义与退出码约定执行你现成的 hook 脚本，无需改写。
 
 ## 读取的配置
 
@@ -41,7 +41,7 @@ const CC_HOOKS_DETAIL = `把 **Claude Code 生态的 hooks 脚本**桥接进 Meo
 
 ## 事件映射
 
-| Claude Code 事件 | MeowCode hook | 行为 |
+| Claude Code 事件 | KlockCode hook | 行为 |
 | --- | --- | --- |
 | \`PreToolUse\` | \`tool_call\` | 退出码 2 阻止工具执行（stderr 作为原因返回给模型）；stdout JSON \`permissionDecision: deny\` 同样阻止；\`matcher\` 正则匹配工具名 |
 | \`PostToolUse\` | \`tool_result\` | block 决策退化为在工具输出后附注原因（工具已执行，无法撤销） |
@@ -90,8 +90,8 @@ const EXTENSION_AUTHORING_DETAIL = `让 agent 直接帮你**新建技能或插�
 
 ## 它能做什么
 
-- **创建技能**（\`create_skill\`）：把一套流程或知识写成 \`SKILL.md\`，安装到 \`~/.meowcode/skills/<id>/\`。创建后出现在输入框 \`/\` 面板与「我的」，下一轮对话起进入技能索引。
-- **创建插件**（\`create_plugin\`）：生成单文件插件，安装到 \`~/.meowcode/plugins/<id>.ts\`，写入后热重载插件系统，新工具下一轮即可调用。可在「已加载插件」与「我的」看到。
+- **创建技能**（\`create_skill\`）：把一套流程或知识写成 \`SKILL.md\`，安装到 \`~/.klockcode/skills/<id>/\`。创建后出现在输入框 \`/\` 面板与「我的」，下一轮对话起进入技能索引。
+- **创建插件**（\`create_plugin\`）：生成单文件插件，安装到 \`~/.klockcode/plugins/<id>.ts\`，写入后热重载插件系统，新工具下一轮即可调用。可在「已加载插件」与「我的」看到。
 
 ## 安全边界
 
@@ -109,7 +109,7 @@ export const BUILTIN_PLUGIN_META: Record<string, BuiltinPluginMeta> = {
   "claude-code-hooks": {
     displayName: "Claude Code hooks 桥接",
     description:
-      "读取 ~/.claude 与工作区 .claude 下的 settings.json，把 Claude Code 生态的 hook 脚本桥接进 MeowCode：PreToolUse / PostToolUse / UserPromptSubmit / Stop / SessionStart 五个事件，退出码与 JSON stdout 语义与 Claude Code 一致。脚本即配即用，不需要时在插件页停用。",
+      "读取 ~/.claude 与工作区 .claude 下的 settings.json，把 Claude Code 生态的 hook 脚本桥接进 KlockCode：PreToolUse / PostToolUse / UserPromptSubmit / Stop / SessionStart 五个事件，退出码与 JSON stdout 语义与 Claude Code 一致。脚本即配即用，不需要时在插件页停用。",
     iconSvg: CLAUDE_MARK_SVG,
     detail: CC_HOOKS_DETAIL,
     tags: ["claude-code", "hooks"],
@@ -125,7 +125,7 @@ export const BUILTIN_PLUGIN_META: Record<string, BuiltinPluginMeta> = {
   "extension-authoring": {
     displayName: "技能与插件创作",
     description:
-      "让 AI 直接帮你新建技能或插件：技能写入 ~/.meowcode/skills 并即刻可用，插件写入 ~/.meowcode/plugins 后热重载加载。插件是任意代码，创建前会弹审批。",
+      "让 AI 直接帮你新建技能或插件：技能写入 ~/.klockcode/skills 并即刻可用，插件写入 ~/.klockcode/plugins 后热重载加载。插件是任意代码，创建前会弹审批。",
     iconSvg: EXTENSION_AUTHORING_SVG,
     detail: EXTENSION_AUTHORING_DETAIL,
     tags: ["skill", "plugin", "authoring"],

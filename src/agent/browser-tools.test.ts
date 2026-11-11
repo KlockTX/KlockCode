@@ -88,9 +88,9 @@ describe("executeBrowserTool", () => {
     const result = await executeBrowserTool("browser_screenshot", {}, host, { keepImages: false });
     expect(result.ok).toBe(true);
     expect(result.images).toBeUndefined();
-    expect(result.output).toContain("meowcode-screenshots");
+    expect(result.output).toContain("klockcode-screenshots");
     const file = result.output.split("\n").at(-1) ?? "";
-    expect(file).toContain("meowcode-screenshots");
+    expect(file).toContain("klockcode-screenshots");
     await expect(fs.stat(file)).resolves.toBeTruthy();
   });
 

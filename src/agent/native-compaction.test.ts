@@ -65,7 +65,7 @@ const responsesProvider = (baseUrl: string, overrides: Partial<ProviderConfig> =
 
 /** 造一段足够长的历史，越过 Anthropic 的 50000 触发下限。 */
 const longHistory = (): ChatMessage[] => [
-  { role: "system", content: "You are MeowCode." },
+  { role: "system", content: "You are KlockCode." },
   { role: "user", content: "refactor the parser carefully. ".repeat(12_000) },
   { role: "assistant", content: "working on it" },
   { role: "user", content: "continue" },

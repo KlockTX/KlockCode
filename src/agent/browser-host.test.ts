@@ -35,15 +35,15 @@ describe("createBrowserHostFromEnv", () => {
   });
 
   it("rejects non-loopback or invalid hosts", () => {
-    expect(createBrowserHostFromEnv({ MEOWCODE_BROWSER_HOST: "http://10.0.0.5:1234" })).toBeUndefined();
-    expect(createBrowserHostFromEnv({ MEOWCODE_BROWSER_HOST: "ftp://127.0.0.1:1" })).toBeUndefined();
-    expect(createBrowserHostFromEnv({ MEOWCODE_BROWSER_HOST: "not a url" })).toBeUndefined();
+    expect(createBrowserHostFromEnv({ KLOCKCODE_BROWSER_HOST: "http://10.0.0.5:1234" })).toBeUndefined();
+    expect(createBrowserHostFromEnv({ KLOCKCODE_BROWSER_HOST: "ftp://127.0.0.1:1" })).toBeUndefined();
+    expect(createBrowserHostFromEnv({ KLOCKCODE_BROWSER_HOST: "not a url" })).toBeUndefined();
   });
 
   it("accepts loopback hosts", async () => {
-    const client = createBrowserHostFromEnv({ MEOWCODE_BROWSER_HOST: "http://127.0.0.1:9/" });
+    const client = createBrowserHostFromEnv({ KLOCKCODE_BROWSER_HOST: "http://127.0.0.1:9/" });
     expect(client).toBeDefined();
-    const localhost = createBrowserHostFromEnv({ MEOWCODE_BROWSER_HOST: "http://localhost:9" });
+    const localhost = createBrowserHostFromEnv({ KLOCKCODE_BROWSER_HOST: "http://localhost:9" });
     expect(localhost).toBeDefined();
   });
 });

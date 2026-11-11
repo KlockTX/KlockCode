@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { PatchError, applyPatch, parsePatch, patchPaths } from "./patch.js";
 
 async function workspace(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), "meowcode-patch-"));
+  return mkdtemp(path.join(tmpdir(), "klockcode-patch-"));
 }
 
 const UPDATE_PATCH = `*** Begin Patch

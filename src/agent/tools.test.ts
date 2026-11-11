@@ -12,6 +12,7 @@ import {
   executeTool,
   deferredDynamicToolNames,
   hasDynamicTool,
+  knownToolNames,
   listDynamicToolDefinitions,
   registerDynamicTool,
   truncateMiddle,
@@ -33,28 +34,28 @@ const hasPowerShell51 = process.platform === "win32" && existsSync(POWER_SHELL_5
 
 /** Windows PowerShell 5.1 的 $OutputEncoding/Python 默认编码与 pwsh 7 不同，用例必须锁 5.1。 */
 async function withPowerShell51<T>(run: () => Promise<T>): Promise<T> {
-  const previous = process.env.MEOWCODE_POWERSHELL;
-  process.env.MEOWCODE_POWERSHELL = POWER_SHELL_51;
+  const previous = process.env.KLOCKCODE_POWERSHELL;
+  process.env.KLOCKCODE_POWERSHELL = POWER_SHELL_51;
   try {
     return await run();
   } finally {
-    if (previous === undefined) delete process.env.MEOWCODE_POWERSHELL;
-    else process.env.MEOWCODE_POWERSHELL = previous;
+    if (previous === undefined) delete process.env.KLOCKCODE_POWERSHELL;
+    else process.env.KLOCKCODE_POWERSHELL = previous;
   }
 }
 
 describe("tools", () => {
   it("lists files while ignoring build directories and app artifacts", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "README.md"), "hello");
     await writeFile(path.join(root, "dist"), "hidden");
-    await mkdir(path.join(root, ".meowcode", "tool-output"), { recursive: true });
-    await writeFile(path.join(root, ".meowcode", "tool-output", "log.txt"), "hidden");
+    await mkdir(path.join(root, ".klockcode", "tool-output"), { recursive: true });
+    await writeFile(path.join(root, ".klockcode", "tool-output", "log.txt"), "hidden");
     const result = await executeTool("list_dir", { path: "." }, root);
     expect(result.ok).toBe(true);
     expect(result.output).toContain("README.md");
     expect(result.output).not.toContain("dist");
-    expect(result.output).not.toContain(".meowcode");
+    expect(result.output).not.toContain(".klockcode");
   });
 
   it("rejects file reads outside the workspace", async () => {
@@ -64,8 +65,8 @@ describe("tools", () => {
   });
 
   it("rejects reads and writes through a junction outside the workspace", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-outside-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-outside-"));
     try {
       await writeFile(path.join(outside, "secret.txt"), "secret");
       await symlink(outside, path.join(root, "escape"), linkType);
@@ -103,7 +104,7 @@ describe("tools", () => {
         AWS_SECRET_ACCESS_KEY: "secret",
         OPENAI_API_KEY: "secret",
         SESSION_SECRET: "secret",
-        MEOWCODE_SERVER_TOKEN: "secret",
+        KLOCKCODE_SERVER_TOKEN: "secret",
       }),
     ).toEqual({
       PATH: "C:\\Windows",
@@ -112,26 +113,26 @@ describe("tools", () => {
     });
   });
 
-  it("strips MeowCode env vars from command environments", async () => {    expect(
+  it("strips KlockCode env vars from command environments", async () => {    expect(
       commandEnv({
-        MEOWCODE_PROVIDERS: "secret",
-        meowcode_server_token: "secret",
+        KLOCKCODE_PROVIDERS: "secret",
+        klockcode_server_token: "secret",
         MEOW_TEST_VISIBLE: "visible",
         Path: "C:\\Windows",
       }),
     ).toEqual({ MEOW_TEST_VISIBLE: "visible", Path: "C:\\Windows" });
 
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
-    const previousSecret = process.env.MEOWCODE_PROVIDERS;
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
+    const previousSecret = process.env.KLOCKCODE_PROVIDERS;
     const previousVisible = process.env.MEOW_TEST_VISIBLE;
-    process.env.MEOWCODE_PROVIDERS = "secret-provider-key";
+    process.env.KLOCKCODE_PROVIDERS = "secret-provider-key";
     process.env.MEOW_TEST_VISIBLE = "visible-value";
     try {
       const result = await executeTool(
         "run_command",
         {
           command:
-            "Write-Output ('P=' + $env:MEOWCODE_PROVIDERS); Write-Output ('V=' + $env:MEOW_TEST_VISIBLE)",
+            "Write-Output ('P=' + $env:KLOCKCODE_PROVIDERS); Write-Output ('V=' + $env:MEOW_TEST_VISIBLE)",
         },
         root,
       );
@@ -139,8 +140,8 @@ describe("tools", () => {
       expect(result.output).not.toContain("secret-provider-key");
       expect(result.output).toContain("visible-value");
     } finally {
-      if (previousSecret === undefined) delete process.env.MEOWCODE_PROVIDERS;
-      else process.env.MEOWCODE_PROVIDERS = previousSecret;
+      if (previousSecret === undefined) delete process.env.KLOCKCODE_PROVIDERS;
+      else process.env.KLOCKCODE_PROVIDERS = previousSecret;
       if (previousVisible === undefined) delete process.env.MEOW_TEST_VISIBLE;
       else process.env.MEOW_TEST_VISIBLE = previousVisible;
       await rm(root, { recursive: true, force: true });
@@ -148,8 +149,8 @@ describe("tools", () => {
   });
 
   it("reads and writes outside the workspace in full access mode", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-outside-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-outside-"));
     const file = path.join(outside, "outside.txt");
 
     const write = await executeTool(
@@ -173,7 +174,7 @@ describe("tools", () => {
   });
 
   it("ends a command promptly when aborted", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const controller = new AbortController();
     const started = Date.now();
     const pending = executeTool("run_command", { command: "Start-Sleep -Seconds 30" }, root, {
@@ -188,7 +189,7 @@ describe("tools", () => {
   });
 
   it("keeps Chinese command output readable", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const result = await executeTool("run_command", { command: "Write-Output '中文测试'" }, root);
     expect(result.ok).toBe(true);
     expect(result.output).toContain("中文测试");
@@ -196,7 +197,7 @@ describe("tools", () => {
   });
 
   it.skipIf(!hasPowerShell51)("keeps Chinese text piped into native commands", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     try {
       const result = await withPowerShell51(() =>
         executeTool("run_command", { command: '"中文测试" | findstr .' }, root),
@@ -210,7 +211,7 @@ describe("tools", () => {
   });
 
   it("forces UTF-8 Python env for commands", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const previous = process.env.PYTHONUTF8;
     process.env.PYTHONUTF8 = "0";
     try {
@@ -229,7 +230,7 @@ describe("tools", () => {
   });
 
   it("truncates long output", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const result = await executeTool("run_command", { command: "1..1000" }, root);
     expect(result.output.length).toBeLessThanOrEqual(20_100);
   });
@@ -244,17 +245,17 @@ describe("tools", () => {
   });
 
   it("persists the captured command output for follow-up reads", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const result = await executeTool("run_command", { command: "'x' * 20000" }, root);
     expect(result.ok).toBe(true);
-    expect(result.output).toContain("the log is saved to .meowcode/tool-output/");
-    expect(result.spilled).toContain(".meowcode/tool-output/run_command-");
+    expect(result.output).toContain("the log is saved to .klockcode/tool-output/");
+    expect(result.spilled).toContain(".klockcode/tool-output/run_command-");
     const full = await readFile(path.join(root, result.spilled!), "utf8");
     expect(full.length).toBeGreaterThanOrEqual(20_000);
   });
 
   it("reports a native command's exit code, not PowerShell's own", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     // PowerShell 自己永远退 0；不把 $LASTEXITCODE 变成进程退出码的话，
     // 失败的 git/npm/test 会被当成成功（模型据此宣布"构建通过"）
     const green = await executeTool("run_command", { command: "cmd /c exit 0" }, root);
@@ -264,14 +265,14 @@ describe("tools", () => {
   });
 
   it("hints at the PowerShell equivalent when a bash-style command is used", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const result = await executeTool("run_command", { command: "export FOO=bar" }, root);
     expect(result.output).toContain("[hint]");
     expect(result.output).toMatch(/PowerShell doesn't have that command|env vars/);
   });
 
   it("strips ANSI escapes out of command output", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const result = await executeTool(
       "run_command",
       { command: "$e=[char]27; Write-Output ($e + '[31mred' + $e + '[0m done')" },
@@ -283,7 +284,7 @@ describe("tools", () => {
   });
 
   it("does not wait for stdin when a command prompts for input", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const started = Date.now();
     const result = await executeTool("run_command", { command: "Read-Host 'name'" }, root);
     // 以前 stdin 从不关闭，这里会挂满 120s 才被杀
@@ -292,7 +293,7 @@ describe("tools", () => {
   });
 
   it("defaults file reads to 400 lines and reports the next offset", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const content = Array.from({ length: 450 }, (_, index) => `line ${index + 1}`).join("\n");
     await writeFile(path.join(root, "long.txt"), content);
 
@@ -304,7 +305,7 @@ describe("tools", () => {
   });
 
   it("saves oversized reads to disk and previews head and tail", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     // 600 行 × 每行约 40 字符 ≈ 24KB，超过 8KB 落盘阈值
     const content = Array.from(
       { length: 600 },
@@ -323,13 +324,13 @@ describe("tools", () => {
     expect(result.output).toMatch(/\[\d+ lines omitted; full content of big\.txt saved to/);
     // 落盘文件确实存在且内容是原文（无行号前缀，行号与原文件对齐）
     const savedPath = result.output.match(/saved to (\S+?) —/)?.[1] ?? "";
-    expect(savedPath).toContain(".meowcode/tool-output/read_file-");
+    expect(savedPath).toContain(".klockcode/tool-output/read_file-");
     const saved = await readFile(path.join(root, ...savedPath.split("/")), "utf8");
     expect(saved).toBe(content);
   });
 
   it("按 token 截断中文读取，不按字符放大四倍", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const content = Array.from(
       { length: 600 },
       (_, index) => `第${index + 1}行：${"中".repeat(40)}`,
@@ -345,7 +346,7 @@ describe("tools", () => {
   });
 
   it("keeps small files fully inline without saving to disk", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const content = Array.from({ length: 450 }, (_, index) => `line ${index + 1}`).join("\n");
     await writeFile(path.join(root, "medium.txt"), content);
 
@@ -357,7 +358,7 @@ describe("tools", () => {
   });
 
   it("respects an explicit small limit while still showing the tail", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const content = Array.from(
       { length: 600 },
       (_, index) => `row ${index + 1} ${"x".repeat(30)}`,
@@ -375,7 +376,7 @@ describe("tools", () => {
 });
 
 describe("line-ending and encoding safe file tools", () => {
-  const tempRoot = async () => await mkdtemp(path.join(tmpdir(), "meowcode-text-"));
+  const tempRoot = async () => await mkdtemp(path.join(tmpdir(), "klockcode-text-"));
 
   /** 约 5.4MB，超过 MAX_TEXT_BYTES */
   const oversizedText = () => `${Array.from({ length: 500_000 }, (_, index) => `row ${index}`).join("\n")}\n`;
@@ -519,7 +520,7 @@ describe("line-ending and encoding safe file tools", () => {
 
 
 describe("efficient editing: multi_edit, receipts, hints, rewrite guard", () => {
-  const tempRoot = async () => await mkdtemp(path.join(tmpdir(), "meowcode-edit-"));
+  const tempRoot = async () => await mkdtemp(path.join(tmpdir(), "klockcode-edit-"));
 
   it("applies several edits in one call and returns the combined diff", async () => {
     const root = await tempRoot();
@@ -624,7 +625,7 @@ describe("efficient editing: multi_edit, receipts, hints, rewrite guard", () => 
 
   it("rejects a cross-file multi_edit that reaches outside the workspace", async () => {
     const root = await tempRoot();
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-outside-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-outside-"));
     await writeFile(path.join(root, "a.ts"), "const a = 1;\n");
     await writeFile(path.join(outside, "secret.ts"), "const s = 1;\n");
 
@@ -732,21 +733,21 @@ describe("efficient editing: multi_edit, receipts, hints, rewrite guard", () => 
     expect(result.ok).toBe(true);
     const { readdir } = await import("node:fs/promises");
     const names = await readdir(root);
-    expect(names.filter((name) => name.includes(".meowcode-"))).toHaveLength(0);
+    expect(names.filter((name) => name.includes(".klockcode-"))).toHaveLength(0);
     expect(names).toContain("atomic.txt");
   });
 });
 
 describe("structured search output degradation", () => {
   it("keeps short output untouched", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const short = "src/a.ts:1: const value = 1;";
     const result = await degradeStructuredOutput(root, "grep", short);
     expect(result).toEqual({ output: short, truncated: false });
   });
 
   it("spills oversized results and points at read_file for paging", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const body = Array.from(
       { length: 600 },
       (_, index) => `src/file${index}.ts:${index + 1}: const value = ${index};`,
@@ -756,16 +757,16 @@ describe("structured search output degradation", () => {
     expect(result.truncated).toBe(true);
     // 预算按 token 计：2k 预算下英文约 8k 字符，不能再按旧的 5k 字符断言
     expect(estimateTokens(result.output)).toBeLessThanOrEqual(2_300);
-    expect(result.output).toContain("full result saved to .meowcode/tool-output/");
+    expect(result.output).toContain("full result saved to .klockcode/tool-output/");
     expect(result.output).toContain("read_file (offset/limit)");
     // 落盘的是完整内容，模型可以分页续读
-    expect(result.spilled).toContain(".meowcode/tool-output/grep-");
+    expect(result.spilled).toContain(".klockcode/tool-output/grep-");
     const full = await readFile(path.join(root, result.spilled!), "utf8");
     expect(full).toBe(body);
   });
 
   it("spills the untruncated body when the inline text was already capped", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const full = Array.from(
       { length: 600 },
       (_, index) => `src/file${index}.ts:${index + 1}: const value = ${index};`,
@@ -781,7 +782,7 @@ describe("structured search output degradation", () => {
   });
 
   it("keeps the trailing truncation notice when degrading", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const body = Array.from({ length: 600 }, (_, index) => `src/f${index}.ts:${index}: match`).join("\n");
     const notice = "\n... [truncated: showing first 100 matches; narrow the pattern]";
 
@@ -790,7 +791,7 @@ describe("structured search output degradation", () => {
   });
 
   it("degrades oversized grep results through executeTool", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(
       path.join(root, "big.ts"),
       Array.from({ length: 600 }, (_, index) => `const value${index} = ${index};`).join("\n"),
@@ -799,7 +800,7 @@ describe("structured search output degradation", () => {
     const result = await executeTool("grep", { pattern: "const value", maxResults: 500 }, root);
     expect(result.ok).toBe(true);
     expect(result.truncated).toBe(true);
-    expect(result.output).toContain("full result saved to .meowcode/tool-output/");
+    expect(result.output).toContain("full result saved to .klockcode/tool-output/");
   });
 });
 
@@ -810,7 +811,7 @@ describe("read_file images", () => {
   );
 
   it("returns the picture itself when the model accepts images", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "shot.png"), png);
 
     const result = await executeTool("read_file", { path: "shot.png" }, root, { vision: true });
@@ -819,7 +820,7 @@ describe("read_file images", () => {
   });
 
   it("still rejects image files for text-only models", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "shot.png"), png);
 
     const result = await executeTool("read_file", { path: "shot.png" }, root);
@@ -827,7 +828,7 @@ describe("read_file images", () => {
   });
 
   it("downsizes an under-4MB image by long edge", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "wide.png"), png);
     const requests: Array<{ path: string; maxEdge?: number }> = [];
 
@@ -855,7 +856,7 @@ describe("read_file images", () => {
   });
 
   it("keeps the original bytes for a small image even when a resizer is available", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "small.png"), png);
 
     const result = await executeTool("read_file", { path: "small.png" }, root, {
@@ -876,7 +877,7 @@ describe("read_file images", () => {
   });
 
   it("auto-downsizes oversized images instead of rejecting them", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "big.png"), Buffer.alloc(4 * 1024 * 1024 + 64, 1));
     const requests: Array<{ path: string; maxBytes?: number }> = [];
 
@@ -905,7 +906,7 @@ describe("read_file images", () => {
   });
 
   it("unloads oversized images with an actionable note when no resizer is available", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "big.png"), Buffer.alloc(4 * 1024 * 1024 + 64, 1));
 
     const result = await executeTool("read_file", { path: "big.png" }, root, { vision: true });
@@ -918,7 +919,7 @@ describe("read_file images", () => {
   });
 
   it("keeps the note actionable when downscaling fails", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "big.jpg"), Buffer.alloc(4 * 1024 * 1024 + 64, 1));
 
     const result = await executeTool("read_file", { path: "big.jpg" }, root, {
@@ -935,7 +936,7 @@ describe("read_file images", () => {
 
 describe("read_many batch reads", () => {
   it("reads several files with per-file sections and line numbers", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "a.ts"), "alpha\nbeta");
     await writeFile(path.join(root, "b.ts"), "gamma");
     const result = await executeTool("read_many", { paths: ["a.ts", "b.ts"] }, root);
@@ -949,7 +950,7 @@ describe("read_many batch reads", () => {
   });
 
   it("dedupes paths and reports missing files without failing the batch", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "a.ts"), "alpha");
     const result = await executeTool(
       "read_many",
@@ -964,7 +965,7 @@ describe("read_many batch reads", () => {
   });
 
   it("skips files that no longer fit the shared budget and hints read_file", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const big = Array.from({ length: 3_000 }, (_, index) => `line ${index} padding padding`).join("\n");
     await writeFile(path.join(root, "big.ts"), big);
     await writeFile(path.join(root, "small.ts"), "tiny");
@@ -976,7 +977,7 @@ describe("read_many batch reads", () => {
   });
 
   it("previews and spills files that no longer fit the shared budget", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     const body = Array.from({ length: 400 }, (_, index) => `line ${index} padding padding padding`).join("\n");
     const names = Array.from({ length: 12 }, (_, index) => `f${index}.ts`);
     for (const name of names) await writeFile(path.join(root, name), body);
@@ -984,13 +985,13 @@ describe("read_many batch reads", () => {
     const result = await executeTool("read_many", { paths: names }, root);
     expect(result.ok).toBe(true);
     // 预算耗尽后不再只回一句「自己用 read_file」：给预览 + 全文落盘
-    expect(result.output).toContain("full content saved to .meowcode/tool-output/read_many-");
+    expect(result.output).toContain("full content saved to .klockcode/tool-output/read_many-");
     expect(result.output).toContain("=== f11.ts ===");
     expect(result.output.length).toBeLessThanOrEqual(20_100);
   });
 
   it("returns readRanges and short-circuits fully covered files", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "a.ts"), "alpha\nbeta");
     await writeFile(path.join(root, "b.ts"), "gamma");
 
@@ -1010,7 +1011,7 @@ describe("read_many batch reads", () => {
   });
 
   it("treats ./a.ts and a.ts as the same file", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "a.ts"), "alpha");
     const result = await executeTool("read_many", { paths: ["./a.ts", "a.ts"] }, root);
     expect(result.output.match(/=== \.\/a\.ts ===/g)).toHaveLength(1);
@@ -1020,7 +1021,7 @@ describe("read_many batch reads", () => {
   });
 
   it("routes image files to read_file instead of inlining base64", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "pic.png"), "fake-png");
     const result = await executeTool("read_many", { paths: ["pic.png"] }, root);
     expect(result.ok).toBe(true);
@@ -1028,7 +1029,7 @@ describe("read_many batch reads", () => {
   });
 
   it("registers read state so a later edit_file detects external changes", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-"));
     await writeFile(path.join(root, "a.ts"), "alpha");
     await executeTool("read_many", { paths: ["a.ts"] }, root);
     await writeFile(path.join(root, "a.ts"), "alpha\nexternal change");
@@ -1079,7 +1080,7 @@ function buildPdf(pages: string[]): Buffer {
 
 describe("read_file PDF", () => {
   it("extracts the text layer with page markers and honours pages=", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-pdf-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-pdf-"));
     await writeFile(
       path.join(root, "doc.pdf"),
       buildPdf(["alpha ".repeat(30), "beta ".repeat(30), "gamma ".repeat(30)]),
@@ -1093,7 +1094,7 @@ describe("read_file PDF", () => {
   });
 
   it("attaches a scanned PDF as a document when the model supports pdf input", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-pdf-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-pdf-"));
     await writeFile(path.join(root, "scan.pdf"), buildPdf(["", ""]));
     const result = await executeTool(
       "read_file",
@@ -1111,7 +1112,7 @@ describe("read_file PDF", () => {
   });
 
   it("returns an actionable hint instead of attaching when pdf input is off", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-pdf-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-pdf-"));
     await writeFile(path.join(root, "scan.pdf"), buildPdf(["", ""]));
     const result = await executeTool("read_file", { path: "scan.pdf" }, root);
     expect(result.ok).toBe(true);
@@ -1121,7 +1122,7 @@ describe("read_file PDF", () => {
   });
 
   it("points read_many at read_file for PDFs", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-pdf-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-pdf-"));
     await writeFile(path.join(root, "doc.pdf"), buildPdf(["alpha ".repeat(30)]));
     const result = await executeTool("read_many", { paths: ["doc.pdf"] }, root);
     expect(result.ok).toBe(true);
@@ -1131,7 +1132,7 @@ describe("read_file PDF", () => {
 
 describe("read_video guards", () => {
   it("refuses to render frames for a text-only model", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-video-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-video-"));
     const result = await executeTool("read_video", { path: "clip.mp4", mode: "storyboard" }, root);
     expect(result.ok).toBe(false);
     expect(result.output).toContain("text-only");
@@ -1245,7 +1246,7 @@ describe("dynamic tool definitions", () => {
 
 describe("memory tools", () => {
   it("writes, reads and deletes a project memory with its index", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-mem-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-mem-"));
     try {
       const write = await executeTool(
         "memory_write",
@@ -1270,7 +1271,7 @@ describe("memory tools", () => {
       expect(read.output).toContain("description: 构建");
 
       const index = await readFile(
-        path.join(root, ".meowcode", "memory", "MEMORY.md"),
+        path.join(root, ".klockcode", "memory", "MEMORY.md"),
         "utf8",
       );
       expect(index).toContain("- [build-setup](build-setup.md) — 构建走 pnpm");
@@ -1294,7 +1295,7 @@ describe("memory tools", () => {
   });
 
   it("rejects bad scope, bad name and empty content", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-tools-mem-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-tools-mem-"));
     try {
       const scope = await executeTool(
         "memory_write",
@@ -1387,5 +1388,19 @@ describe("decodeCommandOutput", () => {
 
   it("decodes pure ASCII without a fallback", () => {
     expect(decodeCommandOutput(Buffer.from("plain ascii\n", "latin1"))).toBe("plain ascii\n");
+  });
+});
+
+describe("knownToolNames", () => {
+  it("覆盖契约表全集：按宿主注入的工具也算已知", async () => {
+    const { BUILTIN_TOOL_CONTRACTS } = await import("./tool-contract.js");
+    const known = knownToolNames();
+    // 浏览器 7 件套只在桌面端挂上 host 时才注册定义，但名字是真实存在的。
+    // 语义 lint 用 knownToolNames 判 tool-unknown：漏认会让用户照着提示删掉合法白名单。
+    for (const name of Object.keys(BUILTIN_TOOL_CONTRACTS)) {
+      expect(known.has(name), `${name} 应在 knownToolNames 里`).toBe(true);
+    }
+    expect(known.has("browser_navigate")).toBe(true);
+    expect(known.has("admit")).toBe(true);
   });
 });

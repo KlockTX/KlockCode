@@ -7,7 +7,7 @@ import type { AgentProfileId, AgentRole } from "./types.js";
 /**
  * 可编辑架构图文档：
  * 一张 节点（tier / gate / role）+ 边（tier-gate 带序 / gate-role）的图，
- * 存放在工作区 `.meowcode/harness.json`，用户可随意增删改；
+ * 存放在工作区 `.klockcode/harness.json`，用户可随意增删改；
  * WorkflowRuntime 按这张图驱动门禁序列、角色绑定与失败回跳。
  *
  * 校验只管结构契约（版本 / id 唯一 / 边端点存在 / loop-to 目标存在），
@@ -122,7 +122,7 @@ const BUILTIN_ROLE_IDS: ReadonlySet<string> = new Set(AGENT_ROLE_NAMES);
 
 /**
  * 结构校验（metis 同款原则：只管结构，不管语义删减）。
- * 额外仅一条 MeowCode 特有约束：role 节点 id 必须命中内置角色注册表。
+ * 额外仅一条 KlockCode 特有约束：role 节点 id 必须命中内置角色注册表。
  */
 export function validateHarnessDocument(doc: unknown): HarnessValidationResult {
   const errors: string[] = [];
@@ -377,7 +377,7 @@ function minimalHarnessSeed(): HarnessDocument {
     edges,
     metadata: {
       description:
-        "MeowCode 内置极简 Agent 架构：两个工具（read_file / run_command），无门禁，只有通用 / Explore 两个子 Agent",
+        "KlockCode 内置极简 Agent 架构：两个工具（read_file / run_command），无门禁，只有通用 / Explore 两个子 Agent",
     },
   };
 }
@@ -612,7 +612,7 @@ function complexHarnessSeed(): HarnessDocument {
     edges,
     metadata: {
       description:
-        "MeowCode 内置复杂 Agent 架构：T1 走 G0→G4→G5→G6→goal-check，T2 走 G0→G1→G2→G3.5→G4→G5→G6→G7→sweep→goal-check",
+        "KlockCode 内置复杂 Agent 架构：T1 走 G0→G4→G5→G6→goal-check，T2 走 G0→G1→G2→G3.5→G4→G5→G6→G7→sweep→goal-check",
     },
   };
 }
@@ -705,7 +705,7 @@ export function builtinHarnessSeed(profile: AgentProfileId = "standard"): Harnes
     edges,
     metadata: {
       description:
-        "MeowCode 内置标准 Agent 架构：完整拓扑（子 Agent + T0/T1/T2 门禁；T1/T2 经 G4→G5→G6）",
+        "KlockCode 内置标准 Agent 架构：完整拓扑（子 Agent + T0/T1/T2 门禁；T1/T2 经 G4→G5→G6）",
     },
   };
 }
@@ -779,9 +779,9 @@ export function completeHarnessRoles(
   return { ...doc, nodes, edges };
 }
 
-/** 每个主 Agent 一张独立架构图：.meowcode/harness/<id>.json（id 也可以是自定义架构） */
+/** 每个主 Agent 一张独立架构图：.klockcode/harness/<id>.json（id 也可以是自定义架构） */
 export function harnessFilePath(cwd: string, id: string = "standard"): string {
-  return path.join(cwd, ".meowcode", HARNESS_DIR_NAME, `${id}.json`);
+  return path.join(cwd, ".klockcode", HARNESS_DIR_NAME, `${id}.json`);
 }
 
 /** 架构图 id 允许的形态：小写字母数字与连字符（自定义架构用 custom-1 / custom-2 …） */
@@ -809,7 +809,7 @@ export async function listHarnessArchitectures(cwd: string): Promise<HarnessArch
   const summaries: HarnessArchitectureSummary[] = (["standard", "minimal", "complex"] as const).map(
     (id) => ({ id, name: null, builtin: true }),
   );
-  const dir = path.join(cwd, ".meowcode", HARNESS_DIR_NAME);
+  const dir = path.join(cwd, ".klockcode", HARNESS_DIR_NAME);
   let entries: string[] = [];
   try {
     entries = await fs.readdir(dir);
@@ -861,7 +861,7 @@ export async function createHarnessArchitecture(
   cwd: string,
   options: { name?: string; cloneFrom?: string } = {},
 ): Promise<{ id: string; name: string; document: HarnessDocument }> {
-  const dir = path.join(cwd, ".meowcode", HARNESS_DIR_NAME);
+  const dir = path.join(cwd, ".klockcode", HARNESS_DIR_NAME);
   await fs.mkdir(dir, { recursive: true });
   let seq = 1;
   let id = `custom-${seq}`;
@@ -935,9 +935,116 @@ export async function deleteHarnessArchitecture(cwd: string, id: string): Promis
   }
 }
 
-/** 旧版单图路径：升级前的 .meowcode/harness.json，作为标准 Agent 的兼容来源 */
+/** 旧版单图路径：升级前的 .klockcode/harness.json，作为标准 Agent 的兼容来源 */
 export function legacyHarnessFilePath(cwd: string): string {
-  return path.join(cwd, ".meowcode", HARNESS_FILE_NAME);
+  return path.join(cwd, ".klockcode", HARNESS_FILE_NAME);
+}
+
+/** 架构图的读取候选：本档位的图，标准档额外回退旧版单图（.klockcode/harness.json） */
+function harnessCandidates(cwd: string, id: string): string[] {
+  const candidates = [harnessFilePath(cwd, id)];
+  if (id === "standard") candidates.push(legacyHarnessFilePath(cwd));
+  return candidates;
+}
+
+/** 路径 + 修改时间 + 字节数：用来判断磁盘上的图是否被改过（不读内容） */
+function fileSignature(filePath: string, stat: { mtimeMs: number; size: number }): string {
+  return `${filePath}|${stat.mtimeMs}|${stat.size}`;
+}
+
+/**
+ * 架构图来源签名：只做 stat、不读内容，回合边界判定「手改过没有」用。
+ * 两个候选都不存在（用内置种子）时返回 seed:<档位>，所以「新建文件」也算一次变化。
+ */
+export async function harnessSourceSignature(
+  cwd: string,
+  id: string = "standard",
+): Promise<string> {
+  for (const filePath of harnessCandidates(cwd, id)) {
+    try {
+      const stat = await fs.stat(filePath);
+      if (stat.isFile()) return fileSignature(filePath, stat);
+    } catch {
+      // 不存在：正常路径，看下一个候选
+    }
+  }
+  return `seed:${isBuiltinHarnessId(id) ? id : "standard"}`;
+}
+
+/** 一次装载的完整结果：文档 + 来源签名 + 是否因非法而回退种子 */
+export interface HarnessDocumentSnapshot {
+  document: HarnessDocument;
+  /** 见 harnessSourceSignature；回退种子时为 seed:<档位> */
+  signature: string;
+  /** 实际读取的文件；回退种子时为 null */
+  sourcePath: string | null;
+  /**
+   * 文件存在但校验失败（document 已回退内置种子）。
+   * 热重载用这个标记否决覆盖：手改成非法 JSON 不该把正在用的图悄悄换成种子。
+   */
+  invalid: boolean;
+}
+
+/**
+ * 读取工作区架构图 + 来源签名（热重载用）。
+ *
+ * 与旧实现的一处刻意差异：候选文件存在但内容非法时**不再**继续回退下一个候选，
+ * 而是立刻返回 invalid 快照。旧行为会在用户手改坏本档位的图之后悄悄启用旧版单图，
+ * 让「配置没生效」变成静默的事实；现在由调用方决定（首次装载用种子，热重载拒绝覆盖）。
+ */
+export async function readHarnessSnapshot(
+  cwd: string,
+  id: string = "standard",
+): Promise<HarnessDocumentSnapshot> {
+  // 自定义架构（custom-*）在门禁/角色补齐上按标准档位处理
+  const builtin: AgentProfileId = isBuiltinHarnessId(id) ? id : "standard";
+  for (const filePath of harnessCandidates(cwd, id)) {
+    let raw: string;
+    let signature: string;
+    try {
+      const stat = await fs.stat(filePath);
+      if (!stat.isFile()) continue;
+      raw = await fs.readFile(filePath, "utf8");
+      signature = fileSignature(filePath, stat);
+    } catch {
+      // 文件不存在 / 读不了：正常路径，继续下一个候选 / 用内置种子
+      continue;
+    }
+    const fallback = (invalid: boolean): HarnessDocumentSnapshot => ({
+      document: completeHarnessRoles(builtinHarnessSeed(builtin), builtin),
+      signature,
+      sourcePath: filePath,
+      invalid,
+    });
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      console.error(
+        `[klockcode] ignoring invalid harness document (${filePath}):\n- ${(error as Error).message}`,
+      );
+      return fallback(true);
+    }
+    const result = validateHarnessDocument(parsed);
+    if (!result.valid) {
+      console.error(
+        `[klockcode] ignoring invalid harness document (${filePath}):\n- ${result.errors.join("\n- ")}`,
+      );
+      return fallback(true);
+    }
+    return {
+      document: completeHarnessRoles(parsed as HarnessDocument, builtin),
+      signature,
+      sourcePath: filePath,
+      invalid: false,
+    };
+  }
+  return {
+    document: completeHarnessRoles(builtinHarnessSeed(builtin), builtin),
+    signature: `seed:${builtin}`,
+    sourcePath: null,
+    invalid: false,
+  };
 }
 
 /**
@@ -948,25 +1055,7 @@ export async function loadHarnessDocument(
   cwd: string,
   id: string = "standard",
 ): Promise<HarnessDocument> {
-  // 自定义架构（custom-*）在门禁/角色补齐上按标准档位处理
-  const builtin: AgentProfileId = isBuiltinHarnessId(id) ? id : "standard";
-  // 标准 Agent 额外回退到旧版单图（升级前的 .meowcode/harness.json）
-  const candidates = [harnessFilePath(cwd, id)];
-  if (id === "standard") candidates.push(legacyHarnessFilePath(cwd));
-  for (const filePath of candidates) {
-    try {
-      const raw = await fs.readFile(filePath, "utf8");
-      const parsed: unknown = JSON.parse(raw);
-      const result = validateHarnessDocument(parsed);
-      if (result.valid) return completeHarnessRoles(parsed as HarnessDocument, builtin);
-      console.error(
-        `[meowcode] ignoring invalid harness document (${filePath}):\n- ${result.errors.join("\n- ")}`,
-      );
-    } catch {
-      // 文件不存在：正常路径，继续下一个候选 / 用内置种子
-    }
-  }
-  return completeHarnessRoles(builtinHarnessSeed(builtin), builtin);
+  return (await readHarnessSnapshot(cwd, id)).document;
 }
 
 /** 校验并落盘；返回校验结果（invalid 时不写文件）。 */

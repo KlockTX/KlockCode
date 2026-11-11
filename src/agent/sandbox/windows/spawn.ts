@@ -1,6 +1,6 @@
 /**
  * Ported from deepseek-harness packages/subprocess/win32-process/src/process.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: restricted-token spawn
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: restricted-token spawn
  * with the caller's stdio inherited, wrapped in a kill-on-close Job.
  */
 

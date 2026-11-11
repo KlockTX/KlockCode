@@ -1,5 +1,5 @@
 /**
- * Client for the MeowCode Desktop embedded-browser host (loopback HTTP control plane).
+ * Client for the KlockCode Desktop embedded-browser host (loopback HTTP control plane).
  * Browser tools call this; Electron main implements the server while Desktop is running.
  * 无 Desktop 环境（测试 / CLI）时 env 缺失，createBrowserHostFromEnv 返回 undefined。
  */
@@ -142,7 +142,7 @@ export function createHttpBrowserHostClient(options: {
 export function createBrowserHostFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): BrowserHostClient | undefined {
-  const baseUrl = env.MEOWCODE_BROWSER_HOST?.trim();
+  const baseUrl = env.KLOCKCODE_BROWSER_HOST?.trim();
   if (!baseUrl) {
     return undefined;
   }
@@ -159,6 +159,6 @@ export function createBrowserHostFromEnv(
   }
   return createHttpBrowserHostClient({
     baseUrl: baseUrl.replace(/\/$/, ""),
-    token: env.MEOWCODE_BROWSER_HOST_TOKEN?.trim() || undefined,
+    token: env.KLOCKCODE_BROWSER_HOST_TOKEN?.trim() || undefined,
   });
 }

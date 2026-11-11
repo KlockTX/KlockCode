@@ -108,7 +108,7 @@ describe("PluginRegistry.rollbackPlugin", () => {
 describe("PluginRegistry.listDescriptors", () => {
   it("汇总插件元数据与注册清单", () => {
     const registry = new PluginRegistry();
-    registry.addPlugin("p1", "project", "D:/w/.meowcode/plugins/p1.ts");
+    registry.addPlugin("p1", "project", "D:/w/.klockcode/plugins/p1.ts");
     registry.addTool("p1", makeTool("tool_x"));
     registry.addCommand("p1", { name: "cmd_x", run: () => "x" });
     registry.addHook("p1", "session_start", () => undefined);
@@ -116,7 +116,7 @@ describe("PluginRegistry.listDescriptors", () => {
     expect(descriptors).toEqual([
       {
         id: "p1",
-        path: "D:/w/.meowcode/plugins/p1.ts",
+        path: "D:/w/.klockcode/plugins/p1.ts",
         source: "project",
         enabled: true,
         toolNames: ["tool_x"],

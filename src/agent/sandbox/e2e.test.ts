@@ -10,7 +10,7 @@ import { probeSandbox, revokeSandboxGrantsRemote } from "./runner-client.js";
 import type { SandboxSettings } from "./types.js";
 import { executeTool } from "../tools.js";
 
-const enabled = process.platform === "win32" && process.env.MEOWCODE_SANDBOX_E2E === "1";
+const enabled = process.platform === "win32" && process.env.KLOCKCODE_SANDBOX_E2E === "1";
 const distRunner = fileURLToPath(
   new URL("../../../dist/agent/sandbox/windows/runner.js", import.meta.url),
 );
@@ -26,6 +26,14 @@ const settings: SandboxSettings = {
   allowTemp: true,
   grantTimeoutMs: 120_000,
   confirmDelete: false,
+};
+
+const readOnlySettings: SandboxSettings = {
+  ...settings,
+  mode: "read-only",
+  // 只读下这两项不生效，显式打开以证明它们确实被忽略
+  writableRoots: [],
+  allowTemp: true,
 };
 
 function listIcacls(target: string): string {
@@ -46,8 +54,8 @@ describe.skipIf(!enabled)("Windows command sandbox e2e", () => {
       throw new Error(`compiled sandbox runner missing: ${distRunner}; run pnpm build:agent first`);
     }
     savedLocalAppData = process.env.LOCALAPPDATA;
-    process.env.MEOWCODE_SANDBOX_RUNNER = distRunner;
-    process.env.MEOWCODE_SANDBOX_NODE = process.execPath;
+    process.env.KLOCKCODE_SANDBOX_RUNNER = distRunner;
+    process.env.KLOCKCODE_SANDBOX_NODE = process.execPath;
     workspace = mkdtempSync(join(tmpdir(), "meow-sandbox-e2e-ws-"));
     outsideDir = mkdtempSync(join(tmpdir(), "meow-sandbox-e2e-out-"));
   });
@@ -57,8 +65,8 @@ describe.skipIf(!enabled)("Windows command sandbox e2e", () => {
     await revokeSandboxGrantsRemote({ workspace, settings }).catch(() => undefined);
     rmSync(workspace, { recursive: true, force: true });
     rmSync(outsideDir, { recursive: true, force: true });
-    delete process.env.MEOWCODE_SANDBOX_RUNNER;
-    delete process.env.MEOWCODE_SANDBOX_NODE;
+    delete process.env.KLOCKCODE_SANDBOX_RUNNER;
+    delete process.env.KLOCKCODE_SANDBOX_NODE;
     if (savedLocalAppData === undefined) delete process.env.LOCALAPPDATA;
     else process.env.LOCALAPPDATA = savedLocalAppData;
   });
@@ -110,7 +118,7 @@ describe.skipIf(!enabled)("Windows command sandbox e2e", () => {
     const localAppData = join(outsideDir, "localappdata");
     mkdirSync(localAppData, { recursive: true });
     process.env.LOCALAPPDATA = localAppData;
-    const tempRoot = join(localAppData, "MeowCode", "sandbox-temp");
+    const tempRoot = join(localAppData, "KlockCode", "sandbox-temp");
 
     const result = await executeTool(
       "run_command",
@@ -180,5 +188,45 @@ describe.skipIf(!enabled)("Windows command sandbox e2e", () => {
     expect(sandboxed.aborted).toBe(false);
     expect(sandboxed.stdout.equals(plain.stdout)).toBe(true);
     expect(sandboxed.stderr.equals(plain.stderr)).toBe(true);
+  });
+
+  // read-only：连工作区都不授予写权限。这一档存在的意义就是「能执行、但不能改」，
+  // 所以断言必须是「工作区内的写也被拒」——否则它和 workspace-write 没区别。
+  it("read-only can execute and read the workspace", async () => {
+    setSandboxSettings(readOnlySettings);
+    writeFileSync(join(workspace, "readable.txt"), "hello");
+    const result = await executeTool(
+      "run_command",
+      { command: "Get-Content -Path 'readable.txt' -Raw" },
+      workspace,
+    );
+    expect(result.ok).toBe(true);
+    expect(result.output).toContain("hello");
+  });
+
+  it("read-only blocks writes inside the workspace", async () => {
+    setSandboxSettings(readOnlySettings);
+    const target = join(workspace, "blocked.txt");
+    const result = await executeTool(
+      "run_command",
+      { command: `Set-Content -Path '${target}' -Value x -Encoding utf8` },
+      workspace,
+    );
+    expect(result.ok).toBe(false);
+    expect(result.sandboxDenial?.kind).toBe("write_denied");
+    expect(existsSync(target)).toBe(false);
+  });
+
+  it("read-only leaves no ACL behind on the workspace", async () => {
+    const readOnlyWs = mkdtempSync(join(tmpdir(), "meow-sandbox-e2e-ro-"));
+    try {
+      // 探针也要走 read-only：它不该写入任何 ACE
+      const probe = await probeSandbox({ workspace: readOnlyWs, settings: readOnlySettings });
+      expect(probe.ok).toBe(true);
+      expect(countCapabilitySids(readOnlyWs)).toBe(0);
+      expect(hasLowLabel(readOnlyWs)).toBe(false);
+    } finally {
+      rmSync(readOnlyWs, { recursive: true, force: true });
+    }
   });
 });

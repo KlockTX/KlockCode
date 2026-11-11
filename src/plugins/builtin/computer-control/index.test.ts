@@ -50,13 +50,13 @@ afterAll(() => {
   server.close();
 });
 
-const ENV_KEYS = ["MEOWCODE_COMPUTER_HOST", "MEOWCODE_COMPUTER_HOST_TOKEN"] as const;
+const ENV_KEYS = ["KLOCKCODE_COMPUTER_HOST", "KLOCKCODE_COMPUTER_HOST_TOKEN"] as const;
 
 beforeEach(() => {
   received = [];
   responder = () => ({ ok: true });
-  process.env.MEOWCODE_COMPUTER_HOST = baseUrl;
-  process.env.MEOWCODE_COMPUTER_HOST_TOKEN = "test-token";
+  process.env.KLOCKCODE_COMPUTER_HOST = baseUrl;
+  process.env.KLOCKCODE_COMPUTER_HOST_TOKEN = "test-token";
 });
 
 afterEach(() => {
@@ -80,7 +80,7 @@ const SCREENSHOT_RESPONSE = {
 
 describe("computer-control 内置插件", () => {
   it("无 env 时不注册任何工具（CLI / 测试降级）", () => {
-    delete process.env.MEOWCODE_COMPUTER_HOST;
+    delete process.env.KLOCKCODE_COMPUTER_HOST;
     const api = makeApi();
     computerControlPlugin(api);
     expect(api.tools).toHaveLength(0);

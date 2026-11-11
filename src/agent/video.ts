@@ -7,7 +7,7 @@
  *  - frames：指定时间点取 ≤4 帧，长边 2048，用于看细节。
  *
  * 不引 ffmpeg-static（80MB），用系统 ffmpeg；缺失时返回安装提示而不是抛栈。
- * 临时文件一律落在 os.tmpdir()/meowcode-video-<uuid>，finally 递归删除。
+ * 临时文件一律落在 os.tmpdir()/klockcode-video-<uuid>，finally 递归删除。
  */
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -46,14 +46,14 @@ export type VideoToolResult =
   | { ok: true; output: string; images?: Array<{ data: string; mimeType: string }>; meta?: VideoMeta }
   | { ok: false; output: string };
 
-/** ffmpeg 可执行文件：允许 MEOWCODE_FFMPEG 覆盖（便携版/非 PATH 安装）。 */
+/** ffmpeg 可执行文件：允许 KLOCKCODE_FFMPEG 覆盖（便携版/非 PATH 安装）。 */
 export function ffmpegPath(): string {
-  return process.env.MEOWCODE_FFMPEG?.trim() || "ffmpeg";
+  return process.env.KLOCKCODE_FFMPEG?.trim() || "ffmpeg";
 }
 
 /** ffprobe 默认为 ffmpeg 同目录的同名工具。 */
 export function ffprobePath(): string {
-  const explicit = process.env.MEOWCODE_FFPROBE?.trim();
+  const explicit = process.env.KLOCKCODE_FFPROBE?.trim();
   if (explicit) return explicit;
   const ffmpeg = ffmpegPath();
   if (ffmpeg === "ffmpeg") return "ffprobe";
@@ -145,7 +145,7 @@ export async function hasFfmpeg(runner: ProcessRunner = defaultRunner): Promise<
 }
 
 const INSTALL_HINT =
-  "ffmpeg was not found. Install it (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg) and make sure `ffmpeg` is on PATH, or set MEOWCODE_FFMPEG to the full path of the executable.";
+  "ffmpeg was not found. Install it (Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg) and make sure `ffmpeg` is on PATH, or set KLOCKCODE_FFMPEG to the full path of the executable.";
 
 /** ffprobe JSON → 元信息。导出以便单测覆盖字段映射。 */
 export function parseFfprobeJson(raw: string, bytes: number): VideoMeta | undefined {
@@ -228,7 +228,7 @@ async function probe(
 
 /** 临时工作目录：每次调用一个，finally 删掉。 */
 async function withTempDir<T>(task: (dir: string) => Promise<T>): Promise<T> {
-  const dir = path.join(os.tmpdir(), `meowcode-video-${randomUUID()}`);
+  const dir = path.join(os.tmpdir(), `klockcode-video-${randomUUID()}`);
   await fs.mkdir(dir, { recursive: true });
   try {
     return await task(dir);

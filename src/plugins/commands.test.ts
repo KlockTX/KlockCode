@@ -56,7 +56,7 @@ describe("loadCommandIndex.resolve", () => {
   async function setup() {
     const workspace = await makeTempDir();
     const home = await makeTempDir();
-    const commandsDir = path.join(workspace, ".meowcode", "commands");
+    const commandsDir = path.join(workspace, ".klockcode", "commands");
     await fs.mkdir(commandsDir, { recursive: true });
     await fs.writeFile(
       path.join(commandsDir, "deploy.md"),

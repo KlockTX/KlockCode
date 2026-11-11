@@ -42,8 +42,11 @@ describe("prompt budget", () => {
     // 5200 → 5000：那段 PowerShell 讲义压成一句指路（细节进了主提示词的极简档），
     // context_status 与 ask_user 的描述去掉重复措辞；实测 4974。
     // 再往上应优先走 tool_search 延迟加载，而不是继续堆常驻 schema。
+    // 5000 → 5050：估算器换成分字符权重（非拉丁字符 0.25 → 0.5，全角标点/省略号
+    // 属于这一类）。同一份 schema 从 4998 → 5001，**一条内容都没加**，是测量口径变保守；
+    // 真实 tiktoken 计数仍是 4974。要加 schema 依然没有余量。
     const tokens = estimateTokens(JSON.stringify(toolDefinitions));
-    expect(tokens).toBeLessThan(5_000);
+    expect(tokens).toBeLessThan(5_050);
   });
 
   it("compaction prompts stay under 2500 chars", () => {

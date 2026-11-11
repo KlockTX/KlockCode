@@ -1,7 +1,7 @@
 /**
  * 召回层。
  *
- * 与 metis 的差异（见方案 D1）：MeowCode 的 system[1] 是会话级快照
+ * 与 metis 的差异（见方案 D1）：KlockCode 的 system[1] 是会话级快照
  * （runtime.ts:6468 的 refreshInstructions 每会话只读一次），每回合改写它
  * 会让整段 prompt cache 作废。所以：
  *

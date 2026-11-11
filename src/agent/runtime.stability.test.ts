@@ -50,8 +50,8 @@ function captureCalls(): Captured[] {
       return captured;
 }
 
-const workspace = () => mkdtemp(path.join(tmpdir(), "meowcode-stability-ws-"));
-const sessions = () => mkdtemp(path.join(tmpdir(), "meowcode-stability-s-"));
+const workspace = () => mkdtemp(path.join(tmpdir(), "klockcode-stability-ws-"));
+const sessions = () => mkdtemp(path.join(tmpdir(), "klockcode-stability-s-"));
 
 beforeEach(() => {
   streamMock.mockReset();
@@ -94,7 +94,7 @@ describe("工具目录在回合边界重建", () => {
 describe("验证类角色不能写文件", () => {
   it("架构图给 verifier 节点配了 write_file 也开不了写权限", async () => {
     const ws = await workspace();
-    // 用户可以在 .meowcode/harness.json 里给角色节点覆盖工具白名单 ——
+    // 用户可以在 .klockcode/harness.json 里给角色节点覆盖工具白名单 ——
     // writeDenied 必须是角色不变量，不能靠"注册表恰好没写"来兜底。
     const { builtinHarnessSeed } = await import("./harness-document.js");
     const doc = builtinHarnessSeed("complex");
@@ -108,9 +108,9 @@ describe("验证类角色不能写文件", () => {
         data!.tools = ["read_file", "run_command", "tool_search", "write_file", "edit_file"];
       }
     }
-    await mkdir(path.join(ws, ".meowcode", "harness"), { recursive: true });
+    await mkdir(path.join(ws, ".klockcode", "harness"), { recursive: true });
     await writeFile(
-      path.join(ws, ".meowcode", "harness", "complex.json"),
+      path.join(ws, ".klockcode", "harness", "complex.json"),
       JSON.stringify(doc, null, 2),
       "utf8",
     );
@@ -233,7 +233,7 @@ describe("验证类角色不能写文件", () => {
           usage: { inputTokens: 10, outputTokens: 2 },
         };
       }
-      if (system.includes("You are MeowCode")) {
+      if (system.includes("You are KlockCode")) {
         // 主 Agent：先派 verifier，拿到报告后收尾
         const sawChild = options.messages.some(
           (message) => message.role === "tool" && String(message.content).includes("Child result"),

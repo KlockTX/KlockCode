@@ -42,6 +42,7 @@ import { getSandboxSettings } from "./sandbox/policy.js";
 import { runShellCommand } from "./exec/shell.js";
 import { MAX_COMMAND_OUTPUT_BYTES, DEFAULT_COMMAND_TIMEOUT_MS } from "./exec/types.js";
 import {
+  BUILTIN_TOOL_CONTRACTS,
   builtinToolContract,
   isParallelSafeContract,
   type ToolContract,
@@ -242,7 +243,7 @@ export const toolDefinitions: ToolDefinition[] = [
     type: "function",
     function: {
       name: "list_dir",
-      description: "List files and directories; build/dependency folders are skipped; large listings spill to .meowcode/tool-output/.",
+      description: "List files and directories; build/dependency folders are skipped; large listings spill to .klockcode/tool-output/.",
       parameters: {
         type: "object",
         properties: {
@@ -300,7 +301,7 @@ export const toolDefinitions: ToolDefinition[] = [
     function: {
       name: "read_video",
       description:
-        "Inspect a video via ffmpeg. meta: duration/resolution/fps/audio, 0 images. storyboard: 9 evenly spaced frames as one 3x3 sheet (~1.5k tokens) — start here. frames: up to 4 exact timestamps at 2048px. Needs ffmpeg (or MEOWCODE_FFMPEG).",
+        "Inspect a video via ffmpeg. meta: duration/resolution/fps/audio, 0 images. storyboard: 9 evenly spaced frames as one 3x3 sheet (~1.5k tokens) — start here. frames: up to 4 exact timestamps at 2048px. Needs ffmpeg (or KLOCKCODE_FFMPEG).",
       parameters: {
         type: "object",
         properties: {
@@ -487,7 +488,7 @@ export const toolDefinitions: ToolDefinition[] = [
     function: {
       name: "run_command",
       description:
-        "Run a PowerShell command in the workspace. Routine commands run automatically; only destructive ones (disk, registry, shutdown) ask first. Long output keeps head and tail; full log is saved under .meowcode/tool-output/. When the command sandbox is enabled, writes outside the workspace and configured extra roots are blocked; a blocked command may ask once to retry outside the sandbox. background=true starts a long-running job (dev server, watcher) in a terminal and returns immediately; read it with the job tool. " +
+        "Run a PowerShell command in the workspace. Routine commands run automatically; only destructive ones (disk, registry, shutdown) ask first. Long output keeps head and tail; full log is saved under .klockcode/tool-output/. When the command sandbox is enabled, writes outside the workspace and configured extra roots are blocked; a blocked command may ask once to retry outside the sandbox. background=true starts a long-running job (dev server, watcher) in a terminal and returns immediately; read it with the job tool. " +
         // 这段是给模型看的写法约束：系统提示词按 token 预算只留了「怎么搜/怎么读」，
         // 只在真要下命令时才需要读到的东西放这里。
         "This is PowerShell, not bash: no rm -rf / export / cat / grep -r — use Remove-Item -Recurse -Force, $env:NAME='value', Get-Content, Select-String. Windows PowerShell 5.1 has no && or ||: chain with ';'. There is no stdin, so interactive prompts (Read-Host, pause, git commit without -m) hang until the timeout. " +
@@ -1091,6 +1092,25 @@ function unpinDynamicTool(name: string): void {
 /** 当前被延迟展示的动态工具名（诊断 / tool_search 兜底列表用）。 */
 export function deferredDynamicToolNames(): string[] {
   return [...deferredDynamicTools].sort();
+}
+
+/**
+ * 当前**可用**的工具名全集：内置 + admit（编排通道，不在 toolDefinitions 里）
+ * + 全部已注册动态工具（含被描述预算推迟的——推迟只是这轮没广告出去，工具还在）。
+ * 架构图的 tool 白名单校验用它做拼写检查，避免另存一份会漂移的清单。
+ */
+export function knownToolNames(): ReadonlySet<string> {
+  return new Set([
+    ...toolDefinitions.map((definition) => definition.function.name),
+    admitToolDefinition.function.name,
+    // 契约表是工具名的**静态全集**，其中包含按宿主注入的工具：浏览器那 7 个只在桌面端挂上
+    // browser host 时才注册定义，CLI / 无浏览器的会话里取不到它们，但它们真实存在。
+    // 语义 lint 用这张表判 tool-unknown —— 这里宁可多认：漏认会让用户照着「工具不存在」
+    // 的提示删掉合法的白名单条目，而那正是这条提示本要防止的损失。
+    ...Object.keys(BUILTIN_TOOL_CONTRACTS),
+    ...listDynamicToolDefinitions().map((definition) => definition.function.name),
+    ...deferredDynamicToolNames(),
+  ]);
 }
 
 /**
@@ -2075,7 +2095,7 @@ async function readMany(
 
 /** 原子写入：先写同目录临时文件再 rename，避免写一半崩进程把文件截断。 */
 async function writeFileAtomic(file: string, data: string): Promise<void> {
-  const temp = `${file}.meowcode-${randomUUID()}.tmp`;
+  const temp = `${file}.klockcode-${randomUUID()}.tmp`;
   try {
     await fs.writeFile(temp, data, "utf8");
     await fs.rename(temp, file);

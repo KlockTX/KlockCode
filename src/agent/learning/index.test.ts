@@ -24,8 +24,8 @@ afterEach(async () => {
 });
 
 async function makeWorkspace(): Promise<{ workspace: string; homeDir: string }> {
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-learn-ws-"));
-  const homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-learn-home-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-learn-ws-"));
+  const homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-learn-home-"));
   tempRoots.push(workspace, homeDir);
   return { workspace, homeDir };
 }

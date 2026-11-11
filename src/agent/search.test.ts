@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { searchGlob, searchGrep } from "./search";
 
 async function makeWorkspace(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-search-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-search-"));
   await mkdir(path.join(root, "src", "deep"), { recursive: true });
   await mkdir(path.join(root, "node_modules", "pkg"), { recursive: true });
   await writeFile(path.join(root, "src", "alpha.ts"), "export const alpha = 1;\nconst other = 3;\n");
@@ -16,8 +16,8 @@ async function makeWorkspace(): Promise<string> {
 }
 
 afterEach(() => {
-  delete process.env.MEOWCODE_RIPGREP_PATH;
-  delete process.env.MEOWCODE_RESOURCES_PATH;
+  delete process.env.KLOCKCODE_RIPGREP_PATH;
+  delete process.env.KLOCKCODE_RESOURCES_PATH;
 });
 
 describe("searchGlob", () => {
@@ -51,7 +51,7 @@ describe("searchGlob", () => {
 
   it("searches outside the workspace in full access mode", async () => {
     const root = await makeWorkspace();
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-search-outside-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-search-outside-"));
     await writeFile(path.join(outside, "outside.ts"), "export const outside = 1;\n");
     const result = await searchGlob(root, outside, "**/*.ts", 10, undefined, true);
     expect(result.ok).toBe(true);
@@ -60,7 +60,7 @@ describe("searchGlob", () => {
 
   it("reports a tool error when ripgrep is missing", async () => {
     const root = await makeWorkspace();
-    process.env.MEOWCODE_RIPGREP_PATH = path.join(root, "missing-rg.exe");
+    process.env.KLOCKCODE_RIPGREP_PATH = path.join(root, "missing-rg.exe");
     const result = await searchGlob(root, ".", "**/*.ts", 10);
     expect(result.ok).toBe(false);
     expect(result.output).not.toBe("");

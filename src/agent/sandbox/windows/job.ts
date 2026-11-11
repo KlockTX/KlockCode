@@ -1,6 +1,6 @@
 /**
  * Ported from deepseek-harness packages/subprocess/win32-process/src/process.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: kill-on-close Job 包装。
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: kill-on-close Job 包装。
  */
 
 import * as abi from "./abi.js";

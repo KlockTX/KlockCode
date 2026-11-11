@@ -15,7 +15,7 @@ import {
 const dirs: string[] = [];
 
 async function makeSessionsDir(): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-session-search-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-session-search-"));
   dirs.push(dir);
   return dir;
 }

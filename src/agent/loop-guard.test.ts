@@ -6,7 +6,7 @@ import { LoopGuard, MAX_READ_RANGES_PER_FILE } from "./loop-guard";
 import type { ChatMessage, ToolCall } from "./types";
 
 async function workspace(lines = 600): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-guard-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-guard-"));
   await writeFile(
     path.join(dir, "a.ts"),
     Array.from({ length: lines }, (_, index) => `line ${index + 1}`).join("\n"),

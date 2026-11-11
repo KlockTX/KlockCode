@@ -7,7 +7,7 @@
  *
  * 三条约束：
  *  - 单次最多 20 页、4k tokens（对齐 read_file 的输出预算），超出给续读提示；
- *  - 结果按 sha256 + 页范围缓存到 `.meowcode/cache/pdf/`，二次读取不再解析；
+ *  - 结果按 sha256 + 页范围缓存到 `.klockcode/cache/pdf/`，二次读取不再解析；
  *  - pdfjs 只在真正读 PDF 时动态 import（legacy 构建，Node 侧 fake worker）。
  */
 import { createHash } from "node:crypto";
@@ -205,7 +205,7 @@ type CacheEntry = {
 };
 
 function cacheDir(workspace: string): string {
-  return path.join(workspace, ".meowcode", "cache", "pdf");
+  return path.join(workspace, ".klockcode", "cache", "pdf");
 }
 
 function cacheKey(sha: string, pages: number[]): string {

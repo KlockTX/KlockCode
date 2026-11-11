@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { createAgentLogger, pruneAgentLogs } from "./logging.js";
 
 async function tempDir(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), "meowcode-log-"));
+  return mkdtemp(path.join(tmpdir(), "klockcode-log-"));
 }
 
 describe("createAgentLogger", () => {

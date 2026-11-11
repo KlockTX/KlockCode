@@ -14,7 +14,7 @@ import {
 const dirs: string[] = [];
 
 async function makeWorkspace(): Promise<string> {
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-rules-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-rules-"));
   dirs.push(workspace);
   return workspace;
 }

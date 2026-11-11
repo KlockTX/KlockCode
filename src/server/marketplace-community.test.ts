@@ -78,7 +78,7 @@ const MCP_ITEM = {
   version: "1.0.0",
   author: "someone",
   server: { url: "https://mcp.example.com" },
-  requiresEnv: ["MEOWCODE_DEMO_TOKEN"],
+  requiresEnv: ["KLOCKCODE_DEMO_TOKEN"],
 };
 
 function communityBlobs(): BlobDef[] {
@@ -169,12 +169,12 @@ describe("community marketplace source", () => {
     const result = await source.install("demo-skill", "skill", { homeDir: home });
     expect(result.overwritten).toBe(false);
 
-    const body = await readFile(path.join(home, ".meowcode", "skills", "demo-skill", "SKILL.md"), "utf8");
+    const body = await readFile(path.join(home, ".klockcode", "skills", "demo-skill", "SKILL.md"), "utf8");
     expect(body).toContain("技能正文");
-    expect(existsSync(path.join(home, ".meowcode", "skills", "demo-skill", "item.json"))).toBe(false);
+    expect(existsSync(path.join(home, ".klockcode", "skills", "demo-skill", "item.json"))).toBe(false);
 
     const marker = JSON.parse(
-      await readFile(path.join(home, ".meowcode", ".marketplace", "skill-demo-skill.json"), "utf8"),
+      await readFile(path.join(home, ".klockcode", ".marketplace", "skill-demo-skill.json"), "utf8"),
     );
     expect(marker.source).toBe("community");
     expect(marker.version).toBe("1.0.0");
@@ -182,14 +182,14 @@ describe("community marketplace source", () => {
     // 官方卸载兼容：标记格式一致，官方 store 直接能删
     const official = createMarketplaceStore(bundles);
     await official.uninstall("demo-skill", "skill", { homeDir: home });
-    expect(existsSync(path.join(home, ".meowcode", "skills", "demo-skill"))).toBe(false);
+    expect(existsSync(path.join(home, ".klockcode", "skills", "demo-skill"))).toBe(false);
   });
 
-  it("安装插件：写入 ~/.meowcode/plugins/<id>.ts", async () => {
+  it("安装插件：写入 ~/.klockcode/plugins/<id>.ts", async () => {
     const remote = makeFetch(communityBlobs());
     const source = createCommunitySource({ fetchImpl: remote.fetchImpl, retries: 0 });
     await source.install("demo-plugin", "plugin", { homeDir: home });
-    const code = await readFile(path.join(home, ".meowcode", "plugins", "demo-plugin.ts"), "utf8");
+    const code = await readFile(path.join(home, ".klockcode", "plugins", "demo-plugin.ts"), "utf8");
     expect(code).toContain("community");
   });
 
@@ -197,7 +197,7 @@ describe("community marketplace source", () => {
     const remote = makeFetch(communityBlobs());
     const source = createCommunitySource({ fetchImpl: remote.fetchImpl, retries: 0 });
     await source.install("demo-mcp", "mcp", { homeDir: home });
-    const config = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"));
+    const config = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"));
     expect(config.mcpServers["demo-mcp"]).toEqual({ url: "https://mcp.example.com" });
   });
 

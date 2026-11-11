@@ -1,14 +1,16 @@
 /**
  * Ported from deepseek-harness packages/sandbox/sandbox-windows-acl/src/runner.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: standalone sandbox runner.
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: standalone sandbox runner.
  *
  * Stable argv contract (server builds it):
  *   node runner.js --workspace <absReal> [--writable <abs>...]
- *                  [--temp <abs>|--no-temp] --mode workspace-write
+ *                  [--temp <abs>|--no-temp] --mode workspace-write|read-only
  *                  -- <exe> [argv...]
  *   node runner.js --revoke --workspace <absReal> [--writable <abs>...]
  *
- * Failure contract: stderr `meowcode-sandbox-run: <detail>` + exit 127.
+ * mode=read-only 必须配 --no-temp：不写任何 ACE、不上 Low 标签、不发私有 temp。
+ *
+ * Failure contract: stderr `klockcode-sandbox-run: <detail>` + exit 127.
  * The child is NEVER spawned unrestricted. Success writes no bytes.
  */
 
@@ -22,7 +24,7 @@ import { assertTempRootOutsideWorkspace } from "./path-boundary.js";
 import { assertLocalNtfs } from "./probe.js";
 import { spawnInheritedJobProcess } from "./spawn.js";
 
-const RUNNER_SIGNATURE = "meowcode-sandbox-run";
+const RUNNER_SIGNATURE = "klockcode-sandbox-run";
 const RUNNER_FAILURE_EXIT = 127;
 
 class RunnerFailure extends Error {}
@@ -33,7 +35,7 @@ function fail(detail: string): never {
 }
 
 function debugLog(detail: string): void {
-  if (process.env.MEOWCODE_SANDBOX_DEBUG === "1") {
+  if (process.env.KLOCKCODE_SANDBOX_DEBUG === "1") {
     process.stderr.write(`${RUNNER_SIGNATURE}: ${detail}\n`);
   }
 }
@@ -53,13 +55,19 @@ async function main(): Promise<number> {
     return 0;
   }
 
-  if (parsed.mode === "read-only") {
-    fail("read-only sandbox mode is not implemented yet");
+  if (parsed.mode === "read-only" && parsed.tempRoot !== null) {
+    // 契约违背：只读模式不许带私有 temp（客户端一律发 --no-temp）
+    fail("read-only mode must not be given a private temp directory; pass --no-temp");
   }
   requireDirectory("--workspace", parsed.workspace);
-  for (const root of parsed.writableRoots) requireDirectory("--writable", root);
+  // read-only 不授权可写根，也就不必要求它们存在（被删/离线的额外根不该拦住只读命令）
+  if (parsed.mode === "workspace-write") {
+    for (const root of parsed.writableRoots) requireDirectory("--writable", root);
+  }
   assertLocalNtfs("--workspace", parsed.workspace);
-  for (const root of parsed.writableRoots) assertLocalNtfs("--writable", root);
+  if (parsed.mode === "workspace-write") {
+    for (const root of parsed.writableRoots) assertLocalNtfs("--writable", root);
+  }
   if (parsed.tempRoot !== null) {
     assertTempRootOutsideWorkspace(parsed.workspace, parsed.tempRoot);
     assertLocalNtfs("--temp", parsed.tempRoot);
@@ -84,7 +92,7 @@ async function main(): Promise<number> {
       workspace: parsed.workspace,
       writableRoots: parsed.writableRoots,
       tempDir: privateTemp ?? null,
-      mode: "workspace-write",
+      mode: parsed.mode,
     });
     const initStartedAt = Date.now();
     await session.init();

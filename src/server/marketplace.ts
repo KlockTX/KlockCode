@@ -70,15 +70,15 @@ export class MarketplaceError extends Error {
 
 type IndexFile = { version: number; generatedAt: string; items: MarketplaceItem[] };
 
-/** 安装标记（~/.meowcode/.marketplace/<type>-<id>.json）：uninstall 只认带标记的安装物 */
+/** 安装标记（~/.klockcode/.marketplace/<type>-<id>.json）：uninstall 只认带标记的安装物 */
 type InstallMarker = { id: string; type: MarketItemType; source: string; installedAt: string };
 
-/** 手动条目标记（~/.meowcode/.marketplace/manual-<type>-<id>.json）：「我的」栏的数据源与卸载凭据 */
+/** 手动条目标记（~/.klockcode/.marketplace/manual-<type>-<id>.json）：「我的」栏的数据源与卸载凭据 */
 export type ManualMarker = {
   id: string;
   type: MarketItemType;
   addedAt: string;
-  /** 相对 ~/.meowcode 的安装目标（plugins 目录导入不是 <id>.ts，卸载需要真路径） */
+  /** 相对 ~/.klockcode 的安装目标（plugins 目录导入不是 <id>.ts，卸载需要真路径） */
   target: string;
 };
 
@@ -108,7 +108,7 @@ export type MineList = { skills: MineSkillEntry[]; plugins: MinePluginEntry[]; m
  * 市场/社区/第三方安装项（有 `<type>-<id>.json`）跳过；返回补写的条数。
  */
 export async function backfillSkillMarkers(homeDir: string): Promise<number> {
-  const root = path.join(homeDir, ".meowcode");
+  const root = path.join(homeDir, ".klockcode");
   const skillsDir = path.join(root, "skills");
   const markerDir = path.join(root, ".marketplace");
   let entries;
@@ -141,7 +141,7 @@ export async function backfillSkillMarkers(homeDir: string): Promise<number> {
 }
 
 /**
- * 写一条手动条目标记（~/.meowcode/.marketplace/manual-<type>-<id>.json）。
+ * 写一条手动条目标记（~/.klockcode/.marketplace/manual-<type>-<id>.json）。
  * 「我的」栏的数据源与卸载凭据；AI 自建技能/插件也复用这套标记。
  */
 export async function writeManualMarkerFile(
@@ -153,7 +153,7 @@ export async function writeManualMarkerFile(
   }
   const file = path.join(
     homeDir,
-    ".meowcode",
+    ".klockcode",
     ".marketplace",
     `manual-${input.type}-${input.id}.json`,
   );
@@ -167,7 +167,7 @@ export async function writeManualMarkerFile(
 }
 
 /**
- * 本机已安装的 MCP（~/.meowcode/mcp.json 里的全部条目）。
+ * 本机已安装的 MCP（~/.klockcode/mcp.json 里的全部条目）。
  * 市场索引只认「有安装标记」的条目，手动添加与直接手写进 mcp.json 的都拿不到，
  * 而「已安装」分区要展示的是本机真正在跑/配着的全部 MCP。
  */
@@ -196,7 +196,7 @@ export type MarketplaceContext = { homeDir: string };
 
 /**
  * 市场存储：bundles 只读（resources/marketplace/），安装目标固定在
- * ~/.meowcode/{skills,plugins,mcp.json}。纯 fs 逻辑，便于单测。
+ * ~/.klockcode/{skills,plugins,mcp.json}。纯 fs 逻辑，便于单测。
  */
 export function createMarketplaceStore(bundlesDir: string | undefined) {
   /** mcp 条目是不是远程 server（server 配了 url）——决定 UI 有没有「授权」按钮 */
@@ -218,7 +218,7 @@ export function createMarketplaceStore(bundlesDir: string | undefined) {
   }
 
   function meowRoot(ctx: MarketplaceContext): string {
-    return path.join(ctx.homeDir, ".meowcode");
+    return path.join(ctx.homeDir, ".klockcode");
   }
 
   function assertSafeId(id: string): void {
@@ -227,7 +227,7 @@ export function createMarketplaceStore(bundlesDir: string | undefined) {
     }
   }
 
-  /** type+id → 安装目标路径（全部断言在 ~/.meowcode 内） */
+  /** type+id → 安装目标路径（全部断言在 ~/.klockcode 内） */
   function installTarget(type: MarketItemType, id: string, ctx: MarketplaceContext): string {
     assertSafeId(id);
     const root = meowRoot(ctx);
@@ -639,7 +639,7 @@ export function createMarketplaceStore(bundlesDir: string | undefined) {
         copy = async () => {
           await fs.cp(sourcePath, path.join(meowRoot(ctx), targetPath), {
             recursive: true,
-            // node_modules/.git 不拷：体积大；插件依赖应放在 ~/.meowcode/plugins 下自行管理
+            // node_modules/.git 不拷：体积大；插件依赖应放在 ~/.klockcode/plugins 下自行管理
             filter: (source) => {
               const base = path.basename(source);
               return base !== "node_modules" && base !== ".git";
@@ -672,13 +672,13 @@ export function createMarketplaceStore(bundlesDir: string | undefined) {
         throw new MarketplaceError("conflict", `${input.type}/${id} is already in mine`);
       }
       if (await exists(path.join(meowRoot(ctx), targetPath))) {
-        throw new MarketplaceError("conflict", `~/.meowcode already has ${targetPath.replace(/\\/g, "/")}`);
+        throw new MarketplaceError("conflict", `~/.klockcode already has ${targetPath.replace(/\\/g, "/")}`);
       }
       await writeManualMarker(input.type, id, await copy(), ctx);
       return { id, type: input.type };
     },
 
-    /** 手动添加/更新 MCP server：merge 进 ~/.meowcode/mcp.json 并写 manual 标记 */
+    /** 手动添加/更新 MCP server：merge 进 ~/.klockcode/mcp.json 并写 manual 标记 */
     async manualMcpSave(
       input: { id: string; server: Record<string, unknown> },
       ctx: MarketplaceContext,

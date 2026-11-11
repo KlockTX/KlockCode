@@ -179,7 +179,7 @@ describe("marketplace thirdparty", () => {
   let clawhubRoutesOverride: Route[] | null;
 
   beforeEach(async () => {
-    homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-thirdparty-"));
+    homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-thirdparty-"));
     counter = { list: 0, search: 0 };
     skillhubCounter = { list: 0 };
     keywordSeen = { value: null };
@@ -306,11 +306,11 @@ describe("marketplace thirdparty", () => {
     const result = await store.install("clawhub-alpha", { homeDir });
     expect(result).toEqual({ id: "clawhub-alpha", type: "skill", overwritten: false });
 
-    const target = path.join(homeDir, ".meowcode", "skills", "clawhub-alpha");
+    const target = path.join(homeDir, ".klockcode", "skills", "clawhub-alpha");
     expect(await readFile(path.join(target, "SKILL.md"), "utf8")).toBe(CLAWHUB_ALPHA_MD);
     expect(await readFile(path.join(target, "refs", "a.md"), "utf8")).toBe(CLAWHUB_ALPHA_REF);
     const marker = JSON.parse(
-      await readFile(path.join(homeDir, ".meowcode", ".marketplace", "skill-clawhub-alpha.json"), "utf8"),
+      await readFile(path.join(homeDir, ".klockcode", ".marketplace", "skill-clawhub-alpha.json"), "utf8"),
     );
     expect(marker).toMatchObject({ id: "clawhub-alpha", type: "skill", source: "clawhub" });
 
@@ -327,7 +327,7 @@ describe("marketplace thirdparty", () => {
     await official.uninstall("clawhub-alpha", "skill", { homeDir });
     expect(existsSync(target)).toBe(false);
     expect(
-      existsSync(path.join(homeDir, ".meowcode", ".marketplace", "skill-clawhub-alpha.json")),
+      existsSync(path.join(homeDir, ".klockcode", ".marketplace", "skill-clawhub-alpha.json")),
     ).toBe(false);
   });
 
@@ -348,7 +348,7 @@ describe("marketplace thirdparty", () => {
     const store = makeStore();
     await expect(store.install("clawhub-alpha", { homeDir })).rejects.toThrow(/checksum mismatch/);
     expect(
-      existsSync(path.join(homeDir, ".meowcode", "skills", "clawhub-alpha")),
+      existsSync(path.join(homeDir, ".klockcode", "skills", "clawhub-alpha")),
     ).toBe(false);
   });
 
@@ -371,7 +371,7 @@ describe("marketplace thirdparty", () => {
     ];
     const store = makeStore();
     await expect(store.install("clawhub-alpha", { homeDir })).rejects.toThrow(/unsafe file path/);
-    expect(existsSync(path.join(homeDir, ".meowcode", "evil.md"))).toBe(false);
+    expect(existsSync(path.join(homeDir, ".klockcode", "evil.md"))).toBe(false);
   });
 
   it("翻页：SkillHub 页码游标递增，nextCursors 透传", async () => {
@@ -414,7 +414,7 @@ describe("marketplace thirdparty", () => {
   it("SkillHub 安装走 files 端点清单与 file 端点下载", async () => {
     const store = makeStore();
     await store.install("skillhub-beta", { homeDir });
-    const target = path.join(homeDir, ".meowcode", "skills", "skillhub-beta");
+    const target = path.join(homeDir, ".klockcode", "skills", "skillhub-beta");
     expect(await readFile(path.join(target, "SKILL.md"), "utf8")).toBe(SKILLHUB_BETA_MD);
     expect(await readFile(path.join(target, "docs", "b.md"), "utf8")).toBe(SKILLHUB_BETA_DOC);
     expect((await stat(path.join(target, "SKILL.md"))).isFile()).toBe(true);

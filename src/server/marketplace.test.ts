@@ -25,7 +25,7 @@ beforeEach(async () => {
     path.join(bundles, "mcp", "demo-mcp.json"),
     JSON.stringify({
       description: "demo mcp",
-      server: { url: "https://mcp.example.com", headers: { Authorization: "Bearer ${MEOWCODE_DEMO_TOKEN}" } },
+      server: { url: "https://mcp.example.com", headers: { Authorization: "Bearer ${KLOCKCODE_DEMO_TOKEN}" } },
     }),
   );
   await mkdir(path.join(bundles, "plugins"), { recursive: true });
@@ -71,7 +71,7 @@ beforeEach(async () => {
           version: "1.0.0",
           entry: "mcp/demo-mcp.json",
           entryKind: "file",
-          requiresEnv: ["MEOWCODE_DEMO_TOKEN"],
+          requiresEnv: ["KLOCKCODE_DEMO_TOKEN"],
         },
       ],
     }),
@@ -83,7 +83,7 @@ afterEach(async () => {
     rm(home, { recursive: true, force: true }),
     rm(bundles, { recursive: true, force: true }),
   ]);
-  delete process.env.MEOWCODE_DEMO_TOKEN;
+  delete process.env.KLOCKCODE_DEMO_TOKEN;
 });
 
 function store() {
@@ -109,8 +109,8 @@ describe("createMarketplaceStore.list", () => {
     expect(entries).toHaveLength(3);
     expect(entries.every((entry) => !entry.installed)).toBe(true);
     const mcp = entries.find((entry) => entry.type === "mcp");
-    expect(mcp?.envReady).toBe(false); // MEOWCODE_DEMO_TOKEN 未设置
-    process.env.MEOWCODE_DEMO_TOKEN = "x";
+    expect(mcp?.envReady).toBe(false); // KLOCKCODE_DEMO_TOKEN 未设置
+    process.env.KLOCKCODE_DEMO_TOKEN = "x";
     const after = await store().list({ homeDir: home });
     expect(after.entries.find((entry) => entry.type === "mcp")?.envReady).toBe(true);
   });
@@ -209,16 +209,16 @@ describe("createMarketplaceStore.list", () => {
 });
 
 describe("install", () => {
-  it("skill 整目录复制到 ~/.meowcode/skills/<id>", async () => {
+  it("skill 整目录复制到 ~/.klockcode/skills/<id>", async () => {
     await store().install("demo-skill", "skill", { homeDir: home });
-    const skillFile = path.join(home, ".meowcode", "skills", "demo-skill", "SKILL.md");
+    const skillFile = path.join(home, ".klockcode", "skills", "demo-skill", "SKILL.md");
     expect(await readFile(skillFile, "utf8")).toContain("A demo skill");
   });
 
   it("plugin 复制单文件；mcp 合并写 user 根 mcp.json 且保留既有键", async () => {
-    await mkdir(path.join(home, ".meowcode"), { recursive: true });
+    await mkdir(path.join(home, ".klockcode"), { recursive: true });
     await writeFile(
-      path.join(home, ".meowcode", "mcp.json"),
+      path.join(home, ".klockcode", "mcp.json"),
       JSON.stringify({ mcpServers: { existing: { command: "keep" } }, note: "keep-me" }),
     );
 
@@ -227,10 +227,10 @@ describe("install", () => {
     await marketplace.install("demo-mcp", "mcp", { homeDir: home });
 
     expect(
-      await readFile(path.join(home, ".meowcode", "plugins", "demo-plugin.ts"), "utf8"),
+      await readFile(path.join(home, ".klockcode", "plugins", "demo-plugin.ts"), "utf8"),
     ).toContain("export default");
     const mcpConfig = JSON.parse(
-      await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"),
+      await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"),
     );
     expect(Object.keys(mcpConfig.mcpServers)).toEqual(["existing", "demo-mcp"]);
     expect(mcpConfig.note).toBe("keep-me");
@@ -263,7 +263,7 @@ describe("install", () => {
   it("每次安装写市场标记", async () => {
     await store().install("demo-skill", "skill", { homeDir: home });
     const marker = JSON.parse(
-      await readFile(path.join(home, ".meowcode", ".marketplace", "skill-demo-skill.json"), "utf8"),
+      await readFile(path.join(home, ".klockcode", ".marketplace", "skill-demo-skill.json"), "utf8"),
     );
     expect(marker).toMatchObject({ id: "demo-skill", type: "skill", source: "builtin" });
   });
@@ -282,17 +282,17 @@ describe("uninstall", () => {
 
     const { entries } = await marketplace.list({ homeDir: home });
     expect(entries.every((entry) => !entry.installed)).toBe(true);
-    const mcpConfig = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"));
+    const mcpConfig = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"));
     expect(mcpConfig.mcpServers).toEqual({});
   });
 
   it("无标记的同名内容拒绝卸载（not_managed），且不删文件", async () => {
-    await mkdir(path.join(home, ".meowcode", "skills", "manual-skill"), { recursive: true });
-    await writeFile(path.join(home, ".meowcode", "skills", "manual-skill", "SKILL.md"), "mine");
+    await mkdir(path.join(home, ".klockcode", "skills", "manual-skill"), { recursive: true });
+    await writeFile(path.join(home, ".klockcode", "skills", "manual-skill", "SKILL.md"), "mine");
     await expect(store().uninstall("manual-skill", "skill", { homeDir: home })).rejects.toMatchObject({
       code: "not_managed",
     });
-    expect(await readFile(path.join(home, ".meowcode", "skills", "manual-skill", "SKILL.md"), "utf8")).toBe("mine");
+    expect(await readFile(path.join(home, ".klockcode", "skills", "manual-skill", "SKILL.md"), "utf8")).toBe("mine");
   });
 
   it("未安装的 id 卸载报 not_managed", async () => {
@@ -321,7 +321,7 @@ describe("mine/manual", () => {
       const result = await marketplace.manualImport({ type: "skill", sourcePath: dir }, { homeDir: home });
       expect(result).toEqual({ id: "my-skill", type: "skill" });
       expect(
-        await readFile(path.join(home, ".meowcode", "skills", "my-skill", "SKILL.md"), "utf8"),
+        await readFile(path.join(home, ".klockcode", "skills", "my-skill", "SKILL.md"), "utf8"),
       ).toContain("手动技能");
 
       const mine = await marketplace.mineList({ homeDir: home });
@@ -356,7 +356,7 @@ describe("mine/manual", () => {
         { homeDir: home },
       );
       expect(
-        await readFile(path.join(home, ".meowcode", "plugins", "my-plugin.ts"), "utf8"),
+        await readFile(path.join(home, ".klockcode", "plugins", "my-plugin.ts"), "utf8"),
       ).toContain("export default");
 
       const pluginDir = path.join(sourceRoot, "dir-plugin");
@@ -364,11 +364,11 @@ describe("mine/manual", () => {
       await writeFile(path.join(pluginDir, "index.ts"), "export const x = 1;");
       await writeFile(path.join(pluginDir, "node_modules", "dep", "a.js"), "x");
       await marketplace.manualImport({ type: "plugin", sourcePath: pluginDir }, { homeDir: home });
-      expect(await readFile(path.join(home, ".meowcode", "plugins", "dir-plugin", "index.ts"), "utf8")).toBe(
+      expect(await readFile(path.join(home, ".klockcode", "plugins", "dir-plugin", "index.ts"), "utf8")).toBe(
         "export const x = 1;",
       );
       await expect(
-        readFile(path.join(home, ".meowcode", "plugins", "dir-plugin", "node_modules", "dep", "a.js"), "utf8"),
+        readFile(path.join(home, ".klockcode", "plugins", "dir-plugin", "node_modules", "dep", "a.js"), "utf8"),
       ).rejects.toThrow();
 
       let mine = await marketplace.mineList({ homeDir: home });
@@ -377,7 +377,7 @@ describe("mine/manual", () => {
       // 卸载走 manual 标记的 target：目录整个删除
       await marketplace.uninstall("dir-plugin", "plugin", { homeDir: home });
       await expect(
-        readFile(path.join(home, ".meowcode", "plugins", "dir-plugin", "index.ts"), "utf8"),
+        readFile(path.join(home, ".klockcode", "plugins", "dir-plugin", "index.ts"), "utf8"),
       ).rejects.toThrow();
       mine = await marketplace.mineList({ homeDir: home });
       expect(mine.plugins.map((entry) => entry.id)).toEqual(["my-plugin"]);
@@ -398,8 +398,8 @@ describe("mine/manual", () => {
       ).rejects.toMatchObject({ code: "conflict" });
 
       // 与手放内容撞 id（无任何标记但目标已存在）
-      await mkdir(path.join(home, ".meowcode", "skills", "hand-made"), { recursive: true });
-      await writeFile(path.join(home, ".meowcode", "skills", "hand-made", "SKILL.md"), "hand");
+      await mkdir(path.join(home, ".klockcode", "skills", "hand-made"), { recursive: true });
+      await writeFile(path.join(home, ".klockcode", "skills", "hand-made", "SKILL.md"), "hand");
       const handDir = await makeSkillDir(sourceRoot, "hand-made");
       await expect(
         marketplace.manualImport({ type: "skill", sourcePath: handDir }, { homeDir: home }),
@@ -425,9 +425,9 @@ describe("mine/manual", () => {
 
   it("manualMcpSave：merge 写入 + 更新自己的条目 overwritten=true + 撞键拒绝", async () => {
     const marketplace = store();
-    await mkdir(path.join(home, ".meowcode"), { recursive: true });
+    await mkdir(path.join(home, ".klockcode"), { recursive: true });
     await writeFile(
-      path.join(home, ".meowcode", "mcp.json"),
+      path.join(home, ".klockcode", "mcp.json"),
       JSON.stringify({ mcpServers: { existing: { command: "keep" } } }),
     );
 
@@ -442,7 +442,7 @@ describe("mine/manual", () => {
     );
     expect(again.overwritten).toBe(true);
 
-    const config = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"));
+    const config = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"));
     expect(config.mcpServers.existing).toEqual({ command: "keep" });
     expect(config.mcpServers["my-mcp"].url).toBe("https://mcp.example.com");
 
@@ -465,7 +465,7 @@ describe("mine/manual", () => {
     const marketplace = store();
     await marketplace.manualMcpSave({ id: "my-mcp", server: { command: "npx" } }, { homeDir: home });
     await marketplace.manualMcpToggle({ id: "my-mcp", enabled: false }, { homeDir: home });
-    const config = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"));
+    const config = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"));
     expect(config.mcpServers["my-mcp"].enabled).toBe(false);
     let mine = await marketplace.mineList({ homeDir: home });
     expect(mine.mcp[0]).toMatchObject({ id: "my-mcp", status: "ok", enabled: false });
@@ -477,9 +477,9 @@ describe("mine/manual", () => {
     // 有标记但 mcp.json 键被手删 → toggle 报 not_found，mineList 标 missing
     await marketplace.uninstall("my-mcp", "mcp", { homeDir: home });
     await marketplace.manualMcpSave({ id: "gone", server: { url: "https://x" } }, { homeDir: home });
-    const raw = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"));
+    const raw = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"));
     delete raw.mcpServers.gone;
-    await writeFile(path.join(home, ".meowcode", "mcp.json"), JSON.stringify(raw));
+    await writeFile(path.join(home, ".klockcode", "mcp.json"), JSON.stringify(raw));
     await expect(
       marketplace.manualMcpToggle({ id: "gone", enabled: true }, { homeDir: home }),
     ).rejects.toMatchObject({ code: "not_found" });
@@ -489,9 +489,9 @@ describe("mine/manual", () => {
 
   it("installedMcpList：列出 mcp.json 全部条目并区分来源；mcpRemoveLocal 只删无标记的本地配置", async () => {
     const marketplace = store();
-    await mkdir(path.join(home, ".meowcode"), { recursive: true });
+    await mkdir(path.join(home, ".klockcode"), { recursive: true });
     await writeFile(
-      path.join(home, ".meowcode", "mcp.json"),
+      path.join(home, ".klockcode", "mcp.json"),
       JSON.stringify({
         mcpServers: {
           "hand-written": { command: "node", args: ["server.js"] },
@@ -540,7 +540,7 @@ describe("mine/manual", () => {
 
     // 本地配置删掉后从列表里消失，其余条目不受影响
     await marketplace.mcpRemoveLocal("hand-written", { homeDir: home });
-    const config = JSON.parse(await readFile(path.join(home, ".meowcode", "mcp.json"), "utf8"));
+    const config = JSON.parse(await readFile(path.join(home, ".klockcode", "mcp.json"), "utf8"));
     expect(config.mcpServers["hand-written"]).toBeUndefined();
     expect(config.mcpServers["http-one"]).toBeDefined();
     expect((await marketplace.installedMcpList({ homeDir: home })).map((entry) => entry.id)).not.toContain(
@@ -552,7 +552,7 @@ describe("mine/manual", () => {
     const marketplace = store();
     await marketplace.install("demo-mcp", "mcp", { homeDir: home });
     await writeFile(
-      path.join(home, ".meowcode", "mcp.json"),
+      path.join(home, ".klockcode", "mcp.json"),
       JSON.stringify({
         mcpServers: { "demo-mcp": { command: "x" }, "DEMO-MCP": { command: "y" } },
       }),
@@ -571,13 +571,13 @@ describe("mine/manual", () => {
       await marketplace.manualImport({ type: "skill", sourcePath: dir }, { homeDir: home });
       await marketplace.uninstall("my-skill", "skill", { homeDir: home });
       await expect(
-        readFile(path.join(home, ".meowcode", "skills", "my-skill", "SKILL.md"), "utf8"),
+        readFile(path.join(home, ".klockcode", "skills", "my-skill", "SKILL.md"), "utf8"),
       ).rejects.toThrow();
       expect((await marketplace.mineList({ homeDir: home })).skills).toEqual([]);
 
       // 手放内容（无标记）：uninstall 依旧 not_managed
-      await mkdir(path.join(home, ".meowcode", "skills", "hand-made"), { recursive: true });
-      await writeFile(path.join(home, ".meowcode", "skills", "hand-made", "SKILL.md"), "hand");
+      await mkdir(path.join(home, ".klockcode", "skills", "hand-made"), { recursive: true });
+      await writeFile(path.join(home, ".klockcode", "skills", "hand-made", "SKILL.md"), "hand");
       await expect(store().uninstall("hand-made", "skill", { homeDir: home })).rejects.toMatchObject({
         code: "not_managed",
       });
@@ -590,7 +590,7 @@ describe("mine/manual", () => {
 
 describe("writeManualMarkerFile", () => {
   it("写 manual 标记后「我的」可见", async () => {
-    const skillDir = path.join(home, ".meowcode", "skills", "ai-skill");
+    const skillDir = path.join(home, ".klockcode", "skills", "ai-skill");
     await mkdir(skillDir, { recursive: true });
     await writeFile(path.join(skillDir, "SKILL.md"), "---\nname: ai-skill\ndescription: x\n---\n");
     await writeManualMarkerFile(home, { type: "skill", id: "ai-skill", target: "skills/ai-skill" });
@@ -608,7 +608,7 @@ describe("writeManualMarkerFile", () => {
 
 describe("backfillSkillMarkers", () => {
   it("给未标记的本机技能补 manual 标记，市场安装项跳过，幂等", async () => {
-    const skillsRoot = path.join(home, ".meowcode", "skills");
+    const skillsRoot = path.join(home, ".klockcode", "skills");
     for (const id of ["local-one", "market-one"]) {
       await mkdir(path.join(skillsRoot, id), { recursive: true });
       await writeFile(
@@ -616,14 +616,14 @@ describe("backfillSkillMarkers", () => {
         `---\nname: ${id}\ndescription: desc\n---\n`,
       );
     }
-    await mkdir(path.join(home, ".meowcode", ".marketplace"), { recursive: true });
+    await mkdir(path.join(home, ".klockcode", ".marketplace"), { recursive: true });
     await writeFile(
-      path.join(home, ".meowcode", ".marketplace", "skill-market-one.json"),
+      path.join(home, ".klockcode", ".marketplace", "skill-market-one.json"),
       JSON.stringify({ id: "market-one", type: "skill", source: "builtin", installedAt: "" }),
     );
 
     expect(await backfillSkillMarkers(home)).toBe(1);
-    const markers = await readdir(path.join(home, ".meowcode", ".marketplace"));
+    const markers = await readdir(path.join(home, ".klockcode", ".marketplace"));
     expect(markers).toContain("manual-skill-local-one.json");
     expect(markers).not.toContain("manual-skill-market-one.json");
 

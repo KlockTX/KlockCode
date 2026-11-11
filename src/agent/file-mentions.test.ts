@@ -15,7 +15,7 @@ import {
 import type { ChatMessage } from "./types";
 
 async function makeWorkspace(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-mention-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-mention-"));
   const workspace = path.join(root, "workspace");
   await mkdir(workspace, { recursive: true });
   return workspace;
@@ -51,7 +51,7 @@ describe("mentionTokenBudget", () => {
 
 describe("buildFileMentionContext", () => {
   it("reads workspace files and skips paths outside the workspace", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "meowcode-mention-"));
+    const root = await mkdtemp(path.join(tmpdir(), "klockcode-mention-"));
     const workspace = path.join(root, "workspace");
     await mkdir(workspace, { recursive: true });
     await writeFile(path.join(root, "secret.txt"), "top secret", "utf8");
@@ -224,7 +224,7 @@ describe("extractAttachmentPaths", () => {
 });
 
 describe("buildFileMentionContext attachments", () => {
-  const OUTSIDE = path.join(tmpdir(), "meowcode-outside-attachment");
+  const OUTSIDE = path.join(tmpdir(), "klockcode-outside-attachment");
 
   async function makeOutsideFile(name: string, content: string): Promise<string> {
     await mkdir(OUTSIDE, { recursive: true });

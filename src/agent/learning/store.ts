@@ -1,7 +1,7 @@
 /**
  * 学习产物的存储层。
  *
- * 目录布局（project = <workspace>/.meowcode/learning/，user = ~/.meowcode/learning/）：
+ * 目录布局（project = <workspace>/.klockcode/learning/，user = ~/.klockcode/learning/）：
  *
  *   profile.json        结构化用户模型（traits + 置信度 + 状态）
  *   guidelines.json     带 trigger 的项目经验
@@ -72,9 +72,9 @@ export function learningRootFor(
   homeDir?: string,
 ): string {
   if (scope === "user") {
-    return path.join(homeDir ?? os.homedir(), ".meowcode", "learning");
+    return path.join(homeDir ?? os.homedir(), ".klockcode", "learning");
   }
-  return path.join(workspace, ".meowcode", "learning");
+  return path.join(workspace, ".klockcode", "learning");
 }
 
 /** 同时拿到两层根目录。 */

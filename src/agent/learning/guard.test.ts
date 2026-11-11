@@ -16,7 +16,7 @@ describe("control-plane guard", () => {
     expect(checkLearningContent("先调用 update_plan 把步骤写下来", "skill")).toContain(
       "control plane",
     );
-    expect(checkLearningContent("改 .meowcode/harness.json 的节点", "guideline")).toContain(
+    expect(checkLearningContent("改 .klockcode/harness.json 的节点", "guideline")).toContain(
       "control plane",
     );
     expect(checkLearningContent("把 approvalMode 设成 full", "skill")).toContain("control plane");
@@ -49,7 +49,7 @@ describe("config guard", () => {
     expect(checkLearningContent("编辑 settings.json 打开这个开关", "skill")).toContain(
       "configuration",
     );
-    expect(checkLearningContent("设置 MEOWCODE_SELF_LEARNING=1", "skill")).toContain(
+    expect(checkLearningContent("设置 KLOCKCODE_SELF_LEARNING=1", "skill")).toContain(
       "configuration",
     );
     expect(checkLearningContent("在 mcp.json 里加一个 server", "guideline")).toContain(

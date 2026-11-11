@@ -15,19 +15,19 @@ let sessionsDir = "";
 let memoryHomeDir = "";
 
 beforeAll(async () => {
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-server-"));
-  memoryHomeDir = await mkdtemp(path.join(tmpdir(), "meowcode-server-home-"));
-  process.env.MEOWCODE_SESSIONS_DIR = sessionsDir;
-  process.env.MEOWCODE_PROVIDER_ID = "";
-  process.env.MEOWCODE_WORKSPACE = "";
-  process.env.MEOWCODE_HOME_DIR = memoryHomeDir;
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-server-"));
+  memoryHomeDir = await mkdtemp(path.join(tmpdir(), "klockcode-server-home-"));
+  process.env.KLOCKCODE_SESSIONS_DIR = sessionsDir;
+  process.env.KLOCKCODE_PROVIDER_ID = "";
+  process.env.KLOCKCODE_WORKSPACE = "";
+  process.env.KLOCKCODE_HOME_DIR = memoryHomeDir;
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     { id: "p1", name: "provider", baseUrl: "http://127.0.0.1:1", model: "m", apiKey: "secret" },
   ]);
-  process.env.MEOWCODE_BROWSER_HOST_TOKEN = "browser-secret";
-  process.env.MEOWCODE_SERVER_TOKEN = TOKEN;
+  process.env.KLOCKCODE_BROWSER_HOST_TOKEN = "browser-secret";
+  process.env.KLOCKCODE_SERVER_TOKEN = TOKEN;
   // 记忆总开关初值走 env：模拟桌面端关闭开关后启动 server（PUT 用例再实时打开）
-  process.env.MEOWCODE_MEMORY = "0";
+  process.env.KLOCKCODE_MEMORY = "0";
 
   server = await startServer({ port: 0 });
   const address = server.address();
@@ -39,11 +39,11 @@ afterAll(async () => {
   await server.shutdown("test");
   await rm(sessionsDir, { recursive: true, force: true });
   await rm(memoryHomeDir, { recursive: true, force: true });
-  delete process.env.MEOWCODE_SESSIONS_DIR;
-  delete process.env.MEOWCODE_PROVIDER_ID;
-  delete process.env.MEOWCODE_WORKSPACE;
-  delete process.env.MEOWCODE_HOME_DIR;
-  delete process.env.MEOWCODE_MEMORY;
+  delete process.env.KLOCKCODE_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_PROVIDER_ID;
+  delete process.env.KLOCKCODE_WORKSPACE;
+  delete process.env.KLOCKCODE_HOME_DIR;
+  delete process.env.KLOCKCODE_MEMORY;
 });
 
 describe("agent server auth", () => {
@@ -137,9 +137,9 @@ describe("agent server auth", () => {
   });
 
   it("removes secrets from the server environment after startup", () => {
-    expect(process.env.MEOWCODE_PROVIDERS).toBeUndefined();
-    expect(process.env.MEOWCODE_BROWSER_HOST_TOKEN).toBeUndefined();
-    expect(process.env.MEOWCODE_SERVER_TOKEN).toBeUndefined();
+    expect(process.env.KLOCKCODE_PROVIDERS).toBeUndefined();
+    expect(process.env.KLOCKCODE_BROWSER_HOST_TOKEN).toBeUndefined();
+    expect(process.env.KLOCKCODE_SERVER_TOKEN).toBeUndefined();
   });
 
   it("reports whether a turn is running", async () => {
@@ -163,7 +163,7 @@ describe("agent server auth", () => {
       pendingApprovals: [],
       queuedPrompts: [],
       recoveredPrompts: [],
-      approvalMode: "auto",
+      approvalMode: "ask",
       lastTurn: null,
       compactingSessionIds: [],
       lastError: null,
@@ -173,13 +173,13 @@ describe("agent server auth", () => {
   });
 
   it("fails closed when no token is configured", async () => {
-    await expect(startServer({ port: 0 })).rejects.toThrow("MEOWCODE_SERVER_TOKEN is required");
+    await expect(startServer({ port: 0 })).rejects.toThrow("KLOCKCODE_SERVER_TOKEN is required");
   });
 });
 
 describe("memory config", () => {
   it("GET reflects the env boot value", async () => {
-    // beforeAll 里 MEOWCODE_MEMORY="0"：桌面端关掉开关后重启 server 的形态
+    // beforeAll 里 KLOCKCODE_MEMORY="0"：桌面端关掉开关后重启 server 的形态
     const response = await fetch(`${baseUrl}/config/memory`, {
       headers: { authorization: `Bearer ${TOKEN}` },
     });
@@ -310,7 +310,7 @@ describe("sandbox config", () => {
 
 describe("harness endpoints", () => {
   it("GET /harness returns the builtin seed for a fresh workspace", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-harness-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-harness-ws-"));
     const response = await fetch(`${baseUrl}/harness?workspace=${encodeURIComponent(workspace)}`, {
       headers: { authorization: `Bearer ${TOKEN}` },
     });
@@ -323,8 +323,46 @@ describe("harness endpoints", () => {
     await rm(workspace, { recursive: true, force: true });
   });
 
+  it("语义提示：内置种子干净，删掉一条 tier-gate 边后 PUT 会说是哪道门禁失效了", async () => {
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-harness-ws-"));
+    const auth = { authorization: `Bearer ${TOKEN}` };
+    const loaded = await fetch(`${baseUrl}/harness?workspace=${encodeURIComponent(workspace)}`, {
+      headers: auth,
+    });
+    const body = (await loaded.json()) as {
+      document: { nodes: Array<{ id: string; type: string }>; edges: any[] };
+      findings: unknown[];
+    };
+    // 内置种子不该有自己的噪音，否则这条提示会被用户学会忽略
+    expect(body.findings).toEqual([]);
+
+    // 结构仍然合法：只把 G6 从所有 tier 序列里摘掉，节点本身留在画布上
+    const document = body.document;
+    const before = document.edges.filter((edge) => edge.type === "tier-gate" && edge.target === "G6");
+    expect(before.length).toBeGreaterThan(0);
+    document.edges = document.edges.filter((edge) => !(edge.type === "tier-gate" && edge.target === "G6"));
+
+    const saved = await fetch(`${baseUrl}/harness`, {
+      method: "PUT",
+      headers: { ...auth, "content-type": "application/json" },
+      body: JSON.stringify({ workspace, document }),
+    });
+    expect(saved.status).toBe(200);
+    const result = (await saved.json()) as {
+      saved: boolean;
+      findings: Array<{ code: string; severity: string; nodeId?: string; message: string }>;
+    };
+    // 不阻断保存：删掉一段流程是用户的自由，但必须说清后果
+    expect(result.saved).toBe(true);
+    const unattached = result.findings.filter((item) => item.code === "gate-unattached");
+    expect(unattached.map((item) => item.nodeId)).toEqual(["G6"]);
+    expect(unattached[0]?.severity).toBe("warning");
+    expect(unattached[0]?.message).toContain("silently unenforced");
+    await rm(workspace, { recursive: true, force: true });
+  });
+
   it("creates, lists, renames and deletes custom architectures", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-harness-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-harness-ws-"));
     const auth = { authorization: `Bearer ${TOKEN}` };
     // 新建：默认复制标准 Agent 的图
     const created = await fetch(`${baseUrl}/harness/create`, {
@@ -414,7 +452,7 @@ describe("harness endpoints", () => {
   });
 
   it("PUT /harness saves a valid document and rejects invalid ones", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-harness-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-harness-ws-"));
     const valid = {
       version: 1,
       nodes: [
@@ -463,7 +501,7 @@ describe("harness endpoints", () => {
   });
 
   it("keeps one architecture graph per agent profile", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-harness-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-harness-ws-"));
     const auth = { authorization: `Bearer ${TOKEN}` };
     const read = async (profile: string) => {
       const response = await fetch(
@@ -605,7 +643,7 @@ describe("session recovery endpoints", () => {
     };
     expect(current.lastTurn.status).toBe("interrupted");
     expect(current.recoveredPrompts).toEqual([{ id: "q1", text: "send later" }]);
-    expect(current.approvalMode).toBe("auto");
+    expect(current.approvalMode).toBe("ask");
 
     const messages = (await (
       await fetch(`${baseUrl}/session/messages`, {
@@ -1121,7 +1159,7 @@ describe("session mode endpoints", () => {
       body: JSON.stringify({ filePath, format: "json" }),
     });
     expect(json.status).toBe(200);
-    expect(((await json.json()) as { format: string }).format).toBe("meowcode.session.export");
+    expect(((await json.json()) as { format: string }).format).toBe("klockcode.session.export");
   });
 
   it("rejects an export path outside the sessions dir", async () => {
@@ -1229,10 +1267,10 @@ describe("git routes", () => {
   describeGit("with a real repository", () => {
     beforeAll(async () => {
       const { runGit } = await import("../git/git.js");
-      repo = await mkdtemp(path.join(tmpdir(), "meowcode-server-git-"));
-      process.env.GIT_AUTHOR_NAME = "MeowCode Test";
+      repo = await mkdtemp(path.join(tmpdir(), "klockcode-server-git-"));
+      process.env.GIT_AUTHOR_NAME = "KlockCode Test";
       process.env.GIT_AUTHOR_EMAIL = "test@example.com";
-      process.env.GIT_COMMITTER_NAME = "MeowCode Test";
+      process.env.GIT_COMMITTER_NAME = "KlockCode Test";
       process.env.GIT_COMMITTER_EMAIL = "test@example.com";
       await runGit(repo, ["init", "-q"]).catch(async () => {
         await runGit(repo, ["init", "-q"]);
@@ -1395,7 +1433,7 @@ describe("prompt polish", () => {
 
 describe("memory routes", () => {
   it("manages memories in both scopes for a given cwd", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-memory-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-memory-ws-"));
     const auth = { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" };
     try {
       const put = await fetch(`${baseUrl}/memory/file`, {
@@ -1456,7 +1494,7 @@ describe("memory routes", () => {
   });
 
   it("clears each memory scope independently", async () => {
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-memory-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-memory-ws-"));
     const auth = { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" };
     try {
       for (const [scope, name] of [
@@ -1522,7 +1560,7 @@ describe("memory routes", () => {
 
   it("rejects invalid scope and name", async () => {
     const auth = { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" };
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-memory-ws-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-memory-ws-"));
     try {
       const scope = await fetch(`${baseUrl}/memory/file`, {
         method: "PUT",

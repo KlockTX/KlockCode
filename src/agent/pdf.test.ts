@@ -45,7 +45,7 @@ function buildPdf(pages: string[]): Buffer {
 const tempDirs: string[] = [];
 
 async function makeTempDir(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "meowcode-pdf-test-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "klockcode-pdf-test-"));
   tempDirs.push(dir);
   return dir;
 }

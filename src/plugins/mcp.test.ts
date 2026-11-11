@@ -120,8 +120,8 @@ describe("McpManager.start", () => {
 });
 
 describe("缺凭据跳过连接", () => {
-  const TOKEN_ENV = "MEOWCODE_TEST_TOKEN";
-  // 配置里要的是字面占位符 "${MEOWCODE_TEST_TOKEN}"，不是 JS 插值
+  const TOKEN_ENV = "KLOCKCODE_TEST_TOKEN";
+  // 配置里要的是字面占位符 "${KLOCKCODE_TEST_TOKEN}"，不是 JS 插值
   const tokenTemplate = () => `\${${TOKEN_ENV}}`;
 
   afterEach(() => {
@@ -175,8 +175,8 @@ describe("缺凭据跳过连接", () => {
 
   it("连接 401 → 只标 needs_auth，绝不自动弹授权浏览器（由用户手动点「授权」）", async () => {
     const home = await makeTempRoot();
-    const previousHome = process.env.MEOWCODE_HOME_DIR;
-    process.env.MEOWCODE_HOME_DIR = home;
+    const previousHome = process.env.KLOCKCODE_HOME_DIR;
+    process.env.KLOCKCODE_HOME_DIR = home;
     const factory: McpClientFactory = async () => {
       throw new McpAuthRequiredError("cloudflare");
     };
@@ -189,8 +189,8 @@ describe("缺凭据跳过连接", () => {
     } finally {
       spy.mockRestore();
       await manager.dispose();
-      if (previousHome === undefined) delete process.env.MEOWCODE_HOME_DIR;
-      else process.env.MEOWCODE_HOME_DIR = previousHome;
+      if (previousHome === undefined) delete process.env.KLOCKCODE_HOME_DIR;
+      else process.env.KLOCKCODE_HOME_DIR = previousHome;
     }
   });
 
@@ -303,10 +303,10 @@ describe("readMcpConfig", () => {
   it("project 覆盖 user；env/url 模板展开；损坏文件告警不中断", async () => {
     const workspace = await makeTempRoot();
     const home = await makeTempRoot();
-    await fs.mkdir(path.join(home, ".meowcode"), { recursive: true });
-    await fs.mkdir(path.join(workspace, ".meowcode"), { recursive: true });
+    await fs.mkdir(path.join(home, ".klockcode"), { recursive: true });
+    await fs.mkdir(path.join(workspace, ".klockcode"), { recursive: true });
     await fs.writeFile(
-      path.join(home, ".meowcode", "mcp.json"),
+      path.join(home, ".klockcode", "mcp.json"),
       JSON.stringify({
         mcpServers: {
           shared: { command: "user-cmd" },
@@ -315,7 +315,7 @@ describe("readMcpConfig", () => {
       }),
     );
     await fs.writeFile(
-      path.join(workspace, ".meowcode", "mcp.json"),
+      path.join(workspace, ".klockcode", "mcp.json"),
       JSON.stringify({
         mcpServers: {
           shared: { url: "http://x/${MY_TOKEN}" },
@@ -323,7 +323,7 @@ describe("readMcpConfig", () => {
         broken: true,
       }),
     );
-    await fs.writeFile(path.join(workspace, ".meowcode", "mcp.json.bak"), "{ not json");
+    await fs.writeFile(path.join(workspace, ".klockcode", "mcp.json.bak"), "{ not json");
 
     const { servers, errors } = await readMcpConfig({ workspace, homeDir: home });
     expect(servers.shared).toEqual({ url: "http://x/${MY_TOKEN}" });
@@ -501,11 +501,11 @@ describe("restart", () => {
 describe("revoke（解除授权）", () => {
   it("清掉本机 token、摘除工具，状态退回 needs_auth", async () => {
     const home = await makeTempRoot();
-    const previousHome = process.env.MEOWCODE_HOME_DIR;
-    process.env.MEOWCODE_HOME_DIR = home;
+    const previousHome = process.env.KLOCKCODE_HOME_DIR;
+    process.env.KLOCKCODE_HOME_DIR = home;
     try {
       const serverUrl = "https://mcp.example.com/mcp";
-      const tokenFile = path.join(home, ".meowcode", "mcp-oauth", "cloudflare.json");
+      const tokenFile = path.join(home, ".klockcode", "mcp-oauth", "cloudflare.json");
       await fs.mkdir(path.dirname(tokenFile), { recursive: true });
       await fs.writeFile(
         tokenFile,
@@ -534,8 +534,8 @@ describe("revoke（解除授权）", () => {
       expect(stored.clientInformation?.client_id).toBe("dcr-client");
       await manager.dispose();
     } finally {
-      if (previousHome === undefined) delete process.env.MEOWCODE_HOME_DIR;
-      else process.env.MEOWCODE_HOME_DIR = previousHome;
+      if (previousHome === undefined) delete process.env.KLOCKCODE_HOME_DIR;
+      else process.env.KLOCKCODE_HOME_DIR = previousHome;
     }
   });
 
@@ -547,20 +547,20 @@ describe("revoke（解除授权）", () => {
   });
 
   it("stdio args 里的 ${VAR} 与 env 一样会被进程环境展开（检测/展开对称）", () => {
-    const previous = process.env.MEOWCODE_TEST_ARG;
-    process.env.MEOWCODE_TEST_ARG = "hello";
+    const previous = process.env.KLOCKCODE_TEST_ARG;
+    process.env.KLOCKCODE_TEST_ARG = "hello";
     try {
-      expect(expandEnvTemplates("-a ${MEOWCODE_TEST_ARG}")).toBe("-a hello");
-      expect(expandEnvTemplates("keep ${MEOWCODE_MISSING_X} literal? no → empty")).toBe("keep  literal? no → empty");
+      expect(expandEnvTemplates("-a ${KLOCKCODE_TEST_ARG}")).toBe("-a hello");
+      expect(expandEnvTemplates("keep ${KLOCKCODE_MISSING_X} literal? no → empty")).toBe("keep  literal? no → empty");
       // unresolvedEnvVars 与展开对称：env 在场时不缺、env 不在时报缺
-      expect(unresolvedEnvVars({ command: "npx", args: ["-a", "${MEOWCODE_TEST_ARG}"] })).toEqual([]);
-      delete process.env.MEOWCODE_TEST_ARG;
-      expect(unresolvedEnvVars({ command: "npx", args: ["-a", "${MEOWCODE_TEST_ARG}"] })).toEqual([
-        "MEOWCODE_TEST_ARG",
+      expect(unresolvedEnvVars({ command: "npx", args: ["-a", "${KLOCKCODE_TEST_ARG}"] })).toEqual([]);
+      delete process.env.KLOCKCODE_TEST_ARG;
+      expect(unresolvedEnvVars({ command: "npx", args: ["-a", "${KLOCKCODE_TEST_ARG}"] })).toEqual([
+        "KLOCKCODE_TEST_ARG",
       ]);
     } finally {
-      if (previous === undefined) delete process.env.MEOWCODE_TEST_ARG;
-      else process.env.MEOWCODE_TEST_ARG = previous;
+      if (previous === undefined) delete process.env.KLOCKCODE_TEST_ARG;
+      else process.env.KLOCKCODE_TEST_ARG = previous;
     }
   });
 });

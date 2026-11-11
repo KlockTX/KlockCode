@@ -81,7 +81,7 @@ export type LearningProgress = {
 
 /**
  * 默认关闭：自我学习还是实验性能力，且它会改写「模型以后怎么做事」，
- * 这种影响面不该在用户没点头的情况下发生。开关在设置页，或 MEOWCODE_SELF_LEARNING=1。
+ * 这种影响面不该在用户没点头的情况下发生。开关在设置页，或 KLOCKCODE_SELF_LEARNING=1。
  */
 export const DEFAULT_LEARNING_CONFIG: LearningConfig = {
   enabled: false,
@@ -162,7 +162,7 @@ export class LearningController {
   }
 
   /**
-   * 没有工作区就整个关掉：项目级产物会落到相对路径 .meowcode/learning，
+   * 没有工作区就整个关掉：项目级产物会落到相对路径 .klockcode/learning，
    * 那可能正好是应用自身的安装目录 —— 宁可什么都不学，也不能往那儿写。
    */
   get enabled(): boolean {
@@ -564,7 +564,7 @@ export class LearningController {
   /** 手写技能名：学习产物与它们同名时必须让路。 */
   private async handwrittenSkillNames(): Promise<Set<string>> {
     const skills = await discoverSkills([
-      { dir: path.join(this.workspace, ".meowcode", "skills"), source: "project" },
+      { dir: path.join(this.workspace, ".klockcode", "skills"), source: "project" },
     ]).catch(() => []);
     return new Set(skills.map((skill) => skill.name));
   }

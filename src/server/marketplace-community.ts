@@ -7,9 +7,9 @@ import { MarketplaceError, type MarketItemType, type MarketplaceItem } from "./m
 // 常量与类型
 // ---------------------------------------------------------------------------
 
-/** 社区收录仓库（gitcode.com/MuLiuSaMa/MeowCode-Plugins），结构见仓库 README */
+/** 社区收录仓库（gitcode.com/MuLiuSaMa/KlockCode-Plugins），结构见仓库 README */
 const OWNER = "MuLiuSaMa";
-const REPO = "MeowCode-Plugins";
+const REPO = "KlockCode-Plugins";
 
 /** 单文件大小上限（下载后按字节数校验，超限丢弃报错） */
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
@@ -165,7 +165,7 @@ const MIME_BY_EXT: Record<string, string> = {
 export type CommunitySourceOptions = {
   /** 注入测试用 fetch；缺省用全局 fetch */
   fetchImpl?: FetchLike;
-  /** 覆盖收录仓库（测试用）；缺省 MuLiuSaMa/MeowCode-Plugins */
+  /** 覆盖收录仓库（测试用）；缺省 MuLiuSaMa/KlockCode-Plugins */
   repo?: { owner: string; repo: string };
   /** 限流/瞬时错误重试次数（测试设 0 避免退避等待） */
   retries?: number;
@@ -310,7 +310,7 @@ export function createCommunitySource(options: CommunitySourceOptions = {}) {
   // ---- 磁盘缓存 ------------------------------------------------------------
 
   function diskCachePath(ctx: CommunityContext): string {
-    return path.join(ctx.homeDir, ".meowcode", ".marketplace", "community-cache.json");
+    return path.join(ctx.homeDir, ".klockcode", ".marketplace", "community-cache.json");
   }
 
   async function writeDiskCache(items: CommunityItem[], homeDir: string): Promise<void> {
@@ -338,7 +338,7 @@ export function createCommunitySource(options: CommunitySourceOptions = {}) {
   // ---- 安装状态与标记 --------------------------------------------------------
 
   function meowRoot(ctx: CommunityContext): string {
-    return path.join(ctx.homeDir, ".meowcode");
+    return path.join(ctx.homeDir, ".klockcode");
   }
 
   function installTarget(type: MarketItemType, id: string, ctx: CommunityContext): string {

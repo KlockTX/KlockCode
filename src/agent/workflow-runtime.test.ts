@@ -612,3 +612,51 @@ describe("主 Agent 提示词覆盖", () => {
     expect(new WorkflowRuntime({ harness: blank }).rootAgentPrompt).toBeNull();
   });
 });
+
+describe("门禁打回的返工目标", () => {
+  /** 一条泳道两个门禁：G4 由 reviewer 关；G9 属于 T2，是「真实的 gate，但不在这条泳道里」。 */
+  function harnessWithLoop(onFail: string): HarnessDocument {
+    return {
+      version: 1,
+      nodes: [
+        { id: "T1", type: "tier", data: { id: "T1", name: "单车道" } },
+        { id: "G4", type: "gate", data: { id: "G4", name: "实现", onFail } },
+        { id: "G5", type: "gate", data: { id: "G5", name: "评审" } },
+        { id: "reviewer", type: "role", data: { id: "reviewer", name: "评审", role: "reviewer" } },
+        { id: "T2", type: "tier", data: { id: "T2", name: "多车道" } },
+        { id: "G9", type: "gate", data: { id: "G9", name: "另一泳道的门禁" } },
+      ],
+      edges: [
+        { id: "t1-g4", source: "T1", target: "G4", type: "tier-gate", order: 1 },
+        { id: "t1-g5", source: "T1", target: "G5", type: "tier-gate", order: 2 },
+        { id: "g4-r", source: "G4", target: "reviewer", type: "gate-role" },
+        { id: "g5-r", source: "G5", target: "reviewer", type: "gate-role" },
+        { id: "t2-g9", source: "T2", target: "G9", type: "tier-gate", order: 1 },
+        { id: "g9-r", source: "G9", target: "reviewer", type: "gate-role" },
+      ],
+    };
+  }
+
+  function failFirstGate(workflow: WorkflowRuntime): string {
+    workflow.admit(T1_INPUT);
+    return workflow.applyChildGate({
+      role: "reviewer",
+      agentId: "r-1",
+      laneId: MAIN_LANE_ID,
+      childResult: childResult({ findings: [{ severity: "critical", message: "契约没覆盖并发" }] }),
+    }).message;
+  }
+
+  it("目标在本泳道时只返工该门禁及其之后", () => {
+    const message = failFirstGate(new WorkflowRuntime({ harness: harnessWithLoop("loop-to:G5") }));
+    expect(message).toContain("loop back to G5");
+    expect(message).not.toContain("Note:");
+  });
+
+  it("目标属于别的泳道时退回整条重来，且必须写明这次降级", () => {
+    const message = failFirstGate(new WorkflowRuntime({ harness: harnessWithLoop("loop-to:G9") }));
+    expect(message).toContain("loop back to G4");
+    expect(message).toContain('onFail=loop-to:G9 is not a gate of lane "main"');
+    expect(message).toContain("the whole lane was rewound");
+  });
+});

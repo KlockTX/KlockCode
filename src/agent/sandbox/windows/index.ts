@@ -1,6 +1,6 @@
 /**
  * Ported from deepseek-harness packages/sandbox/sandbox-windows-acl/src/index.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: OS-level run_command isolation.
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: OS-level run_command isolation.
  *
  * 只被 runner 进程加载。工作区 ACE 是常驻缓存（dispose 不撤）；
  * 私有 temp ACE 每次执行后撤销；显式「撤销授权」走 revokeSandboxGrants。
@@ -33,11 +33,11 @@ import {
 
 export type SandboxSessionOptions = {
   workspace: string;
-  /** 工作区之外的额外可写根 */
+  /** 工作区之外的额外可写根（read-only 下忽略） */
   writableRoots: readonly string[];
-  /** null = 不授予私有 temp */
+  /** null = 不授予私有 temp（read-only 必须为 null） */
   tempDir: string | null;
-  mode: "workspace-write";
+  mode: "workspace-write" | "read-only";
 };
 
 function parseSid(api: Win32Bindings, sddl: string): NativePtr {
@@ -64,7 +64,7 @@ export class SandboxSession {
   readonly workspace: string;
   readonly writableDirs: string[];
   readonly tempDir: string | null;
-  readonly mode: "workspace-write";
+  readonly mode: "workspace-write" | "read-only";
 
   private api: Win32Bindings | undefined;
   private token: NativePtr | undefined;
@@ -77,6 +77,12 @@ export class SandboxSession {
   constructor(options: SandboxSessionOptions) {
     this.mode = options.mode;
     this.workspace = canonicalizeExistingPath(options.workspace);
+    if (this.mode === "read-only") {
+      // 只读模式不授予任何可写根：留一半等于留一扇半开的门
+      this.writableDirs = [];
+      this.tempDir = null;
+      return;
+    }
     const roots = [this.workspace, ...options.writableRoots.map((root) => canonicalizeExistingPath(root))];
     this.writableDirs = [...new Set(roots)];
     for (const dir of this.writableDirs) requireDirectory("writable root", dir);
@@ -106,36 +112,52 @@ export class SandboxSession {
       const worldSid = makeWellKnownSid(api, abi.WinWorldSid);
       this.koffiSids.push(worldSid);
 
-      const writeSidPtr = parseSid(api, workspaceWriteSid(this.workspace));
-      this.localSids.push(writeSidPtr);
+      // read-only：一个写 ACE 都不写（连工作区也不写）。令牌的 restricting 列表
+      // 只留 [logon, Everyone]，任何已存在对象的写请求都会因缺能力 SID 被拒——
+      // 这是 OS 层拒绝，不依赖命令自己"守规矩"。
+      const readOnly = this.mode === "read-only";
+      let writeSidPtr: NativePtr | undefined;
       let tempSidPtr: NativePtr | undefined;
-      if (this.tempDir !== null) {
-        tempSidPtr = parseSid(api, tempWriteSid(this.tempDir));
-        this.localSids.push(tempSidPtr);
-      }
+      if (!readOnly) {
+        writeSidPtr = parseSid(api, workspaceWriteSid(this.workspace));
+        this.localSids.push(writeSidPtr);
+        if (this.tempDir !== null) {
+          tempSidPtr = parseSid(api, tempWriteSid(this.tempDir));
+          this.localSids.push(tempSidPtr);
+        }
 
-      for (const dir of this.writableDirs) {
-        grantWrite(api, dir, writeSidPtr, lowLabelSid, worldSid);
-      }
-      if (this.tempDir !== null && tempSidPtr !== undefined) {
-        // 先记账再授权：grantWrite 可能在 SetNamedSecurityInfoW 成功后抛 LocalFree 错误。
-        this.tempGrant = { path: this.tempDir, sidPtr: tempSidPtr };
-        grantWrite(api, this.tempDir, tempSidPtr, lowLabelSid, worldSid);
+        for (const dir of this.writableDirs) {
+          grantWrite(api, dir, writeSidPtr, lowLabelSid, worldSid);
+        }
+        if (this.tempDir !== null && tempSidPtr !== undefined) {
+          // 先记账再授权：grantWrite 可能在 SetNamedSecurityInfoW 成功后抛 LocalFree 错误。
+          this.tempGrant = { path: this.tempDir, sidPtr: tempSidPtr };
+          grantWrite(api, this.tempDir, tempSidPtr, lowLabelSid, worldSid);
+        }
       }
 
       const logonSid = findLogonSid(api, currentToken);
       this.koffiSids.push(logonSid);
+      const writeSids: NativePtr[] = [];
+      if (writeSidPtr !== undefined) writeSids.push(writeSidPtr);
+      if (tempSidPtr !== undefined) writeSids.push(tempSidPtr);
       restrictedToken = createRestrictedToken(
         api,
         currentToken,
         logonSid,
-        tempSidPtr === undefined ? [writeSidPtr] : [writeSidPtr, tempSidPtr],
+        writeSids,
         { world: worldSid },
         this.mode,
       );
       this.token = restrictedToken;
       restrictTokenIntegrity(api, restrictedToken, lowLabelSid);
-      setTokenDefaultDaclGrant(api, restrictedToken, tempSidPtr ?? writeSidPtr);
+      // 默认 DACL 只影响「子进程自己新建的对象」：read-only 用 logon SID 保活
+      // （管道/事件创建不能 EPERM），但仍拿不到任何既存文件的写权限。
+      const defaultDaclSid = readOnly ? logonSid : (tempSidPtr ?? writeSidPtr);
+      if (defaultDaclSid === undefined) {
+        throw new Error("SandboxSession init: no SID available for the token default DACL");
+      }
+      setTokenDefaultDaclGrant(api, restrictedToken, defaultDaclSid);
 
       if (api.closeHandle(currentToken) === 0) {
         throwLastError(api, "CloseHandle", "current process token");

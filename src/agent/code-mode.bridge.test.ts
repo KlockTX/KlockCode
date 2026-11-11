@@ -12,7 +12,7 @@ afterEach(async () => {
 });
 
 async function tempWorkspace(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-ptc-bridge-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-ptc-bridge-"));
   workspaces.push(root);
   return root;
 }

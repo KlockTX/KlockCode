@@ -52,8 +52,8 @@ beforeEach(() => {
 
 describe("计划清单新鲜度提醒", () => {
   it("有未完成步骤时，连续 4 次文件变更未更新计划 → 轮间注入提醒", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-plan-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-planws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-plan-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-planws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -94,8 +94,8 @@ describe("计划清单新鲜度提醒", () => {
   }, 60_000);
 
   it("计划全部完成（或没有计划）时不提醒", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-plan-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-planws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-plan-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-planws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");

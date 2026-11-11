@@ -64,8 +64,8 @@ beforeEach(() => {
 
 describe("治理层集成（goal 模式，T1 全流程）", () => {
   it("admit 前写被拦 → admit → 根侧 G4 → reviewer G5 → verifier G6 → 完成", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-gov-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-govws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-gov-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-govws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -184,8 +184,8 @@ describe("治理层集成（goal 模式，T1 全流程）", () => {
   }, 60_000);
 
   it("模型谎报完成触发宿主续命：注入 frontier 后继续，最多 2 次", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-gov-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-govws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-gov-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-govws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");
@@ -233,8 +233,8 @@ describe("治理层集成（goal 模式，T1 全流程）", () => {
   }, 60_000);
 
   it("default 模式不触发治理：不 admit 也能直接写", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-gov-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-govws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-gov-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-govws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("full");

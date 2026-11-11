@@ -41,11 +41,9 @@ import { createTurnTrace, recordToolCall, type TurnTrace } from "./learning/sign
 import { canReplayNativeCompaction, nativeCompactionMode, requestNativeCompaction } from "./native-compaction.js";
 import { createWebSearchBackend, WEB_SEARCH_MAX_RESULTS, type WebSearchResult } from "./web-search.js";
 import { fetchWebPage, type WebFetchOutcome } from "./web-fetch.js";
-import { multiEditPaths, readMultiEditGroups } from "./multi-edit.js";
+import { multiEditPaths } from "./multi-edit.js";
 import {
   displayPath,
-  isWithinAppDataRoot,
-  isWithinWorkspace,
   resolveToolPath,
   resolveWithinWorkspace,
   setAppDataRoot,
@@ -55,7 +53,14 @@ import { LoopGuard, type ReadCoverageSnapshot } from "./loop-guard.js";
 import { SessionStore, listSessions, sessionFileName, type SessionSummary } from "./session-store.js";
 import { SnapshotStore, type SnapshotTarget } from "./snapshot-store.js";
 import { recoverSession } from "./session-recovery.js";
-import { TraceRecorder, type TraceSpan, type TraceSummary } from "./trace.js";
+import {
+  TraceRecorder,
+  type DecisionKind,
+  type DecisionRecord,
+  type TraceExport,
+  type TraceSpan,
+  type TraceSummary,
+} from "./trace.js";
 import {
   addApprovalRule,
   commandPrefix,
@@ -65,7 +70,18 @@ import {
 } from "./approval-rules.js";
 import { createJobManager, type JobManager } from "./jobs.js";
 import { isForceApprovalGitAction, isMutatingGitAction } from "./git-tools.js";
-import { patchPaths } from "./patch.js";
+import { APPROVAL_BOUND_TOOLS } from "./tool-contract.js";
+import {
+  autoApprovalReason,
+  planModeRejection,
+  safeToolInput,
+  shouldConfirmFileDelete,
+  validateToolArguments,
+  WRITABLE_ROOT_TOOLS,
+  writablePaths,
+  writableRootViolation,
+  withinPlansDir,
+} from "./tool-invocation.js";
 import {
   executeTool,
   isDynamicToolRequiringApproval,
@@ -73,10 +89,10 @@ import {
   listDynamicToolDefinitions,
   dynamicToolDefinitionsTrimmed,
   dynamicToolsVersion,
+  knownToolNames,
   toolDefinitions,
   admitToolDefinition,
   truncateOutput,
-  READ_MANY_MAX_PATHS,
   type ToolRunOptions,
 } from "./tools.js";
 import type { PluginRegistry } from "../plugins/registry.js";
@@ -163,8 +179,15 @@ import {
   WorkflowRuntime,
   type GovernanceMode,
 } from "./workflow-runtime.js";
-import { loadHarnessDocument } from "./harness-document.js";
 import {
+  harnessSourceSignature,
+  readHarnessSnapshot,
+  type HarnessDocumentSnapshot,
+} from "./harness-document.js";
+import { lintHarnessDocument, summarizeHarnessFindings } from "./harness-lint.js";
+import { authorize } from "./policy.js";
+import {
+  DEFAULT_APPROVAL_MODE,
   isApprovalMode,
   normalizeApprovalMode,
   isSessionMode,
@@ -177,7 +200,6 @@ import {
   type ChatMessage,
   type ContextEditing,
   type CommandRisk,
-  type CommandRiskCategory,
   type MeowEvent,
   type NativeCompactionPayload,
   type PendingApproval,
@@ -201,7 +223,6 @@ import {
   type UsageSummary,
 } from "./types.js";
 import type { SandboxDenial } from "./sandbox/types.js";
-import { getSandboxSettings } from "./sandbox/policy.js";
 
 export type { ApprovalMode, SessionMode } from "./types.js";
 
@@ -328,17 +349,8 @@ const PLAN_MUTATION_TOOLS = new Set([
   "move_file",
 ]);
 
-const APPROVAL_TOOLS = new Set([
-  "write_file",
-  "edit_file",
-  "multi_edit",
-  "delete_file",
-  "move_file",
-  "apply_patch",
-  "run_command",
-]);
 
-/** 桌面端技能 chip 的固定前缀：命中时该回合按完全访问执行，技能不受会话权限模式约束。 */
+/** 桌面端技能 chip 的固定前缀：命中时只标记为技能回合，不再提升权限档。 */
 const SKILL_REFERENCE_PREFIX = "【技能引用】";
 
 /** 首部引用块（空行之前）里任一行以技能引用开头：支持一条消息挂多个技能 */
@@ -366,12 +378,6 @@ function isLocalBrowserUrl(url: string): boolean {
 
 // READ_ONLY_PARALLEL_TOOLS / clampOutputTokens / estimateRequestInputTokens
 // 已随薄循环抽到 agent-loop.ts 与 context.ts（循环与宿主共用）
-
-/**
- * 循环检测（P1-2）：同一回合内「参数完全相同 且 输出逐字节相同」的连续工具调用，
- * 状态与阈值见 loop-guard.ts（3/5/8 分级，参考 dsh repeat-tool-reminder）。
- */
-type ToolArgumentSpec = { required: string[]; nonEmpty: string[] };
 
 type LiveSubagent = {
   runtime: AgentRuntime;
@@ -411,229 +417,16 @@ type SubagentObservations = {
   pendingCommands: Map<string, string>;
 };
 
-/** 必填参数校验：参数不完整时绝不落盘/执行，按工具错误回给模型。 */
-const TOOL_ARGUMENTS: Record<string, ToolArgumentSpec> = {
-  read_file: { required: ["path"], nonEmpty: ["path"] },
-  glob: { required: ["pattern"], nonEmpty: ["pattern"] },
-  grep: { required: ["pattern"], nonEmpty: ["pattern"] },
-  run_code: { required: ["code"], nonEmpty: ["code"] },
-  write_file: { required: ["path", "content"], nonEmpty: ["path"] },
-  edit_file: { required: ["path", "oldString", "newString"], nonEmpty: ["path", "oldString"] },
-  run_command: { required: ["command"], nonEmpty: ["command"] },
-  browser_navigate: { required: ["url"], nonEmpty: ["url"] },
-  browser_click: { required: ["ref"], nonEmpty: ["ref"] },
-  browser_type: { required: ["text"], nonEmpty: ["text"] },
-  task: { required: ["description"], nonEmpty: ["description"] },
-  admit: { required: ["tier", "task_shape"], nonEmpty: ["tier", "task_shape"] },
-  job: { required: ["action"], nonEmpty: ["action"] },
-  git: { required: ["action"], nonEmpty: ["action"] },
-  delete_file: { required: ["path"], nonEmpty: ["path"] },
-  move_file: { required: ["from", "to"], nonEmpty: ["from", "to"] },
-  apply_patch: { required: ["patch"], nonEmpty: ["patch"] },
-  web_search: { required: ["query"], nonEmpty: ["query"] },
-  web_fetch: { required: ["url"], nonEmpty: ["url"] },
-};
-
-/** 门禁拦截事件的 input 回显：尽力解析参数，解析失败给空对象 */
-function safeToolInput(call: ToolCall): unknown {
-  try {
-    return JSON.parse(call.function.arguments || "{}");
-  } catch {
-    return {};
-  }
-}
-
-function validateToolArguments(
-  tool: string,
-  raw: string | undefined,
-): { ok: true; input: unknown } | { ok: false; error: string } {
-  const text = (raw ?? "").trim();
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text || "{}");
-  } catch {
-    return { ok: false, error: "tool arguments are not valid JSON." };
-  }
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return { ok: false, error: "tool arguments must be a JSON object." };
-  }
-  const args = parsed as Record<string, unknown>;
-  // multi_edit 支持跨文件：path 可以在顶层，也可以挂在每条 edit 上
-  if (tool === "multi_edit") {
-    const groups = readMultiEditGroups(args);
-    if (typeof groups === "string") return { ok: false, error: groups };
-    return { ok: true, input: args };
-  }
-  // read_many 的 paths 是字符串数组：单独校验（TOOL_ARGUMENTS 只覆盖字符串字段）
-  if (tool === "read_many") {
-    const paths = args.paths;
-    if (!Array.isArray(paths) || paths.length === 0) {
-      return { ok: false, error: 'argument "paths" must be a non-empty array of file paths.' };
-    }
-    if (paths.length > READ_MANY_MAX_PATHS) {
-      return { ok: false, error: `argument "paths" accepts at most ${READ_MANY_MAX_PATHS} files; split into batches.` };
-    }
-    if (paths.some((item) => typeof item !== "string" || !item.trim())) {
-      return { ok: false, error: 'every entry in "paths" must be a non-empty string.' };
-    }
-    return { ok: true, input: args };
-  }
-  const spec = TOOL_ARGUMENTS[tool];
-  if (spec) {
-    for (const field of spec.required) {
-      const value = args[field];
-      if (typeof value !== "string") {
-        return { ok: false, error: `missing required string argument "${field}".` };
-      }
-      if (spec.nonEmpty.includes(field) && !value.trim()) {
-        return { ok: false, error: `argument "${field}" must not be empty.` };
-      }
-    }
-  }
-  return { ok: true, input: args };
-}
-
 /**
  * 工具审批模式（粒度由粗到细）：
  *  - "read-only"：只读，写/改/命令一律拒绝
  *  - "ask"：每次写/改/命令都弹审批（旧版 "default" 的语义）
- *  - "auto"：可写根（工作区 + <home>/.meowcode）内的写/改、常规开发命令自动批准；
+ *  - "auto"：可写根（工作区 + <home>/.klockcode）内的写/改、常规开发命令自动批准；
  *    凭据读取、下载执行、系统设置、发布部署、破坏性 git、其它工作区外路径与高危特征仍弹审批（启发式护栏）
  *  - "full"：全部工具自动放行，并允许工作区外的绝对路径
  * 审批模式按会话持久化；旧会话里存的 "default" 读出来归一到 "ask"。
  */
 export { isApprovalMode, normalizeApprovalMode, isSessionMode, normalizeSessionMode };
-
-/** 只有写类工具参与"可写根"判定；命令走独立的高危判定，见 autoApprovalReason。 */
-const WRITABLE_ROOT_TOOLS = new Set([
-  "write_file",
-  "edit_file",
-  "multi_edit",
-  "delete_file",
-  "move_file",
-  "apply_patch",
-]);
-
-/**
- * auto 模式下这次调用能否自动批准，以及归到哪一类留痕原因。
- * 命令没有路径可校验，改用 assessCommandRisk 的启发式护栏：命中即仍要人确认。
- * 这不是沙箱；真正的执行边界在 run_code 隔离与 full 模式的显式授权上。
- */
-/**
- * 命令风险按类别独立授权（codex AskForApproval::Granular 同款策略对象）：
- * "ask" = auto 模式也必须弹审批；"auto" = 可自动放行。
- * 默认全 ask —— 与既往一刀切行为完全一致；将来设置页暴露「XX 类自动放行」时改这张表。
- */
-const COMMAND_RISK_POLICY: Record<CommandRiskCategory, "ask" | "auto"> = {
-  disk_system: "ask",
-  recursive_delete: "ask",
-  credential_access: "ask",
-  env_dump: "ask",
-  remote_exec: "ask",
-  inline_exec: "ask",
-  system_config: "ask",
-  privilege_escalation: "ask",
-  process_kill: "ask",
-  destructive_git: "ask",
-  publish_deploy: "ask",
-};
-
-function autoApprovalReason(
-  tool: string,
-  writableTarget: boolean,
-  commandRisk?: CommandRisk,
-): "writable_root" | "low_risk_command" | null {
-  if (tool === "run_command") {
-    if (!commandRisk) return "low_risk_command";
-    return commandRisk.categories.some((category) => COMMAND_RISK_POLICY[category] === "ask")
-      ? null
-      : "low_risk_command";
-  }
-  return writableTarget ? "writable_root" : null;
-}
-
-/** 「文件删除确认」只在工作区写入沙箱模式下生效；完全访问模式跳过。 */
-function shouldConfirmFileDelete(): boolean {
-  const settings = getSandboxSettings();
-  return settings.enabled && settings.confirmDelete;
-}
-
-/** 写类工具涉及的所有路径：multi_edit 可跨文件，必须逐个判定。 */
-function writablePaths(tool: string, input: unknown): string[] {
-  const args = (input ?? {}) as Record<string, unknown>;
-  if (tool === "multi_edit") {
-    const paths = multiEditPaths(input);
-    if (paths.length) return paths;
-  }
-  if (tool === "move_file") {
-    const from = String(args.from ?? "").trim();
-    const to = String(args.to ?? "").trim();
-    return [from, to].filter(Boolean);
-  }
-  if (tool === "apply_patch") {
-    return patchPaths(String(args.patch ?? ""));
-  }
-  const target = String(args.path ?? "").trim();
-  return target ? [target] : [];
-}
-
-/**
- * 计划模式专用：write 系工具的全部目标路径（realpath 后）都落在工作区 plans/ 目录内才放行。
- * 全部在内返回解析后的绝对路径列表（供 plan_documented 事件取展示路径）；
- * 任一路径越界/解析失败/没有路径 → null（整次调用拒绝）。
- */
-async function withinPlansDir(
-  workspace: string,
-  tool: string,
-  input: unknown,
-): Promise<string[] | null> {
-  const paths = writablePaths(tool, input);
-  if (!paths.length) return null;
-  const plansRoot = path.resolve(workspace, "plans");
-  const resolved: string[] = [];
-  for (const target of paths) {
-    try {
-      const full = await resolveWithinWorkspace(workspace, target);
-      if (!isWithinWorkspace(plansRoot, full)) return null;
-      resolved.push(full);
-    } catch {
-      return null;
-    }
-  }
-  return resolved;
-}
-
-/**
- * 计划模式下被拒绝的工具统一提示（executeToolCall 与 executeTaskToolCall 共用）。
- * 不弹审批：模型收到这条结果后应停下来等用户确认计划。
- */
-function planModeRejection(tool: string): string {
-  return `Tool ${tool} blocked: plan mode only allows writing plan documents under plans/. Do not run commands, spawn subagents, or modify other files; finish the plan document and wait for the user to confirm it.`;
-}
-
-/**
- * codex 式「可写根」判定：目标路径经 realpath 后仍落在工作区内才算可自动批准。
- * <home>/.meowcode（应用自己的记忆/技能/插件数据）与工作区同属可信根。
- * 返回第一个越界路径；全部在区内返回 null；参数里没有路径返回空串。
- * 用 resolveWithinWorkspace 而非字符串前缀比较，工作区内指向外部的软链接/junction 会被识别。
- */
-async function writableRootViolation(
-  workspace: string,
-  tool: string,
-  input: unknown,
-): Promise<string | null> {
-  const paths = writablePaths(tool, input);
-  if (!paths.length) return "";
-  for (const target of paths) {
-    try {
-      await resolveWithinWorkspace(workspace, target);
-    } catch {
-      if (isWithinAppDataRoot(target)) continue;
-      return target;
-    }
-  }
-  return null;
-}
 
 /** 一次后台预热压缩的快照与结果；task 内部就地更新 state/summary。 */
 type WarmupCompaction = {
@@ -723,7 +516,7 @@ const SHRINK_SPILL_MAP_MAX = 400;
  * 模型必须知道「历史是被丢弃而不是被总结」，否则会以为自己漏读了什么。
  */
 const HISTORY_DROPPED_SUMMARY =
-  "[meowcode] Earlier history was dropped without a summary because the context window was exhausted. The plan snapshot and the touched-file list below are current; re-read any file you need instead of assuming what it contains.";
+  "[klockcode] Earlier history was dropped without a summary because the context window was exhausted. The plan snapshot and the touched-file list below are current; re-read any file you need instead of assuming what it contains.";
 
 /**
  * Code Mode 的取舍以开源共识为准（2026-10-30 复核后回滚了「摘只读工具定义」的做法）：
@@ -861,37 +654,37 @@ const MEMORY_TOOL_NAMES: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * 记忆总开关的环境默认值：桌面端经 MEOWCODE_MEMORY 传入 settings.json 的开关。
- * 兼容旧的 MEOWCODE_MEMORY_EXTRACTION（那时候只关蒸馏，语义是现在的一个子集）。
+ * 记忆总开关的环境默认值：桌面端经 KLOCKCODE_MEMORY 传入 settings.json 的开关。
+ * 兼容旧的 KLOCKCODE_MEMORY_EXTRACTION（那时候只关蒸馏，语义是现在的一个子集）。
  * 测试环境在 vitest.setup.ts 里统一置 0。
  */
 function readMemoryEnvDefault(): boolean {
-  const raw = process.env.MEOWCODE_MEMORY ?? process.env.MEOWCODE_MEMORY_EXTRACTION;
+  const raw = process.env.KLOCKCODE_MEMORY ?? process.env.KLOCKCODE_MEMORY_EXTRACTION;
   if (raw === undefined || raw.trim() === "") return true;
   const normalized = raw.trim().toLowerCase();
   return normalized !== "0" && normalized !== "false";
 }
 
 /**
- * 回合后蒸馏的环境开关（MEOWCODE_MEMORY_DISTILL，默认开）。
+ * 回合后蒸馏的环境开关（KLOCKCODE_MEMORY_DISTILL，默认开）。
  *
  * 只在「记忆总开关开着、但不想付蒸馏请求」的场合需要单独关：测试环境就是这么用的——
  * 记忆工具与索引要保留（用例断言它们常驻），后台蒸馏却会吃掉排队的 mock 响应。
  * 产品界面不暴露它：用户关记忆就是整体关。
  */
 function readMemoryDistillEnvDefault(): boolean {
-  const raw = process.env.MEOWCODE_MEMORY_DISTILL;
+  const raw = process.env.KLOCKCODE_MEMORY_DISTILL;
   if (raw === undefined || raw.trim() === "") return true;
   const normalized = raw.trim().toLowerCase();
   return normalized !== "0" && normalized !== "false";
 }
 
-/** 会话回滚（文件快照）的 env 默认值：桌面端经 MEOWCODE_REWIND* 传入；默认开启。 */
+/** 会话回滚（文件快照）的 env 默认值：桌面端经 KLOCKCODE_REWIND* 传入；默认开启。 */
 function readRewindEnvDefaults(): { enabled: boolean; maxBlobBytes?: number; keepCheckpoints?: number } {
-  const raw = process.env.MEOWCODE_REWIND;
+  const raw = process.env.KLOCKCODE_REWIND;
   const enabled = raw === undefined || raw.trim() === "" ? true : raw.trim().toLowerCase() !== "0" && raw.trim().toLowerCase() !== "false";
-  const maxMb = Number(process.env.MEOWCODE_REWIND_MAX_MB);
-  const keep = Number(process.env.MEOWCODE_REWIND_KEEP);
+  const maxMb = Number(process.env.KLOCKCODE_REWIND_MAX_MB);
+  const keep = Number(process.env.KLOCKCODE_REWIND_KEEP);
   return {
     enabled,
     ...(Number.isFinite(maxMb) && maxMb > 0
@@ -902,7 +695,7 @@ function readRewindEnvDefaults(): { enabled: boolean; maxBlobBytes?: number; kee
 }
 
 /** 自我学习开关的 env 初值：**默认关闭**（实验性能力，需用户显式开启）。 */
-function readLearningEnvDefault(): boolean {  const raw = process.env.MEOWCODE_SELF_LEARNING;
+function readLearningEnvDefault(): boolean {  const raw = process.env.KLOCKCODE_SELF_LEARNING;
   if (raw === undefined || raw.trim() === "") return false;
   const normalized = raw.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "on";
@@ -910,7 +703,7 @@ function readLearningEnvDefault(): boolean {  const raw = process.env.MEOWCODE_S
 
 /** 供应商故障转移开关的 env 初值：**默认关闭**，设置里显式开启才切备用服务商。 */
 function readProviderFallbackEnvDefault(): boolean {
-  const raw = process.env.MEOWCODE_PROVIDER_FALLBACK;
+  const raw = process.env.KLOCKCODE_PROVIDER_FALLBACK;
   if (raw === undefined || raw.trim() === "") return false;
   const normalized = raw.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "on";
@@ -945,7 +738,7 @@ export class AgentRuntime {
   private providers: ProviderConfig[];
   private providerId: string;
   private sessionsDir: string;
-  /** 用户主目录：全局技能索引扫描根（~/.meowcode/skills）；测试注入临时目录隔离真实环境 */
+  /** 用户主目录：全局技能索引扫描根（~/.klockcode/skills）；测试注入临时目录隔离真实环境 */
   private homeDir: string;
   /**
    * shrink 前已落盘的旧工具输出（callId → 相对路径）：摘录替换后全文仍可 read_file 找回。
@@ -1011,9 +804,12 @@ export class AgentRuntime {
   } | null = null;
   /** run_code 宿主桥的内部调用序号：只用于审批记录与日志的 callId */
   private bridgeCallSeq = 0;
-  private approvalMode: ApprovalMode = "auto";
+  /** 默认保守：新会话未显式切档时，写文件与命令都要人工确认。 */
+  private approvalMode: ApprovalMode = DEFAULT_APPROVAL_MODE;
   /** 当前回合启动时的审批模式快照：切会话重置全局模式时不影响正在跑的回合 */
   private turnApprovalMode: ApprovalMode | null = null;
+  /** 本回合是否引用了技能：只作为策略面的输入，绝不用于提升审批档 */
+  private turnSkillReference = false;
   /** 会话模式（default/plan/goal）：plan 加写门控，goal 只注入指令 */
   private chatMode: SessionMode = "default";
   /** 当前回合启动时的模式快照，语义同 turnApprovalMode */
@@ -1292,7 +1088,7 @@ export class AgentRuntime {
     providers: ProviderConfig[];
     providerId?: string;
     sessionsDir: string;
-    /** 全局技能目录扫描根（缺省 os.homedir()）；测试注入临时目录隔离真实 ~/.meowcode */
+    /** 全局技能目录扫描根（缺省 os.homedir()）；测试注入临时目录隔离真实 ~/.klockcode */
     homeDir?: string;
     workspace?: string;
     browserHost?: BrowserHostClient | null;
@@ -1311,7 +1107,7 @@ export class AgentRuntime {
     denyHostWrites?: boolean;
     injectInstructions?: boolean;
     instructionSettings?: InstructionSettings;
-    /** 内置技能根：server 传入 MEOWCODE_MARKETPLACE_DIR/builtin-skills；缺省不加载 */
+    /** 内置技能根：server 传入 KLOCKCODE_MARKETPLACE_DIR/builtin-skills；缺省不加载 */
     builtinSkillsDir?: string;
     /**
      * 实验开关（默认全关）：
@@ -1339,13 +1135,13 @@ export class AgentRuntime {
     mcpReady?: Promise<void> | null;
     /** 记忆总开关：缺省开启；server 从设置/env 传入初始值（关掉后不蒸馏、不注入、不下发记忆工具） */
     memory?: boolean;
-    /** 只关回合后蒸馏（记忆工具与索引保留）：缺省按 MEOWCODE_MEMORY_DISTILL，测试用它 */
+    /** 只关回合后蒸馏（记忆工具与索引保留）：缺省按 KLOCKCODE_MEMORY_DISTILL，测试用它 */
     distill?: boolean;
-    /** 会话回滚的文件快照（缺省按 MEOWCODE_REWIND* env，默认开启）；关闭后打点 no-op */
+    /** 会话回滚的文件快照（缺省按 KLOCKCODE_REWIND* env，默认开启）；关闭后打点 no-op */
     snapshots?: { enabled?: boolean; maxBlobBytes?: number; keepCheckpoints?: number };
     /** 自我学习（技能/经验/用户模型）：缺省开启；server 从设置/env 传入 */
     learning?: boolean;
-    /** 供应商故障转移：缺省按 MEOWCODE_PROVIDER_FALLBACK，默认关闭；server 可实时切换 */
+    /** 供应商故障转移：缺省按 KLOCKCODE_PROVIDER_FALLBACK，默认关闭；server 可实时切换 */
     providerFallback?: boolean;
     /** 用户可见回复的语色：缺省普通；server 从设置/env 传入并支持热更新 */
     speechStyle?: SpeechStyle;
@@ -1370,8 +1166,8 @@ export class AgentRuntime {
     this.providerId = options.providerId ?? options.providers[0]?.id ?? "";
     this.sessionsDir = options.sessionsDir;
     this.homeDir = options.homeDir ?? os.homedir();
-    // 路径守卫和应用保持一致的可信根：user 记忆/技能/插件都在 <home>/.meowcode
-    setAppDataRoot(path.join(this.homeDir, ".meowcode"));
+    // 路径守卫和应用保持一致的可信根：user 记忆/技能/插件都在 <home>/.klockcode
+    setAppDataRoot(path.join(this.homeDir, ".klockcode"));
     this.browserHost = options.browserHost ?? null;
     this.enableTaskTool = options.enableTaskTool ?? true;
     this.sessionPace = options.sessionPace ?? "interactive";
@@ -2055,6 +1851,14 @@ export class AgentRuntime {
         );
       });
     }
+    // 架构图主 Agent 节点的工具白名单：既要拦执行，也要从广告里撤下。
+    // 只拦执行时，模型仍会对着一条自己不能用的清单反复试错——白名单就成了
+    // 「配置改了看不见效果」：界面上一目了然的能力边界，在请求里根本不存在。
+    // （task / admit 是编排通道，toolAllowed 里始终保留）
+    if (this.enableTaskTool && this.workflow.rootAgentTools) {
+      base = base.filter((definition) => this.toolAllowed(definition.function.name));
+      browser = browser.filter((definition) => this.toolAllowed(definition.function.name));
+    }
     // 插件 / MCP 动态工具：同样受 allowedTools 白名单约束（Explore 子 Agent 只挂只读工具）
     const pluginTools = listDynamicToolDefinitions().filter((definition) =>
       this.toolAllowed(definition.function.name),
@@ -2064,7 +1868,7 @@ export class AgentRuntime {
     if (dynamicToolDefinitionsTrimmed() && !this.dynamicToolBudgetWarned) {
       this.dynamicToolBudgetWarned = true;
       console.error(
-        "[meowcode] dynamic tool schemas exceeded the 8k budget; overflow tools are deferred (call tool_search to surface them) — disable unused MCP servers to reduce the split",
+        "[klockcode] dynamic tool schemas exceeded the 8k budget; overflow tools are deferred (call tool_search to surface them) — disable unused MCP servers to reduce the split",
       );
     }
     const combined = this.browserHost ? [...base, ...browser] : base;
@@ -2073,10 +1877,14 @@ export class AgentRuntime {
 
   /** 原始工具表的重建键：任一输入变化（MCP 增删、档位、provider 列表）才重算。 */
   private rawToolsKey(): string {
+    // 架构图主 Agent 节点的工具白名单参与缓存键：图重载后 computeTools 的结果会变，
+    // 键不变就会一直返回旧清单（模型看不到刚放开的工具，只能看到已被撤下的）。
+    const harnessTools = this.enableTaskTool ? this.workflow.rootAgentTools : null;
     return [
       dynamicToolsVersion(),
       this.agentProfile,
       this.enableTaskTool ? 1 : 0,
+      harnessTools ? [...harnessTools].sort().join(",") : "all",
       this.memoryEnabled ? 1 : 0,
       this.browserHost ? 1 : 0,
       this.governance,
@@ -2242,6 +2050,40 @@ export class AgentRuntime {
     return this.traceRecorder.summary();
   }
 
+  /** 决策链查询：可按 traceId 与 kind 过滤，供诊断端点与回放使用。 */
+  getDecisions(options?: {
+    traceId?: string;
+    kind?: DecisionKind;
+    limit?: number;
+  }): DecisionRecord[] {
+    return this.traceRecorder.listDecisions(options);
+  }
+
+  /** 导出完整轨迹（性能 span + 决策），用于回合回放与回归对比。 */
+  exportTrace(traceId?: string): TraceExport {
+    return this.traceRecorder.exportTrace(traceId ?? this.getTraceId() ?? "");
+  }
+
+  /** 策略面每次判定都留痕（含 allow）—— 事后要能回答「这次调用是谁放行的」。 */
+  private recordPolicyDecision(
+    session: SessionStore,
+    tool: string,
+    callId: string,
+    verdict: { rule: string; decision: string; reason: string },
+  ): void {
+    this.traceRecorder.recordDecision({
+      traceId: session.traceId,
+      kind: "policy",
+      rule: verdict.rule,
+      outcome: verdict.decision,
+      reason: verdict.reason || "no hard rule matched; delegated to the session approval mode",
+      ...(this.currentTurnId ? { turnId: this.currentTurnId } : {}),
+      callId,
+      sessionId: session.id,
+      tool,
+    });
+  }
+
   get activeTurnSessionId(): string | null {
     return this.runningSessionId;
   }
@@ -2379,7 +2221,7 @@ export class AgentRuntime {
     this.compactionCooldownUntil = 0;
     this.compactionFailureStreak = 0;
     this.ineffectiveCompactions = 0;
-    this.approvalMode = "auto";
+    this.approvalMode = DEFAULT_APPROVAL_MODE;
     // 新会话没有模式记录：显式回到 default，避免沿用上一个会话的 plan/goal
     this.chatMode = "default";
     this.turnChatMode = null;
@@ -2462,7 +2304,7 @@ export class AgentRuntime {
     this.compactionCooldownUntil = 0;
     this.compactionFailureStreak = 0;
     this.ineffectiveCompactions = 0;
-    this.approvalMode = "auto";
+    this.approvalMode = DEFAULT_APPROVAL_MODE;
     this.promptQueue = [];
     this.pendingSteers = [];
     this.lastErrorMessage = null;
@@ -3087,7 +2929,7 @@ export class AgentRuntime {
       });
     } catch (error) {
       console.error(
-        `[meowcode] failed to journal compaction quality: ${
+        `[klockcode] failed to journal compaction quality: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -3431,6 +3273,7 @@ export class AgentRuntime {
     this.cancelIdleTimers(); // 用户回来了：让位（保留保活刷新到的热缓存）
     this.turnApprovalMode = this.approvalMode;
     this.turnChatMode = this.chatMode;
+    this.turnSkillReference = false;
     this.lastErrorMessage = null;
     const turnId = randomUUID();
     this.currentTurnId = turnId;
@@ -3481,8 +3324,9 @@ export class AgentRuntime {
       );
       if (typeof submitted?.text === "string") text = submitted.text;
       if (this.learningTrace) this.learningTrace.userTexts = [text];
-      // 技能引用回合不受会话权限模式影响：技能里的写文件/命令直接执行，回合结束自动恢复原模式
-      if (hasSkillReference(text)) this.turnApprovalMode = "full";
+      // 技能引用只是策略面的输入：技能是第三方内容，不能凭消息前缀获得完全访问。
+      // 旧实现在此把整回合提升为 full，绕过审批与越界检查，已移除。
+      this.turnSkillReference = hasSkillReference(text);
       // 本回合的可回滚点（对应用户消息之前的状态）：必须打在 turn_start 之前 ——
       // 若打在之后，回滚派生的会话会带一个孤立 turn_start，switchSession 的崩溃
       // 恢复会把它重放成一条假用户消息并报「上次生成被中断」，回滚结果直接被污染。
@@ -3596,32 +3440,11 @@ export class AgentRuntime {
         }
       }
       // 新的用户请求 = 新任务：上一条已完成的治理 run 清空，门禁重新武装。
-      // 架构图会话级快照：每会话只装载一次（外部改动必须经 PUT /harness 显式重载，
-      // 每 prompt 静默重读会让 system[0] 字节漂移、整段缓存失效——AGENTS.md 同纪律）。
+      // 架构图在回合边界同步一次：会话首次装载、切档/切图、PUT /harness、
+      // 以及**磁盘文件被手改**（stat 签名变了才重读——每 prompt 无条件重读会让
+      // system[0] 字节漂移、整段缓存失效，AGENTS.md 同纪律）。
       // 治理关闭时也要装载：角色节点的工具/提示词覆盖与治理无关。
-      if (this.enableTaskTool && !this.workflow.active) {
-        const needsLoad =
-          this.harnessSnapshotSessionId !== session.id || this.harnessNoticePending;
-        if (needsLoad) {
-          try {
-            const doc = await loadHarnessDocument(session.cwd, this.currentHarnessArchitecture);
-            const noticeDue = this.harnessNoticePending;
-            this.workflow.setHarness(doc);
-            this.harnessSnapshotSessionId = session.id;
-            this.harnessNoticePending = false;
-            if (noticeDue) {
-              // opencode 同款：变更不悄悄换前缀，in-history 提醒随历史落盘、成为后续回合的稳定前缀
-              await session.appendContextNote(
-                "Runtime context: the harness architecture document was updated; the refreshed workflow map applies from this turn.",
-                "file",
-              );
-              await session.flush();
-            }
-          } catch {
-            // 读取失败保持当前图
-          }
-        }
-      }
+      await this.syncHarnessAtTurnBoundary(session);
       if (this.workflow.state?.completed) this.workflow.reset();
       this.mutationsSincePlanCheck = 0;
       this.planNudgeAt = 0;
@@ -3692,6 +3515,7 @@ export class AgentRuntime {
       this.runningSessionId = null;
       this.turnApprovalMode = null;
       this.turnChatMode = null;
+      this.turnSkillReference = false;
       this.currentTurnId = null;
       this.partialDraft = null;
       for (const callId of this.pendingApprovals.keys()) {
@@ -3867,12 +3691,22 @@ export class AgentRuntime {
       }
     }
     if (!digests.length) return;
+    this.traceRecorder.recordDecision({
+      traceId: session.traceId,
+      kind: "context",
+      rule: "tool-output-shrink",
+      outcome: "shrink",
+      reason: `cold resume: replaced ${digests.length} stale tool outputs with digests after cache TTL expiry`,
+      ...(this.currentTurnId ? { turnId: this.currentTurnId } : {}),
+      sessionId: session.id,
+      details: { count: digests.length },
+    });
     await session.appendToolDigests(digests);
     await session.flush().catch(() => undefined);
     // 纪要改变了后续请求的组成，真实用量锚点随之失效
     this.usageAnchor = null;
     console.error(
-      `[meowcode] cold resume: shrunk ${digests.length} old tool outputs after cache TTL expiry`,
+      `[klockcode] cold resume: shrunk ${digests.length} old tool outputs after cache TTL expiry`,
     );
   }
 
@@ -4794,7 +4628,7 @@ export class AgentRuntime {
             cacheReason = cacheReason ?? result.reason;
             if (result.state === "evicted" || result.state === "unsupported") {
               console.warn(
-                `[meowcode] cache ${result.state} (${turnProvider.name}/${turnProvider.model}): ${
+                `[klockcode] cache ${result.state} (${turnProvider.name}/${turnProvider.model}): ${
                   result.reason ?? "no cached tokens"
                 }`,
               );
@@ -4903,8 +4737,37 @@ export class AgentRuntime {
   }
 
   /**
-   * 重新装载工作区架构图（PUT /harness / 切档 / 切图后由 runtime 调用）：
-   * 异步、只在空闲时装载 —— 活跃 run 的快照冻结，不中途换图（metis 同款）。
+   * 当前生效的架构图快照（诊断用）。
+   *
+   * 「界面上的图」和「真正跑着的图」可能不是同一份（手改未到边界、run 中冻结、
+   * 文件非法被拒），这个出口让这类差异可被查询而不是靠猜。
+   */
+  getHarnessSnapshot(): {
+    architecture: string;
+    /** 已装载来源签名（未经 stat 校验为 null）；拿它和 harnessSourceSignature 比就知道脏没脏 */
+    signature: string | null;
+    /** 已装载会话；null = 本会话还没装载过 */
+    sessionId: string | null;
+    /** 有改动被 run 挡住、等回合边界落地 */
+    pendingReload: boolean;
+    /** 下次装载要往历史里补一条 in-history 说明 */
+    noticePending: boolean;
+  } {
+    return {
+      architecture: this.currentHarnessArchitecture,
+      signature: this.harnessSignature,
+      sessionId: this.harnessSnapshotSessionId,
+      pendingReload: this.harnessPendingReload,
+      noticePending: this.harnessNoticePending,
+    };
+  }
+
+  /**
+   * 重新装载工作区架构图（PUT /harness / 切档 / 切图后由 runtime 调用）。
+   *
+   * 提交时机固定是**回合边界**：活跃 run 的快照冻结，不中途换图（metis 同款）。
+   * 活跃期间只登记待装载、并推一条 harness_reloaded(applied:false)，回合边界再落地——
+   * 旧实现在这里直接 return，导致「保存成功、界面却不生效」且没有任何提示。
    *
    * `notice = true`（PUT /harness 保存了文档内容）时，装载成功后标记待提醒：
    * 下一回合在历史尾部追加一条 in-history 说明——架构文档变了但前缀不动声色地
@@ -4915,19 +4778,145 @@ export class AgentRuntime {
     const session = this.currentSession;
     if (!session) return;
     if (notice) this.harnessNoticePending = true;
-    if (this.workflow.active) return;
-    void loadHarnessDocument(session.cwd, this.currentHarnessArchitecture)
-      .then((doc) => {
-        this.workflow.setHarness(doc);
-        this.harnessSnapshotSessionId = session.id;
-        this.harnessNoticePending = false;
-      })
-      .catch(() => undefined);
+    const source = notice ? "save" : "switch";
+    if (this.workflow.active) {
+      // run 中冻结：登记待装载，边界生效（不再静默丢弃）
+      this.harnessPendingReload = true;
+      this.emit({
+        type: "harness_reloaded",
+        sessionId: session.id,
+        architecture: this.currentHarnessArchitecture,
+        source,
+        applied: false,
+        reason: "active-run",
+      });
+      return;
+    }
+    void this.reloadHarness(session, source).catch(() => undefined);
   }
 
-  /** 架构图会话级快照：每会话只装载一次；外部改动经 PUT /harness 显式重载（AGENTS.md 同纪律）。 */
+  /**
+   * 回合边界同步架构图：把「会话首次装载 / 切换 / 显式保存 / 手改文件」四条路
+   * 收敛到同一处落地，保证声明（磁盘上的 JSON）与执行（本回合的图）一致。
+   */
+  private async syncHarnessAtTurnBoundary(session: SessionStore): Promise<void> {
+    if (!this.enableTaskTool) return;
+    // run 中冻结：待装载标记保留，run 结束后的下一回合生效
+    if (this.workflow.active) return;
+    const first = this.harnessSnapshotSessionId !== session.id || this.harnessSignature === null;
+    if (first) {
+      await this.reloadHarness(session, "session");
+      return;
+    }
+    const explicit = this.harnessPendingReload || this.harnessNoticePending;
+    if (!explicit) {
+      // 手改检测：只 stat 不读内容；签名没变就不重读，避免无谓的前缀漂移
+      let signature: string;
+      try {
+        signature = await harnessSourceSignature(session.cwd, this.currentHarnessArchitecture);
+      } catch {
+        return;
+      }
+      if (signature === this.harnessSignature) return;
+    }
+    await this.reloadHarness(session, explicit ? (this.harnessNoticePending ? "save" : "switch") : "file");
+  }
+
+  /**
+   * 落地一次架构图装载；返回是否真正生效。
+   *
+   * 三条不允许覆盖的路径：
+   * - 治理 run 活跃（workflow.setHarness 拒绝）：保留待装载标记，下个边界再试；
+   * - 文件存在但非法：保留当前图，只更新签名（否则同一份坏文件会被每回合重读）；
+   * - 读取抛错：什么都不动。
+   */
+  private async reloadHarness(
+    session: SessionStore,
+    source: "session" | "switch" | "save" | "file",
+  ): Promise<boolean> {
+    let snapshot: HarnessDocumentSnapshot;
+    try {
+      snapshot = await readHarnessSnapshot(session.cwd, this.currentHarnessArchitecture);
+    } catch {
+      return false;
+    }
+    const emit = (applied: boolean, reason?: "active-run" | "invalid-document"): void => {
+      this.emit({
+        type: "harness_reloaded",
+        sessionId: session.id,
+        architecture: this.currentHarnessArchitecture,
+        source,
+        applied,
+        ...(reason ? { reason } : {}),
+        path: snapshot.sourcePath,
+      });
+    };
+    // 首次装载没有「正在用的图」可言，非法文件也只能用种子兜底（旧行为）
+    if (snapshot.invalid && source !== "session") {
+      this.harnessSignature = snapshot.signature;
+      this.harnessPendingReload = false;
+      this.harnessNoticePending = false;
+      emit(false, "invalid-document");
+      return false;
+    }
+    if (!this.workflow.setHarness(snapshot.document)) {
+      // run 抢在边界前变成活跃：标记留着，下个边界重试
+      this.harnessPendingReload = true;
+      emit(false, "active-run");
+      return false;
+    }
+    const noticeDue = this.harnessNoticePending || source === "file";
+    this.harnessSignature = snapshot.signature;
+    this.harnessSnapshotSessionId = session.id;
+    this.harnessNoticePending = false;
+    this.harnessPendingReload = false;
+    // 图里主 Agent 节点的工具白名单可能变了：重算目录，否则模型还在对着旧清单挑工具
+    if (source !== "session") this.rebuildToolCatalog("harness");
+    emit(true);
+    this.warnAboutHarnessFindings(snapshot, source);
+    if (noticeDue) {
+      // opencode 同款：变更不悄悄换前缀，in-history 提醒随历史落盘、成为后续回合的稳定前缀
+      try {
+        await session.appendContextNote(
+          "Runtime context: the harness architecture document was updated; the refreshed workflow map applies from this turn.",
+          "file",
+        );
+        await session.flush();
+      } catch {
+        // 注入失败不打断回合：图已经换好了
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 装载成功的架构图顺手做一次语义 lint，把"跑起来不会按你画的跑"写进服务端日志。
+   * 编辑器里能看到的提示，在命令行/服务端直跑时也得留下痕迹——否则手改
+   * `.klockcode/harness/*.json` 的后果只有等任务卡住才暴露。
+   * 只在图真正换掉时打印（签名变了才走到这里），不会每回合刷屏。
+   */
+  private warnAboutHarnessFindings(
+    snapshot: HarnessDocumentSnapshot,
+    source: "session" | "switch" | "save" | "file",
+  ): void {
+    const findings = lintHarnessDocument(snapshot.document, { knownTools: knownToolNames() });
+    if (findings.length === 0) return;
+    const where = snapshot.sourcePath ?? "(builtin seed)";
+    console.warn(
+      `[harness] ${this.currentHarnessArchitecture} loaded from ${where} (${source}): ` +
+        `${summarizeHarnessFindings(findings)}`,
+    );
+    for (const finding of findings) {
+      console.warn(`  [${finding.severity}] ${finding.code}: ${finding.message}`);
+    }
+  }
+
+  /** 架构图会话级快照：记录已装载的会话与来源签名；外部改动在回合边界按签名重载。 */
   private harnessSnapshotSessionId: string | null = null;
+  private harnessSignature: string | null = null;
   private harnessNoticePending = false;
+  /** 有活跃 run 时被挡下的重载：回合边界落地（不再静默丢弃） */
+  private harnessPendingReload = false;
 
   /**
    * 治理 hooks（根 runtime 还额外注册治理门禁；子 Agent 始终注册 turn_stop 与 steer）：
@@ -5113,7 +5102,7 @@ export class AgentRuntime {
       await session.flush();
     } catch (error) {
       console.error(
-        `[meowcode] failed to journal tool_call_started for ${entry.tool}: ${
+        `[klockcode] failed to journal tool_call_started for ${entry.tool}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -5139,21 +5128,49 @@ export class AgentRuntime {
     this.earlyToolRuns.set(call.id, this.executeReadOnlyToolCallTraced(session, call, messages));
   }
 
+  /**
+   * 只读批的执行入口。注意它**不是**「所有只读工具」的唯一入口：
+   * agent-loop 只在整批都并发安全时才把调用分到这里；一旦批里混进写操作，整批退化成串行，
+   * 其中的 read_file / grep 会走 executeToolCall（也就是写路径）。
+   * 所以同一个只读调用会随批次构成落到两条路径之一 —— 两条路径的准入判定必须完全一致。
+   * 参数校验与策略面的入口，由 runtime-tool-admission.test.ts 从两边对照着钉住。
+   */
   private async executeReadOnlyToolCall(
     session: SessionStore,
     call: ToolCall,
     messages: ChatMessage[],
   ): Promise<Extract<ChatMessage, { role: "tool" }>> {
-    let input: unknown = {};
-    try {
-      input = JSON.parse(call.function.arguments || "{}");
-    } catch {
-      input = {};
-    }
     const tool = call.function.name;
+    // 与写路径同一套参数校验。原来这里只做裸 JSON.parse，解析失败就退化成 {} 交给执行器——
+    // 于是「批里的一条坏参数」会被当成空参数真跑一遍，错误文案还与串行执行时不同。
+    // 工具的必填校验只有一处真源（tool-invocation），两条路径都必须过它。
+    const validated = validateToolArguments(tool, call.function.arguments);
+    let input: unknown = validated.ok ? validated.input : {};
     const turnId = this.currentTurnId;
     if (turnId) await this.markToolCallStarted(session, { turnId, callId: call.id, tool, input });
     this.emit({ type: "tool_started", sessionId: session.id, callId: call.id, tool, input });
+
+    // 策略面：与写路径同一个入口。当前所有硬规则（越界命令 / 技能引用）都只覆盖写类与命令工具，
+    // 所以这一句今天必然 allow；入口仍然必须在——否则将来给读类工具加规则时，并行批会静默绕过它，
+    // 而这正是这套 harness 一直在防的那类漂移。
+    const policyVerdict = authorize(tool, input, {
+      approvalMode: this.turnApprovalMode ?? this.approvalMode,
+      workspaceRoot: session.cwd,
+      skillReference: this.turnSkillReference,
+    });
+    this.recordPolicyDecision(session, tool, call.id, policyVerdict);
+    if (policyVerdict.decision === "deny") {
+      const output = policyVerdict.reason;
+      this.emit({ type: "tool_output", sessionId: session.id, callId: call.id, output, truncated: false });
+      this.emit({ type: "tool_finished", sessionId: session.id, callId: call.id, ok: false });
+      return { role: "tool", content: output, tool_call_id: call.id, name: tool };
+    }
+    if (!validated.ok) {
+      const output = `Tool call rejected: ${validated.error}`;
+      this.emit({ type: "tool_output", sessionId: session.id, callId: call.id, output, truncated: false });
+      this.emit({ type: "tool_finished", sessionId: session.id, callId: call.id, ok: false });
+      return { role: "tool", content: output, tool_call_id: call.id, name: tool };
+    }
     if (!this.toolAllowed(tool)) {
       const output = `Tool ${tool} is not available for this agent profile.`;
       this.emit({ type: "tool_output", sessionId: session.id, callId: call.id, output, truncated: false });
@@ -5389,6 +5406,21 @@ export class AgentRuntime {
     this.emit({ type: "tool_started", sessionId: session.id, callId: call.id, tool: "task", input });
     if (!validated.ok) {
       const output = `Tool call rejected: ${validated.error}`;
+      this.emit({ type: "tool_output", sessionId: session.id, callId: call.id, output, truncated: false });
+      this.emit({ type: "tool_finished", sessionId: session.id, callId: call.id, ok: false });
+      return { role: "tool", content: output, tool_call_id: call.id, name: "task" };
+    }
+
+    // 策略面：第三条执行路径（task 派发）同样必须过同一个入口。
+    // 今天的硬规则只覆盖写类与命令工具，对 task 必然 allow；入口在，将来加规则时不会漏掉子 Agent。
+    const policyVerdict = authorize("task", input, {
+      approvalMode: this.turnApprovalMode ?? this.approvalMode,
+      workspaceRoot: session.cwd,
+      skillReference: this.turnSkillReference,
+    });
+    this.recordPolicyDecision(session, "task", call.id, policyVerdict);
+    if (policyVerdict.decision === "deny") {
+      const output = policyVerdict.reason;
       this.emit({ type: "tool_output", sessionId: session.id, callId: call.id, output, truncated: false });
       this.emit({ type: "tool_finished", sessionId: session.id, callId: call.id, ok: false });
       return { role: "tool", content: output, tool_call_id: call.id, name: "task" };
@@ -6474,7 +6506,7 @@ export class AgentRuntime {
     // 第 0 档：后台预热已就绪 —— 直接采用，零等待（codex take_ready）
     const ready = this.takeReadyWarmup(session);
     if (ready) {
-      console.error("[meowcode] stage 0: adopting pre-warmed compaction summary (no model call)");
+      console.error("[klockcode] stage 0: adopting pre-warmed compaction summary (no model call)");
       return { messages: await this.applyWarmupSummary(session, provider, ready), stage: 3 };
     }
 
@@ -6483,12 +6515,12 @@ export class AgentRuntime {
       // ——反正 stage 1 起每档都要改写前缀，投影搭同一班车，可能根本不用走到抽尾。
       const projected = projectForRequest(messages, provider);
       if (projected !== messages) {
-        console.error("[meowcode] stage 0.5: projecting old images/documents/thinking (no model call)");
+        console.error("[klockcode] stage 0.5: projecting old images/documents/thinking (no model call)");
         return { messages: projected, stage: 1 };
       }
       const shrunk = await this.shrinkWithSpill(session, messages);
       if (shrunk.changed) {
-        console.error("[meowcode] stage 1: trimming old tool outputs (no model call)");
+        console.error("[klockcode] stage 1: trimming old tool outputs (no model call)");
         return { messages: shrunk.messages, stage: 1 };
       }
     }
@@ -6499,7 +6531,7 @@ export class AgentRuntime {
       await running.task;
       const warmed = this.takeReadyWarmup(session);
       if (warmed) {
-        console.error("[meowcode] stage 1.5: awaited in-flight warmup and adopted it");
+        console.error("[klockcode] stage 1.5: awaited in-flight warmup and adopted it");
         return { messages: await this.applyWarmupSummary(session, provider, warmed), stage: 3 };
       }
     }
@@ -6531,7 +6563,7 @@ export class AgentRuntime {
             // 纪要改变了后续请求的组成，真实用量锚点随之失效
             this.usageAnchor = null;
             console.error(
-              `[meowcode] stage 2: summarized ${digests.size} old tool outputs (conversation text kept verbatim)`,
+              `[klockcode] stage 2: summarized ${digests.size} old tool outputs (conversation text kept verbatim)`,
             );
             return {
               messages: messages.map((message) => {
@@ -6548,7 +6580,7 @@ export class AgentRuntime {
           if (isAbortError(error)) throw error;
           // 纪要请求失败不打断回合：直接进入全量压缩
           console.error(
-            `[meowcode] stage 2 failed, falling back to full compaction: ${
+            `[klockcode] stage 2 failed, falling back to full compaction: ${
               error instanceof Error ? error.message : String(error)
             }`,
           );
@@ -6603,14 +6635,14 @@ export class AgentRuntime {
       }
       this.nativeCompactionFailures = 0;
       console.error(
-        `[meowcode] server-side compaction succeeded (${result.native ? "encrypted item" : "readable summary"})`,
+        `[klockcode] server-side compaction succeeded (${result.native ? "encrypted item" : "readable summary"})`,
       );
       return result;
     } catch (error) {
       if (isAbortError(error)) throw error;
       this.nativeCompactionFailures += 1;
       console.error(
-        `[meowcode] server-side compaction unavailable, falling back to local summary: ${
+        `[klockcode] server-side compaction unavailable, falling back to local summary: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -6643,6 +6675,16 @@ export class AgentRuntime {
       reason: this.turnAbort ? "overflow" : "manual",
     });
     await session.flush().catch(() => undefined);
+    this.traceRecorder.recordDecision({
+      traceId: session.traceId,
+      kind: "context",
+      rule: "compaction",
+      outcome: "compact",
+      reason: `context compaction triggered (${this.turnAbort ? "overflow" : "manual"})`,
+      ...(turnId ? { turnId } : {}),
+      sessionId: session.id,
+      details: { compactionId },
+    });
     this.emit({ type: "compaction_started", sessionId: session.id });
     this.fireHook(
       "compaction_start",
@@ -6684,7 +6726,7 @@ export class AgentRuntime {
           Date.now() < this.compactionCooldownUntil)
       ) {
         console.error(
-          `[meowcode] local compaction circuit-broken (failures=${this.localCompactionFailures}, cooldown=${
+          `[klockcode] local compaction circuit-broken (failures=${this.localCompactionFailures}, cooldown=${
             this.compactionCooldownUntil > Date.now()
           }); dropping oldest history instead`,
         );
@@ -6712,7 +6754,7 @@ export class AgentRuntime {
         onUsage: (usage) => {
           if (usage.cacheReadTokens) {
             console.error(
-              `[meowcode] compaction cache read: ${usage.cacheReadTokens} tokens`,
+              `[klockcode] compaction cache read: ${usage.cacheReadTokens} tokens`,
             );
           }
           void session
@@ -6754,13 +6796,13 @@ export class AgentRuntime {
         this.compactionFailureStreak = 0;
       }
       console.error(
-        `[meowcode] compaction failed (${this.localCompactionFailures}/${COMPACTION_FAILURE_LIMIT}): ${message}; dropping oldest history instead of failing the turn`,
+        `[klockcode] compaction failed (${this.localCompactionFailures}/${COMPACTION_FAILURE_LIMIT}): ${message}; dropping oldest history instead of failing the turn`,
       );
       try {
         return await this.emergencyCompaction(session, provider, compactionId, turnId, messages);
       } catch (fallbackError) {
         console.error(
-          `[meowcode] emergency compaction failed too: ${
+          `[klockcode] emergency compaction failed too: ${
             fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
           }`,
         );
@@ -6821,7 +6863,7 @@ export class AgentRuntime {
     // 窗口极小时可能一条都留不下；至少保留最后一条，配对由 trimMessages 修复
     const keep = Math.max(1, recent.length);
     console.error(
-      `[meowcode] emergency compaction: dropping history without a summary (keeping ${keep} recent messages)`,
+      `[klockcode] emergency compaction: dropping history without a summary (keeping ${keep} recent messages)`,
     );
     return this.commitCompaction(
       session,
@@ -7106,7 +7148,7 @@ export class AgentRuntime {
           onUsage: (usage2) => {
             if (usage2.cacheReadTokens) {
               console.error(
-                `[meowcode] compaction cache read: ${usage2.cacheReadTokens} tokens`,
+                `[klockcode] compaction cache read: ${usage2.cacheReadTokens} tokens`,
               );
             }
             void session
@@ -7260,7 +7302,7 @@ export class AgentRuntime {
         // cc-haha 实测 fork 参数差异曾让命中率 92.7%→61%，read=0 就说明保活在白写。
         onUsage: (usage) => {
           console.error(
-            `[meowcode] cache keepalive: read=${usage.cacheReadTokens ?? 0} write=${usage.cacheWriteTokens ?? 0} input=${usage.inputTokens}`,
+            `[klockcode] cache keepalive: read=${usage.cacheReadTokens ?? 0} write=${usage.cacheWriteTokens ?? 0} input=${usage.inputTokens}`,
           );
         },
       });
@@ -7313,7 +7355,7 @@ export class AgentRuntime {
     const ready = this.takeReadyWarmup(session);
     if (ready) {
       console.error(
-        "[meowcode] proactive: adopting pre-warmed compaction summary (no model call)",
+        "[klockcode] proactive: adopting pre-warmed compaction summary (no model call)",
       );
       // 与手动压缩互斥：采纳虽是纯落盘（毫秒级），期间用户触发压缩仍会踩
       this.compactingSession = true;
@@ -7322,7 +7364,7 @@ export class AgentRuntime {
       } catch (error) {
         if (!isAbortError(error)) {
           console.error(
-            `[meowcode] proactive adoption failed: ${
+            `[klockcode] proactive adoption failed: ${
               error instanceof Error ? error.message : String(error)
             }`,
           );
@@ -7335,7 +7377,7 @@ export class AgentRuntime {
 
     const warmup = this.warmupCompaction;
     if (warmup?.session === session && warmup.state === "running") {
-      console.error("[meowcode] proactive: warmup already in flight, waiting for next turn");
+      console.error("[klockcode] proactive: warmup already in flight, waiting for next turn");
       return;
     }
     // 没有可消费的预热（未启动/已失败/已消费）：现在启动，下一轮高位时采纳。
@@ -7369,6 +7411,16 @@ export class AgentRuntime {
       reason: "overflow",
     });
     await session.flush().catch(() => undefined);
+    this.traceRecorder.recordDecision({
+      traceId: session.traceId,
+      kind: "context",
+      rule: "compaction",
+      outcome: "compact",
+      reason: "context compaction triggered (overflow)",
+      ...(turnId ? { turnId } : {}),
+      sessionId: session.id,
+      details: { compactionId },
+    });
     this.emit({ type: "compaction_started", sessionId: session.id });
     this.fireHook(
       "compaction_start",
@@ -7430,6 +7482,17 @@ export class AgentRuntime {
     };
     const reject = (output: string): { ok: false; output: string } => ({ ok: false, output });
 
+    // 策略面前置门禁：PTC 宿主桥与常规工具走同一套不可覆盖的规则，
+    // 否则 run_code 里的 meow.write / meow.command 会成为绕过口。
+    const policyVerdict = authorize(tool, args, {
+      approvalMode,
+      workspaceRoot: session.cwd,
+      skillReference: this.turnSkillReference,
+    });
+    this.recordPolicyDecision(session, tool, call.id, policyVerdict);
+    if (policyVerdict.decision === "deny") return reject(policyVerdict.reason);
+    const policyAsk = policyVerdict.decision === "ask";
+
     // 验证角色（verifier / fresh-verifier）的写后门：run_code 的 meow.write/edit/multiEdit
     // 走的就是这里。不拦的话，full 模式下它们能先把测试改绿再报 PASS。
     if (this.denyHostWrites && tool !== "run_command") {
@@ -7485,10 +7548,10 @@ export class AgentRuntime {
       );
       approved = forceDecision.approved;
       await session.appendApproval(call.id, tool, args, approved, (turnId ? { turnId } : {}));
-    } else if (!approved && approvalMode === "full") {
+    } else if (!approved && approvalMode === "full" && !policyAsk) {
       approved = true;
       await session.appendApproval(call.id, tool, args, true, (turnId ? { turnId } : {}));
-    } else if (!approved && approvalMode === "auto" && autoReason) {
+    } else if (!approved && approvalMode === "auto" && autoReason && !policyAsk) {
       approved = true;
       await session.appendApproval(call.id, tool, args, true, {
         ...(turnId ? { turnId } : {}),
@@ -7652,6 +7715,34 @@ export class AgentRuntime {
     const approvalMode = this.turnApprovalMode ?? this.approvalMode;
     const allowOutsideWorkspace = approvalMode === "full";
     this.emit({ type: "tool_started", sessionId: session.id, callId: call.id, tool, input });
+
+    // 策略面：所有工具调用（含插件/MCP 动态工具）先过一次不可覆盖的硬规则。
+    // deny 直接终止，不产生任何副作用；ask 会禁止后续所有自动批准路径。
+    const policyVerdict = authorize(tool, input, {
+      approvalMode,
+      workspaceRoot: session.cwd,
+      skillReference: this.turnSkillReference,
+    });
+    this.recordPolicyDecision(session, tool, call.id, policyVerdict);
+    if (policyVerdict.decision === "deny") {
+      const output = policyVerdict.reason;
+      await this.pushToolMessage(session, messages, {
+        role: "tool",
+        content: output,
+        tool_call_id: call.id,
+        name: tool,
+      });
+      this.emit({
+        type: "tool_output",
+        sessionId: session.id,
+        callId: call.id,
+        output,
+        truncated: false,
+      });
+      this.emit({ type: "tool_finished", sessionId: session.id, callId: call.id, ok: false });
+      return;
+    }
+    const policyAsk = policyVerdict.decision === "ask";
 
     if (!validated.ok) {
       const output = `Tool call rejected: ${validated.error}`;
@@ -8019,7 +8110,7 @@ export class AgentRuntime {
     // git 的只读 action 免审批；写 action（stage/commit/discard/push…）按审批模式走
     const gitMutating = tool === "git" && isMutatingGitAction(input);
     const requiresApproval =
-      APPROVAL_TOOLS.has(tool) || browserNeedsApproval || dynamicNeedsApproval || gitMutating;
+      APPROVAL_BOUND_TOOLS.has(tool) || browserNeedsApproval || dynamicNeedsApproval || gitMutating;
 
     // plan 模式下除 plans/ 内的写操作外，其余需要审批的（写/命令/浏览器写/MCP）一律直接拒绝
     if (chatMode === "plan" && !planPaths && (requiresApproval || mcpTool)) {
@@ -8037,11 +8128,11 @@ export class AgentRuntime {
 
     let approved = !requiresApproval || planPaths !== null;
     // hook 明确要求人工确认：即使 auto 自动批准或 full 模式也强制走审批
-    if (hookAsk) approved = false;
+    if (hookAsk || policyAsk) approved = false;
     if (
       approvalMode === "read-only" &&
       planPaths === null &&
-      (APPROVAL_TOOLS.has(tool) || (browserTool && browserReadOnlyBlocked) || dynamicNeedsApproval || mcpTool)
+      (APPROVAL_BOUND_TOOLS.has(tool) || (browserTool && browserReadOnlyBlocked) || dynamicNeedsApproval || mcpTool)
     ) {
       const output = `Tool ${tool} blocked: the session is in read-only mode.`;
       await this.pushToolMessage(session, messages, {
@@ -8092,13 +8183,14 @@ export class AgentRuntime {
       approvalMode !== "full";
     // discard / push / pull 影响工作区或远端且不可逆：任何审批模式都显式确认一次
     const forceGitConfirm = tool === "git" && isForceApprovalGitAction(input);
-    // 项目级规则：只覆盖普通审批路径；删除确认、后台任务、高危 git、plan/read-only、hookAsk 与沙箱逃逸都不受影响
+    // 项目级规则：只覆盖普通审批路径；删除确认、后台任务、高危 git、plan/read-only、hookAsk、策略强制审批与沙箱逃逸都不受影响
     const rememberedRule =
       !approved &&
       !forceDeleteConfirm &&
       !forceBackgroundConfirm &&
       !forceGitConfirm &&
       !hookAsk &&
+      !policyAsk &&
       approvalMode !== "read-only"
         ? await this.tryRememberedApproval(session, tool, input, commandRisk)
         : undefined;
@@ -8120,11 +8212,11 @@ export class AgentRuntime {
       approved = forceDecision.approved;
       denialFeedback = forceDecision.feedback;
       await session.appendApproval(call.id, tool, input, approved, (turnId ? { turnId } : {}));
-    } else if (!approved && approvalMode === "full" && !hookAsk) {
+    } else if (!approved && approvalMode === "full" && !hookAsk && !policyAsk) {
       // 完全访问：不弹审批直接放行，仍写一条 approved 记录到会话文件留痕
       approved = true;
       await session.appendApproval(call.id, tool, input, true, (turnId ? { turnId } : {}));
-    } else if (!approved && approvalMode === "auto" && autoReason && !hookAsk) {
+    } else if (!approved && approvalMode === "auto" && autoReason && !hookAsk && !policyAsk) {
       // codex 式：可写根内的写/改与常规命令自动批准；越界路径与高危命令仍然走审批
       approved = true;
       await session.appendApproval(call.id, tool, input, true, {
@@ -8535,7 +8627,7 @@ export class AgentRuntime {
   }
 
   /**
-   * 验证闭环：写类工具成功后的自动验证。跑 .meowcode/verify.json 声明的命令
+   * 验证闭环：写类工具成功后的自动验证。跑 .klockcode/verify.json 声明的命令
    * （缺省启发式探测 typecheck），失败结果结构化压缩后作为返回值附加到工具回执；
    * 每回合最多 maxFeedbackPerTurn 次失败回灌，超过后改为"如实告知用户"指令防死循环。
    * 任何异常都不允许影响写结果本身：整体 try/catch，catch 时 console.warn + 返回 null。
@@ -8571,7 +8663,7 @@ export class AgentRuntime {
           });
         } catch (error) {
           console.warn(
-            `[meowcode] lsp diagnostics skipped: ${
+            `[klockcode] lsp diagnostics skipped: ${
               error instanceof Error ? error.message : String(error)
             }`,
           );
@@ -8643,7 +8735,7 @@ export class AgentRuntime {
       return parts.length ? parts.join("\n\n") : null;
     } catch (error) {
       console.warn(
-        `[meowcode] post-write verification skipped: ${
+        `[klockcode] post-write verification skipped: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -8672,7 +8764,7 @@ export class AgentRuntime {
       // 已经执行的副作用不能因为一次落盘失败就从上下文里消失：那会让模型以为工具没跑过并重复执行。
       // 内存照常带上这条结果，磁盘上的配对缺口交给恢复时的 repairToolPairs。
       console.error(
-        `[meowcode] failed to journal ${message.name} result: ${error instanceof Error ? error.message : String(error)}`,
+        `[klockcode] failed to journal ${message.name} result: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.emit({
         type: "error",
@@ -8720,7 +8812,7 @@ export class AgentRuntime {
       await session.flush();
     } catch (error) {
       console.error(
-        `[meowcode] failed to journal stop-hook message: ${error instanceof Error ? error.message : String(error)}`,
+        `[klockcode] failed to journal stop-hook message: ${error instanceof Error ? error.message : String(error)}`,
       );
       this.emit({
         type: "error",
@@ -9065,5 +9157,4 @@ export type SessionHeaderLike = {
   messages: ChatMessage[];
   worktree?: SessionWorktree;
 };
-
 

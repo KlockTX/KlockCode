@@ -1,6 +1,6 @@
 /**
  * Ported from deepseek-harness packages/sandbox/sandbox-windows-acl/src/workspace-sid.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: OS-level run_command isolation.
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: OS-level run_command isolation.
  */
 
 import { createHash } from "node:crypto";

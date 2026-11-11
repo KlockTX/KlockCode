@@ -55,7 +55,7 @@ beforeEach(() => {
 
 describe("subagent modes", () => {
   it("fork 子会话继承父历史前缀", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-fork-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-fork-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(dir);
 
@@ -81,7 +81,7 @@ describe("subagent modes", () => {
   });
 
   it("嵌套深度用尽时拒绝 task，并给出明确原因", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-depth-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-depth-"));
     const runtime = makeRuntime(dir, { enableTaskTool: false, subagentDepth: 2 });
     await runtime.newSession(dir);
 

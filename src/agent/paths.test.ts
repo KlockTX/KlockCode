@@ -38,9 +38,9 @@ describe("workspace path guard", () => {
     );
   });
 
-  it("treats the app data root (home/.meowcode) as trusted", async () => {
-    const workspace = await tempDir("meowcode-ws-");
-    const appRoot = await tempDir("meowcode-app-");
+  it("treats the app data root (home/.klockcode) as trusted", async () => {
+    const workspace = await tempDir("klockcode-ws-");
+    const appRoot = await tempDir("klockcode-app-");
     const realAppRoot = await realpath(appRoot);
     try {
       setAppDataRoot(appRoot);
@@ -57,14 +57,14 @@ describe("workspace path guard", () => {
         "outside the workspace",
       );
     } finally {
-      setAppDataRoot(path.join(os.homedir(), ".meowcode"));
+      setAppDataRoot(path.join(os.homedir(), ".klockcode"));
       await rm(workspace, { recursive: true, force: true });
       await rm(appRoot, { recursive: true, force: true });
     }
   });
 
   it("resolves new files under the real workspace path", async () => {
-    const root = await tempDir("meowcode-paths-");
+    const root = await tempDir("klockcode-paths-");
     try {
       const realRoot = await realpath(root);
       expect(await resolveToolPath(root, "nested/new.txt")).toBe(
@@ -76,8 +76,8 @@ describe("workspace path guard", () => {
   });
 
   it("rejects junction escapes for existing and new files", async () => {
-    const root = await tempDir("meowcode-paths-");
-    const outside = await tempDir("meowcode-outside-");
+    const root = await tempDir("klockcode-paths-");
+    const outside = await tempDir("klockcode-outside-");
     try {
       await writeFile(path.join(outside, "secret.txt"), "secret");
       await symlink(outside, path.join(root, "escape"), linkType);
@@ -98,8 +98,8 @@ describe("workspace path guard", () => {
   });
 
   it("canonicalizes a workspace that is itself a junction", async () => {
-    const real = await tempDir("meowcode-real-");
-    const linkParent = await tempDir("meowcode-link-");
+    const real = await tempDir("klockcode-real-");
+    const linkParent = await tempDir("klockcode-link-");
     const linked = path.join(linkParent, "work");
     try {
       await writeFile(path.join(real, "a.txt"), "hello");

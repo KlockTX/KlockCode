@@ -10,7 +10,7 @@ import type { ToolDefinition, ToolResult } from "./types.js";
  * 仅当桌面端注入了 browser host（env）时才注册给模型；浏览器操作不进审批。
  */
 
-const SCREENSHOT_DIR = path.join(os.tmpdir(), "meowcode-screenshots");
+const SCREENSHOT_DIR = path.join(os.tmpdir(), "klockcode-screenshots");
 
 export const browserToolDefinitions: ToolDefinition[] = [
   {

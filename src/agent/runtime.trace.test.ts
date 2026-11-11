@@ -35,7 +35,7 @@ beforeEach(() => {
 
 describe("runtime trace", () => {
   it("回合结束后留下 turn 与 llm span，并带上用量属性", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-trace-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-trace-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock.mockResolvedValueOnce({
@@ -56,7 +56,7 @@ describe("runtime trace", () => {
   });
 
   it("span 通过 sink 交给外部日志", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-trace-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-trace-"));
     const seen: string[] = [];
     const runtime = makeRuntime(dir, (span) => seen.push(span.kind));
     await runtime.newSession();

@@ -26,15 +26,26 @@ describe("normalizeSandboxSettings", () => {
     });
   });
 
-  it("enables only on win32 with a supported mode", () => {
+  it("enables on win32 for both executable modes", () => {
     expect(normalizeSandboxSettings({ enabled: true }, "win32").enabled).toBe(true);
     expect(normalizeSandboxSettings({ enabled: true }, "linux").enabled).toBe(false);
-    expect(normalizeSandboxSettings({ enabled: true, mode: "read-only" }, "win32").enabled).toBe(
-      false,
-    );
+    expect(normalizeSandboxSettings({ enabled: true, mode: "read-only" }, "win32")).toMatchObject({
+      enabled: true,
+      mode: "read-only",
+    });
     expect(
       normalizeSandboxSettings({ enabled: true, mode: "workspace-write" }, "win32").enabled,
     ).toBe(true);
+  });
+
+  it("fails closed to read-only on an unknown mode instead of silently disabling", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    // 写错一个词不该等于「关掉沙箱」：命令会被拒写，问题立刻可见
+    expect(normalizeSandboxSettings({ enabled: true, mode: "readonly" }, "win32")).toMatchObject({
+      enabled: true,
+      mode: "read-only",
+    });
+    expect(spy).toHaveBeenCalledOnce();
   });
 
   it("keeps absolute, deduplicated writable roots", () => {
@@ -77,7 +88,7 @@ describe("readSandboxSettingsFromEnv", () => {
 
   it("parses the JSON settings", () => {
     const settings = readSandboxSettingsFromEnv({
-      MEOWCODE_SANDBOX: JSON.stringify({ enabled: true, allowTemp: false }),
+      KLOCKCODE_SANDBOX: JSON.stringify({ enabled: true, allowTemp: false }),
     });
     expect(settings.enabled).toBe(process.platform === "win32");
     expect(settings.allowTemp).toBe(false);
@@ -85,7 +96,7 @@ describe("readSandboxSettingsFromEnv", () => {
 
   it("fails closed and logs on invalid JSON", () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    expect(readSandboxSettingsFromEnv({ MEOWCODE_SANDBOX: "{not-json" }).enabled).toBe(false);
+    expect(readSandboxSettingsFromEnv({ KLOCKCODE_SANDBOX: "{not-json" }).enabled).toBe(false);
     expect(spy).toHaveBeenCalledOnce();
   });
 });

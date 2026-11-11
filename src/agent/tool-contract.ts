@@ -100,3 +100,30 @@ export function builtinToolContract(name: string): ToolContract | undefined {
 export function isParallelSafeContract(contract: ToolContract | undefined): boolean {
   return contract?.readOnly === true && contract.parallelSafe === true;
 }
+
+/**
+ * 写类工具（审批语义的子集，不是按 sideEffects 机械分类）：
+ * 需要人工审批、参与「可写根」判定、多文件与补丁必须逐个路径过区。
+ *
+ * 刻意不含 run_code：它在隔离子进程里跑，写操作经能力桥回到宿主逐次审批；
+ * 也不含 task / git —— git 的写动作走 isMutatingGitAction，task 自身不碰文件。
+ */
+export const WRITABLE_ROOT_TOOLS: ReadonlySet<string> = new Set([
+  "write_file",
+  "edit_file",
+  "multi_edit",
+  "delete_file",
+  "move_file",
+  "apply_patch",
+]);
+
+/**
+ * 需要人工审批的工具 = 写类 + 命令。
+ *
+ * 以前 runtime 与 policy 各写一份同样的字面量、靠注释互相提醒「保持一致」——
+ * 改一处漏一处就会让某条路径少一道闸。现在两边都从这里取。
+ */
+export const APPROVAL_BOUND_TOOLS: ReadonlySet<string> = new Set([
+  ...WRITABLE_ROOT_TOOLS,
+  "run_command",
+]);

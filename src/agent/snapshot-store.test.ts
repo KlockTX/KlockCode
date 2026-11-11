@@ -15,7 +15,7 @@ import { SNAPSHOT_SKIPPED, type SnapshotFiles } from "./types.js";
 const createdDirs: string[] = [];
 
 async function makeWorkspaceFile(rel: string, content: string): Promise<{ root: string; file: string }> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-snap-ws-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-snap-ws-"));
   createdDirs.push(root);
   const file = path.join(root, rel);
   await writeFile(file, content, "utf8");

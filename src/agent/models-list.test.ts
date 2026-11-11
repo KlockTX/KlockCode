@@ -6,7 +6,7 @@ const stored = {
   protocol: "anthropic-messages" as const,
   apiKey: "sk-stored",
   authStyle: "api-key" as const,
-  extraHeaders: { "X-Title": "MeowCode" },
+  extraHeaders: { "X-Title": "KlockCode" },
 };
 
 describe("resolveProviderModelsOptions", () => {
@@ -22,7 +22,7 @@ describe("resolveProviderModelsOptions", () => {
         protocol: "anthropic-messages",
         apiKey: "sk-stored",
         authStyle: "api-key",
-        extraHeaders: { "X-Title": "MeowCode" },
+        extraHeaders: { "X-Title": "KlockCode" },
       },
     });
   });

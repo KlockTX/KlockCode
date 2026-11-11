@@ -689,14 +689,14 @@ describe("streamChatCompletion auth/extra fields", () => {
         ...baseOptions.provider,
         apiKey: "azure-key",
         authStyle: "api-key",
-        extraHeaders: { "x-title": "MeowCode" },
+        extraHeaders: { "x-title": "KlockCode" },
         extraBody: { enable_thinking: false },
       },
     });
     expect(calls).toHaveLength(1);
     expect(calls[0].headers["api-key"]).toBe("azure-key");
     expect(calls[0].headers.authorization).toBeUndefined();
-    expect(calls[0].headers["x-title"]).toBe("MeowCode");
+    expect(calls[0].headers["x-title"]).toBe("KlockCode");
     expect(calls[0].body.enable_thinking).toBe(false);
   });
 

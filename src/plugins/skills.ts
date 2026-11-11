@@ -17,11 +17,11 @@ export type SkillEntry = {
 
 /**
  * 内置技能目录：随包的 `resources/marketplace/builtin-skills`（桌面端把整个
- * resources/marketplace 打包进 <resources>/marketplace，并注入 MEOWCODE_MARKETPLACE_DIR）。
+ * resources/marketplace 打包进 <resources>/marketplace，并注入 KLOCKCODE_MARKETPLACE_DIR）。
  * 未注入时按仓库布局回退；目录不存在时发现流程会自然跳过。
  */
 export function builtinSkillsDir(): string {
-  const marketplace = process.env.MEOWCODE_MARKETPLACE_DIR;
+  const marketplace = process.env.KLOCKCODE_MARKETPLACE_DIR;
   if (marketplace && marketplace.trim()) return path.join(marketplace, "builtin-skills");
   return path.join(
     path.dirname(fileURLToPath(import.meta.url)),
@@ -34,7 +34,7 @@ export function builtinSkillsDir(): string {
 }
 
 /**
- * 发现 SKILL.md：`<root>/.meowcode/skills/<name>/SKILL.md`。
+ * 发现 SKILL.md：`<root>/.klockcode/skills/<name>/SKILL.md`。
  * name 取 frontmatter，缺失时回退目录名；默认跳过缺 description 的条目
  * （索引注入用），技能选择器可传 allowMissingDescription 列出全部。
  * project 同名覆盖 user；手写技能优先于学习产物（roots 顺序决定）。
@@ -148,17 +148,17 @@ export async function loadSkillIndexDetail(roots: {
   builtinDir?: string;
 }): Promise<SkillIndexDetail> {
   const sources: Array<{ dir: string; source: "project" | "user" | "builtin"; learned?: boolean }> = [
-    { dir: path.join(roots.workspace, ".meowcode", "skills"), source: "project" },
+    { dir: path.join(roots.workspace, ".klockcode", "skills"), source: "project" },
     {
-      dir: path.join(roots.workspace, ".meowcode", "learning", "skills"),
+      dir: path.join(roots.workspace, ".klockcode", "learning", "skills"),
       source: "project",
       learned: true,
     },
   ];
   if (roots.homeDir) {
-    sources.push({ dir: path.join(roots.homeDir, ".meowcode", "skills"), source: "user" });
+    sources.push({ dir: path.join(roots.homeDir, ".klockcode", "skills"), source: "user" });
     sources.push({
-      dir: path.join(roots.homeDir, ".meowcode", "learning", "skills"),
+      dir: path.join(roots.homeDir, ".klockcode", "learning", "skills"),
       source: "user",
       learned: true,
     });

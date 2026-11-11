@@ -7,7 +7,7 @@ import { writeTextAtomic } from "./atomic-json.js";
  * 跨会话持久记忆（Claude Code auto-memory 模式）：
  * - MEMORY.md 索引（一行一条 `- [name](name.md) — 一句话钩子`）会话启动时注入指令块；
  * - 每条事实一个 `<name>.md` 文件（frontmatter: description / created / type），模型按需 memory_read。
- * - 双层范围：user = `~/.meowcode/memory/`（跨项目），project = `<workspace>/.meowcode/memory/`。
+ * - 双层范围：user = `~/.klockcode/memory/`（跨项目），project = `<workspace>/.klockcode/memory/`。
  * 索引只是派生缓存：单事实文件里的 frontmatter 才是 description 的真相源，
  * 手工编辑/未登记索引的文件会在 listMemories 里并入，不会丢。
  */
@@ -55,9 +55,9 @@ export function isValidMemoryName(name: string): boolean {
 
 export function memoryDirFor(scope: MemoryScope, workspace: string, homeDir?: string): string {
   if (scope === "user") {
-    return path.join(homeDir ?? os.homedir(), ".meowcode", "memory");
+    return path.join(homeDir ?? os.homedir(), ".klockcode", "memory");
   }
-  return path.join(workspace, ".meowcode", "memory");
+  return path.join(workspace, ".klockcode", "memory");
 }
 
 export function memoryFilePath(dir: string, name: string): string {

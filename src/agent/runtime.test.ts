@@ -28,7 +28,7 @@ function makeRuntime(sessionsDir: string): InstanceType<typeof AgentRuntime> {
   return new AgentRuntime({
     providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
     sessionsDir,
-    // 隔离真实 ~/.meowcode：全局技能索引会让 system 消息内容随用户环境漂移
+    // 隔离真实 ~/.klockcode：全局技能索引会让 system 消息内容随用户环境漂移
     homeDir: sessionsDir,
   });
 }
@@ -37,6 +37,17 @@ async function collectEvents(runtime: InstanceType<typeof AgentRuntime>): Promis
   const events: MeowEvent[] = [];
   runtime.onEvent((event) => events.push(event));
   return events;
+}
+
+async function waitForPendingApproval(
+  runtime: InstanceType<typeof AgentRuntime>,
+): Promise<NonNullable<typeof runtime.pendingApproval>> {
+  for (let i = 0; i < 300; i += 1) {
+    const pending = runtime.pendingApproval;
+    if (pending) return pending;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error("timed out waiting for approval");
 }
 
 beforeEach(() => {
@@ -76,8 +87,8 @@ describe("validatePlanInput", () => {
 
 describe("next prompt suggestion", () => {
   it("predicts the next prompt from the recent transcript", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     streamMock
@@ -103,8 +114,8 @@ describe("next prompt suggestion", () => {
   });
 
   it("does not request a suggestion while a turn is running", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     expect(await runtime.suggestNextPrompt()).toBeNull();
@@ -112,8 +123,8 @@ describe("next prompt suggestion", () => {
   });
 
   it("does not retry when the suggestion response has no content", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     streamMock
@@ -131,8 +142,8 @@ describe("next prompt suggestion", () => {
 
 describe("request prefix stability", () => {
   it("keeps stable system messages (base + memory guide), persists tool results, and extends the previous prefix", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -212,7 +223,7 @@ describe("request prefix stability", () => {
 
 describe("AgentRuntime context compaction", () => {
   it("compacts once on overflow and retries the turn", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     const _session = await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -240,7 +251,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("does not loop compaction when the retry also overflows", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -259,7 +270,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("drops oldest history instead of failing the turn when the summary call fails", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -282,7 +293,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("enters a cooldown after two summary failures and stops calling the summary model", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const overflow = new ProviderRequestError(413, "prompt is too long");
@@ -305,7 +316,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("escapes overflow with the lightweight tool-output shrink before any model call", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     // 未声明窗口：请求前不做任何裁剪，溢出后第一档「确定性收缩」必须兜住
     const runtime = makeRuntime(dir);
     await runtime.newSession();
@@ -346,7 +357,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("summarizes only old tool outputs (stage 2) instead of full compaction", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m", contextWindow: 16_000 }],
       sessionsDir: dir,
@@ -408,7 +419,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("propagates non-overflow errors without compacting", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -437,7 +448,7 @@ describe("AgentRuntime context compaction", () => {
   const flush = () => new Promise((resolve) => setTimeout(resolve, 20));
 
   it("pre-warms the summary in the background and adopts it on overflow without a summary call", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeWindowedRuntime(dir);
     await runtime.newSession();
     await seedHistory(runtime.current!, 8);
@@ -472,7 +483,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("skips the warmup below the usage threshold", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeWindowedRuntime(dir);
     await runtime.newSession();
     await seedHistory(runtime.current!, 8);
@@ -490,7 +501,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("proactively adopts a ready warmup when usage stays above 85%", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeWindowedRuntime(dir);
     await runtime.newSession();
     await seedHistory(runtime.current!, 8);
@@ -534,7 +545,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("does not block the turn while the warmup is still in flight", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeWindowedRuntime(dir);
     await runtime.newSession();
     await seedHistory(runtime.current!, 8);
@@ -567,7 +578,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("awaits an in-flight warmup on overflow instead of starting a new summary", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeWindowedRuntime(dir);
     await runtime.newSession();
     await seedHistory(runtime.current!, 8);
@@ -604,7 +615,7 @@ describe("AgentRuntime context compaction", () => {
   });
 
   it("falls back to the synchronous compaction when the warmup failed", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeWindowedRuntime(dir);
     await runtime.newSession();
     await seedHistory(runtime.current!, 8);
@@ -635,7 +646,7 @@ describe("AgentRuntime context compaction", () => {
 
 describe("AgentRuntime update_plan", () => {
   it("persists the plan, emits plan_updated, and keeps it in the tool result", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     const session = await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -672,7 +683,7 @@ describe("AgentRuntime update_plan", () => {
   });
 
   it("rejects an invalid plan without emitting plan_updated", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -704,7 +715,7 @@ describe("AgentRuntime update_plan", () => {
 
 describe("AgentRuntime manual compaction", () => {
   it("compacts on demand and persists the summary", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     const session = await runtime.newSession();
     await runtime.current?.appendMessage({ role: "user", content: "hello" });
@@ -732,8 +743,8 @@ describe("AgentRuntime manual compaction", () => {
   });
 
   it("adds a paths-only note for files touched before compaction", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.current?.appendMessage({
@@ -768,20 +779,20 @@ describe("AgentRuntime manual compaction", () => {
   });
 
   it("rejects compaction without a session", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await expect(runtime.compactSession()).rejects.toThrow(/No active session/);
   });
 
   it("rejects compaction when there is nothing to compact", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     await expect(runtime.compactSession()).rejects.toThrow(/Nothing to compact/);
   });
 
   it("blocks prompts while compacting and clears the state when compaction fails", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     await runtime.current?.appendMessage({ role: "user", content: "hello" });
@@ -809,7 +820,7 @@ describe("AgentRuntime manual compaction", () => {
   });
 
   it("rejects compaction while a turn is running", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     // 挂起的请求模拟长回合；abort 信号触发时才退出
@@ -846,7 +857,7 @@ describe("AgentRuntime manual compaction", () => {
 
 describe("AgentRuntime active provider", () => {
   it("falls back to an enabled provider when the configured one is disabled", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [
         { id: "off", name: "Off", baseUrl: "http://localhost", model: "m1", enabled: false },
@@ -864,9 +875,9 @@ describe("AgentRuntime active provider", () => {
 });
 
 describe("AgentRuntime context usage", () => {  it("falls back to estimates, then prefers real input tokens", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
-    // 工作区也用临时目录：否则会扫到仓库里 .meowcode/learning/skills 的学习产物，
+    // 工作区也用临时目录：否则会扫到仓库里 .klockcode/learning/skills 的学习产物，
     // skillCount 随本机使用记录漂移（这条断言要的是「没有技能」）
     await runtime.newSession(dir);
 
@@ -903,7 +914,7 @@ describe("AgentRuntime context usage", () => {  it("falls back to estimates, the
   });
 
   it("recommends manual compaction at 85% without auto-compacting", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m", contextWindow: 4_000 }],
       sessionsDir: dir,
@@ -922,7 +933,7 @@ describe("AgentRuntime context usage", () => {  it("falls back to estimates, the
     expect(events.some((event) => event.type === "compaction_started")).toBe(false);
   });
   it("emits raw cache buckets in usage events", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -948,7 +959,7 @@ describe("AgentRuntime context usage", () => {  it("falls back to estimates, the
   });
 
   it("流中实时样本与最终真值共用同一 roundId，最终一条标 final", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -987,7 +998,7 @@ describe("AgentRuntime context usage", () => {  it("falls back to estimates, the
   });
 
   it("回合出错时保留最后一次部分用量，不再撤回成 0", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -1018,7 +1029,7 @@ describe("AgentRuntime context usage", () => {  it("falls back to estimates, the
 
 describe("AgentRuntime spurious overflow guard", () => {
   it("refuses to compact when the input is far below the declared window", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m", contextWindow: 1_000_000 }],
       sessionsDir: dir,
@@ -1037,7 +1048,7 @@ describe("AgentRuntime spurious overflow guard", () => {
   });
 
   it("still compacts genuine overflow when the input approaches the window", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m", contextWindow: 8_000 }],
       sessionsDir: dir,
@@ -1063,7 +1074,7 @@ describe("AgentRuntime spurious overflow guard", () => {
 
 describe("AgentRuntime provider switching", () => {
   it("resets the real-usage source when the active provider changes", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [
         { id: "a", name: "A", baseUrl: "http://localhost", model: "m" },
@@ -1089,7 +1100,7 @@ describe("AgentRuntime provider switching", () => {
 
 describe("AgentRuntime tool rounds", () => {
   it("does not stop after 20 tool rounds", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -1133,7 +1144,7 @@ describe("AgentRuntime tool rounds", () => {
 
 describe("AgentRuntime journal failures", () => {
   it("keeps an executed tool result in context when journaling it fails", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const session = runtime.current;
@@ -1183,7 +1194,7 @@ describe("AgentRuntime journal failures", () => {
 
 describe("AgentRuntime orphan tool calls", () => {
   it("drops a tool_call without a result even when no context window is configured", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const session = runtime.current;
@@ -1216,9 +1227,9 @@ describe("AgentRuntime orphan tool calls", () => {
 
 describe("AgentRuntime full access mode", () => {
   it("writes outside the workspace without approval and records the review diff", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
-    const outsideRoot = await mkdtemp(path.join(tmpdir(), "meowcode-outside-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
+    const outsideRoot = await mkdtemp(path.join(tmpdir(), "klockcode-outside-"));
     const outsideFile = path.join(outsideRoot, "outside.txt");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -1256,9 +1267,9 @@ describe("AgentRuntime full access mode", () => {
   });
 
   it("reads outside the workspace in full mode but rejects it in default mode", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
-    const outsideRoot = await mkdtemp(path.join(tmpdir(), "meowcode-outside-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
+    const outsideRoot = await mkdtemp(path.join(tmpdir(), "klockcode-outside-"));
     const outsideFile = path.join(outsideRoot, "outside.txt");
     await writeFile(outsideFile, "secret", "utf8");
 
@@ -1296,13 +1307,13 @@ describe("AgentRuntime full access mode", () => {
     expect(restricted?.content).toContain("Path is outside the workspace");
   });
 
-  it("auto mode reads and writes the app data dir (<home>/.meowcode) without full access", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+  it("auto mode reads and writes the app data dir (<home>/.klockcode) without full access", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("auto");
-    const target = path.join(dir, ".meowcode", "memory", "note.md");
+    const target = path.join(dir, ".klockcode", "memory", "note.md");
 
     streamMock
       .mockResolvedValueOnce({
@@ -1350,8 +1361,8 @@ describe("AgentRuntime full access mode", () => {
 
 describe("AgentRuntime file change review records", () => {
   it("records write_file and edit_file diffs into the session and reloads from disk", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-review-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-review-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full"); // 免审批直接执行，聚焦记录逻辑
@@ -1424,8 +1435,8 @@ describe("AgentRuntime file change review records", () => {
 
 describe("AgentRuntime browser tools", () => {
   it("advertises browser tools only when the desktop browser host is connected", async () => {
-    const withHostDir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const plainDir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const withHostDir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const plainDir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
 
     const withHost = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
@@ -1458,7 +1469,7 @@ describe("AgentRuntime browser tools", () => {
   });
 
   it("dispatches browser tool calls to the host without approval and emits tool events", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const commands: BrowserHostCommand[] = [];
     const browserHost: BrowserHostClient = {
       async execute(command) {
@@ -1504,7 +1515,7 @@ describe("AgentRuntime browser tools", () => {
   });
 
   it("blocks browser write actions in read-only mode", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const commands: BrowserHostCommand[] = [];
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
@@ -1546,7 +1557,7 @@ describe("AgentRuntime browser tools", () => {
   });
 
   it("asks for approval before external navigation", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const commands: BrowserHostCommand[] = [];
     const runtime = new AgentRuntime({
       providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
@@ -1603,7 +1614,7 @@ describe("AgentRuntime browser tools", () => {
 
   it("attaches or drops screenshot images based on the provider image modality", async () => {
     const makeRunner = async (inputModalities: Array<"text" | "image">) => {
-      const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+      const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
       return new AgentRuntime({
         providers: [
           {
@@ -1661,11 +1672,11 @@ describe("AgentRuntime browser tools", () => {
       (message) => message.role === "tool",
     );
     expect(fallback?.images).toBeUndefined();
-    expect(fallback?.content).toContain("meowcode-screenshots");
+    expect(fallback?.content).toContain("klockcode-screenshots");
   });
 
   it("passes user-attached images to the provider but keeps them out of the session file", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [
         {
@@ -1697,8 +1708,8 @@ describe("AgentRuntime browser tools", () => {
 
 describe("approval modes", () => {
   it("blocks mutating tools in read-only mode", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "hello");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -1754,9 +1765,9 @@ describe("approval modes", () => {
     expect(await readFile(path.join(workspace, "a.txt"), "utf8")).toBe("hello");
   });
 
-  it("skill 引用的回合不受权限模式约束", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+  it("skill 引用的回合不再提权：写入必须人工审批", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("ask");
@@ -1780,15 +1791,20 @@ describe("approval modes", () => {
       })
       .mockResolvedValueOnce({ message: { role: "assistant", content: "done" } });
 
-    await runtime.prompt("【插件引用】demo-plugin · demo-plugin\n【技能引用】demo · demo\n\n执行技能");
+    const running = runtime.prompt(
+      "【插件引用】demo-plugin · demo-plugin\n【技能引用】demo · demo\n\n执行技能",
+    );
+    const pending = await waitForPendingApproval(runtime);
+    runtime.respondToApproval(pending.callId, { approved: false });
+    await running;
 
-    expect(events.some((event) => event.type === "approval_required")).toBe(false);
-    expect(await readFile(path.join(workspace, "skill.txt"), "utf8")).toBe("ok");
+    expect(events.some((event) => event.type === "approval_required")).toBe(true);
+    await expect(readFile(path.join(workspace, "skill.txt"), "utf8")).rejects.toThrow();
   });
 
   it("applies multi_edit in full-access mode and records one file change", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "one\ntwo\nthree\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -1828,7 +1844,7 @@ describe("approval modes", () => {
   });
 
   it("settles a pending approval when steering a queued prompt", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     // 该用例验证"待审批被插话结算"，需要每次询问模式（默认 auto 会在工作区内自动批准）
@@ -1875,7 +1891,7 @@ describe("approval modes", () => {
   });
 
   it("attaches risk details to a dangerous command approval", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock
@@ -1910,8 +1926,8 @@ describe("approval modes", () => {
   });
 
   it("keeps the approval mode captured at turn start when switching sessions", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -1961,7 +1977,7 @@ describe("approval modes", () => {
 
 describe("turn ownership", () => {
   it("settles a pending approval when the turn is aborted", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     // 该用例验证"待审批被中断结算"，需要每次询问模式（默认 auto 会放行常规命令）
@@ -2013,7 +2029,7 @@ describe("turn ownership", () => {
   });
 
   it("clears pending approval details after a response", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     // 同上：待审批结算机制与权限档无关，这里显式要求弹窗
@@ -2049,7 +2065,7 @@ describe("turn ownership", () => {
   });
 
   it("rejects prompts for another conversation while a turn is running", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock.mockImplementation((options: { signal?: AbortSignal }) => {
@@ -2084,7 +2100,7 @@ describe("turn ownership", () => {
 
 describe("response truncation", () => {
   it("surfaces a length finish reason as an error", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -2105,8 +2121,8 @@ describe("response truncation", () => {
   });
 
   it("does not execute tool calls from a truncated response", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -2146,7 +2162,7 @@ describe("response truncation", () => {
 
 describe("usage persistence", () => {
   it("persists provider usage to the session", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock.mockResolvedValueOnce({
@@ -2169,7 +2185,7 @@ describe("usage persistence", () => {
   });
 
   it("persists background suggestion usage once per request", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock
@@ -2203,7 +2219,7 @@ describe("usage persistence", () => {
   });
 
   it("persists partial usage when a stream fails after reporting usage", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -2238,7 +2254,7 @@ describe("usage persistence", () => {
   });
 
   it("persists turn timing metrics", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock.mockImplementationOnce(
@@ -2263,7 +2279,7 @@ describe("usage persistence", () => {
 
 describe("prompt size guard", () => {
   it("rejects a prompt that cannot fit the model window before calling the provider", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [
         {
@@ -2289,7 +2305,7 @@ describe("prompt size guard", () => {
   });
 
   it("reports a document that alone exceeds the window", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [
         {
@@ -2314,8 +2330,8 @@ describe("prompt size guard", () => {
 });
 
 describe("workspace instructions", () => {  it("injects AGENTS.md and reloads it when the source file changes", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "AGENTS.md"), "RULE ONE");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -2327,7 +2343,7 @@ describe("workspace instructions", () => {  it("injects AGENTS.md and reloads it
       (message): message is Extract<ChatMessage, { role: "system" }> => message.role === "system",
     );
     expect(firstSystems).toHaveLength(2);
-    expect(firstSystems[0].content).toContain("You are MeowCode");
+    expect(firstSystems[0].content).toContain("You are KlockCode");
     expect(firstSystems[1].content).toContain("RULE ONE");
 
     // 会话内改 AGENTS.md：每回合 stat 一次，变了就重载（缓存该断就断，
@@ -2353,8 +2369,8 @@ describe("workspace instructions", () => {  it("injects AGENTS.md and reloads it
   });
 
   it("keeps the base prompt stable and moves mode instructions into history", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "AGENTS.md"), "RULE ONE");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -2368,7 +2384,7 @@ describe("workspace instructions", () => {  it("injects AGENTS.md and reloads it
     );
     // 顺序锁死：稳定基础提示 → 工作区规则。模式指令不再进 system 段（DSH 式 in-history），
     // 切换模式只追加历史尾注，前缀缓存不失效。
-    expect(systems[0].content).toContain("You are MeowCode");
+    expect(systems[0].content).toContain("You are KlockCode");
     expect(systems[1].content).toContain("RULE ONE");
     expect(systems).toHaveLength(2);
     const modeNote = sent.find(
@@ -2386,8 +2402,8 @@ describe("workspace instructions", () => {  it("injects AGENTS.md and reloads it
 
 describe("parallel read-only tools", () => {
   it("executes a batch of reads and keeps result order", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "AAA");
     await writeFile(path.join(workspace, "b.txt"), "BBB");
     const runtime = makeRuntime(dir);
@@ -2433,8 +2449,8 @@ describe("parallel read-only tools", () => {
   });
 
   it("injects web fetch on the parallel read-only path", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "AAA");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -2496,8 +2512,8 @@ describe("midstream early tool execution (experimental)", () => {
     });
 
   it("starts a read-only tool midstream and lands the result exactly once", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "AAA");
     const runtime = makeEarlyRuntime(dir);
     await runtime.newSession(workspace);
@@ -2557,7 +2573,7 @@ describe("midstream early tool execution (experimental)", () => {
   });
 
   it("does not register the callback when the switch is off", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     streamMock.mockImplementationOnce(async (options: {
@@ -2586,7 +2602,7 @@ describe("prompt queue", () => {
     });
 
   it("runs a prompt queued during an active turn", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -2633,7 +2649,7 @@ describe("prompt queue", () => {
   });
 
   it("removes a queued prompt by id", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     let release!: (value: { message: { role: "assistant"; content: string } }) => void;
@@ -2671,7 +2687,7 @@ describe("prompt queue", () => {
   });
 
   it("steers a queued prompt by aborting the active turn", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -2709,7 +2725,7 @@ describe("prompt queue", () => {
   });
 
   it("drops queued prompts when the turn is aborted", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -2737,7 +2753,7 @@ describe("prompt queue", () => {
   });
 
   it("still surfaces non-abort failures", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -2754,8 +2770,8 @@ describe("prompt queue", () => {
 
 describe("abort safety", () => {
   it("does not execute later tool calls after abort", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -2808,9 +2824,9 @@ describe("abort safety", () => {
 
 describe("AgentRuntime file mentions", () => {
   it("injects referenced workspace files and ignores paths outside", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
-    const outside = await mkdtemp(path.join(tmpdir(), "meowcode-outside-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "klockcode-outside-"));
     await writeFile(path.join(workspace, "note file.txt"), "hello from file");
     await writeFile(path.join(workspace, "code.ts"), "const x = 1;");
     await writeFile(path.join(outside, "secret.txt"), "top secret");
@@ -2837,8 +2853,8 @@ describe("AgentRuntime file mentions", () => {
   });
 
   it("re-injects a file that the agent edited after the earlier injection", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "code.ts"), "const x = 1;");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -2897,8 +2913,8 @@ describe("AgentRuntime file mentions", () => {
 
 describe("AgentRuntime tool argument validation", () => {
   it("rejects invalid JSON and missing required fields without executing", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "original");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -2945,7 +2961,7 @@ describe("AgentRuntime tool argument validation", () => {
 
 describe("AgentRuntime compaction request budget", () => {
   it("caps the summary request max tokens to the reserved output budget", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new AgentRuntime({
       providers: [
         {
@@ -2972,8 +2988,8 @@ describe("AgentRuntime compaction request budget", () => {
 
 describe("AgentRuntime session restore", () => {
   it("restores the preferred session and falls back to the latest for the workspace", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const first = makeRuntime(dir);
     const firstHeader = await first.newSession(workspace);
     await first.current?.appendMessage({ role: "user", content: "first" });
@@ -2992,8 +3008,8 @@ describe("AgentRuntime session restore", () => {
 
 describe("AgentRuntime turn durability", () => {
   it("persists turn_start/turn_end and restores approval mode", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("read-only");
@@ -3018,8 +3034,8 @@ describe("AgentRuntime turn durability", () => {
   });
 
   it("writes queued prompts to disk while a turn is running", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     streamMock.mockImplementationOnce(
@@ -3052,8 +3068,8 @@ describe("AgentRuntime turn durability", () => {
   });
 
   it("persists a partial assistant message when the turn is aborted", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     streamMock.mockImplementationOnce(
@@ -3083,8 +3099,8 @@ describe("AgentRuntime turn durability", () => {
   });
 
   it("keeps queued prompts across a graceful shutdown", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     const header = await runtime.newSession(workspace);
     streamMock.mockImplementationOnce(
@@ -3112,8 +3128,8 @@ describe("AgentRuntime turn durability", () => {
   });
 
   it("restores unexecuted queue items without auto-running them", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     const header = await runtime.newSession(workspace);
     const store = await SessionStore.load(header.filePath);
@@ -3129,11 +3145,13 @@ describe("AgentRuntime turn durability", () => {
 });
 
 describe("approval mode: writable roots", () => {
+  // 这组用例测的是 auto 档自身的行为，显式声明前置档位，不依赖进程默认值。
   const setup = async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
+    await runtime.setApprovalMode("auto");
     const events = await collectEvents(runtime);
     return { runtime, workspace, events };
   };
@@ -3148,9 +3166,12 @@ describe("approval mode: writable roots", () => {
     },
   });
 
-  it("new sessions start in auto mode", async () => {
-    const { runtime } = await setup();
-    expect(runtime.currentApprovalMode).toBe("auto");
+  it("new sessions start in the conservative ask mode", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
+    const runtime = makeRuntime(dir);
+    await runtime.newSession(workspace);
+    expect(runtime.currentApprovalMode).toBe("ask");
   });
 
   it("auto-approves a write inside the workspace without prompting", async () => {
@@ -3236,7 +3257,7 @@ describe("approval mode: writable roots", () => {
 
   it("rejects a path outside the workspace without asking", async () => {
     const { runtime, events } = await setup();
-    const outside = path.join(tmpdir(), `meowcode-outside-${Date.now()}.txt`);
+    const outside = path.join(tmpdir(), `klockcode-outside-${Date.now()}.txt`);
     streamMock
       .mockResolvedValueOnce(toolCall("w2", "write_file", { path: outside, content: "x" }))
       .mockResolvedValueOnce({ message: { role: "assistant", content: "done" } });
@@ -3253,10 +3274,11 @@ describe("approval mode: writable roots", () => {
     await expect(readFile(outside, "utf8")).rejects.toThrow();
   });
 
-  it("maps the legacy default mode to ask", () => {
+  it("旧版 default 与缺失值都收敛到最保守的 ask", () => {
     expect(normalizeApprovalMode("default")).toBe("ask");
     expect(normalizeApprovalMode("auto")).toBe("auto");
-    expect(normalizeApprovalMode(undefined)).toBe("auto");
+    expect(normalizeApprovalMode(undefined)).toBe("ask");
+    expect(normalizeApprovalMode("nonsense")).toBe("ask");
   });
 });
 
@@ -3274,8 +3296,8 @@ describe("AgentRuntime approval staleness", () => {
     );
 
   it("re-asks once when the file changes while the approval is open", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const file = path.join(workspace, "code.ts");
     await writeFile(file, "const x = 1;\nconst y = 1;\n");
     const runtime = makeRuntime(dir);
@@ -3319,8 +3341,8 @@ describe("AgentRuntime approval staleness", () => {
   });
 
   it("writes nothing when the file keeps changing during the second approval", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const file = path.join(workspace, "code.ts");
     await writeFile(file, "const x = 1;\nconst y = 1;\n");
     const runtime = makeRuntime(dir);
@@ -3363,8 +3385,8 @@ describe("AgentRuntime approval staleness", () => {
   });
 
   it("previews and records every file touched by a cross-file multi_edit", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const a = path.join(workspace, "a.ts");
     const b = path.join(workspace, "b.ts");
     await writeFile(a, "const a = 1;\n");
@@ -3438,8 +3460,8 @@ describe("session modes", () => {
   }
 
   it("auto-approves plan documents under plans/ and emits plan_documented", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     // 默认 auto：即使不是 plan 模式也会自动批准，这里验证 reason 必须是 plan_mode
@@ -3478,8 +3500,8 @@ describe("session modes", () => {
   });
 
   it("rejects writes outside plans/, commands and subagents in plan mode", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setSessionMode("plan");
@@ -3513,8 +3535,8 @@ describe("session modes", () => {
   });
 
   it("still allows plan documents when the approval mode is read-only", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("read-only");
@@ -3546,8 +3568,8 @@ describe("session modes", () => {
   });
 
   it("appends mode notes into history and gates goal-mode mutations behind admit", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setApprovalMode("ask");
@@ -3629,9 +3651,9 @@ describe("session modes", () => {
   });
 
   it("emits session_mode and persists the mode on the session", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
-    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "meowcode-ws-")));
+    await runtime.newSession(await mkdtemp(path.join(tmpdir(), "klockcode-ws-")));
     const events = await collectEvents(runtime);
 
     await runtime.setSessionMode("plan");
@@ -3647,8 +3669,8 @@ describe("session modes", () => {
   });
 
   it("resets the mode when a new session is created", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     await runtime.setSessionMode("goal");
@@ -3668,8 +3690,8 @@ describe("tool loop detection", () => {
   });
 
   it("appends a loop reminder on the 3rd identical call with identical output", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "same content");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -3694,8 +3716,8 @@ describe("tool loop detection", () => {
   });
 
   it("does not count calls with different arguments or changing outputs", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "alpha");
     await writeFile(path.join(workspace, "b.txt"), "beta");
     const runtime = makeRuntime(dir);
@@ -3735,8 +3757,8 @@ describe("tool loop detection", () => {
   });
 
   it("blocks the identical call after 8 zero-information repeats", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "same content");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -3768,8 +3790,8 @@ describe("tool loop detection", () => {
 
 describe("context_status virtual tool", () => {
   it("reports usage, window and remaining headroom", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = new (await import("./runtime.js")).AgentRuntime({
       providers: [
         { id: "p", name: "P", baseUrl: "http://localhost", model: "m", contextWindow: 100_000 },
@@ -3800,7 +3822,7 @@ describe("context_status virtual tool", () => {
   });
 
   it("clamps the main request output budget to the remaining window", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = new (await import("./runtime.js")).AgentRuntime({
       providers: [
         {
@@ -3826,8 +3848,8 @@ describe("context_status virtual tool", () => {
   });
 
   it("derives a session-stable affinity key for every protocol", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = new (await import("./runtime.js")).AgentRuntime({
       providers: [
         {
@@ -3852,8 +3874,8 @@ describe("context_status virtual tool", () => {
     expect(provider.pace).toBe("interactive");
 
     // Anthropic 协议同样盖键（以 x-session-id 头发出），不再只服务 OpenAI 系
-    const anthropicDir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const anthropicWs = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const anthropicDir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const anthropicWs = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const anthropicRuntime = new (await import("./runtime.js")).AgentRuntime({
       providers: [
         {
@@ -3877,8 +3899,8 @@ describe("context_status virtual tool", () => {
 
 describe("free tool-result pruning (over-budget shrink)", () => {
   it("shrinks old oversized tool outputs when the request exceeds the window", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const big = Array.from(
       { length: 1_200 },
       (_, index) => `line ${index} of the big file with some padding text`,
@@ -3918,8 +3940,8 @@ describe("free tool-result pruning (over-budget shrink)", () => {
   });
 
   it("does not rewrite tool outputs below the window limit", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-cache-first-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache-first-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-cache-first-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache-first-ws-"));
     const files = Array.from({ length: 8 }, (_, index) => `big-${index}.txt`);
     await Promise.all(
       files.map((file) =>
@@ -4057,8 +4079,8 @@ describe("cold resume pre-shrink (cache TTL expired)", () => {
   }
 
   async function makeColdRuntime(providers: ProviderConfig[]) {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-cold-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cold-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-cold-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cold-ws-"));
     const runtime = new (await import("./runtime.js")).AgentRuntime({
       providers,
       sessionsDir: dir,
@@ -4191,8 +4213,8 @@ describe("lineage cache affinity", () => {
   }
 
   async function makeLineageRuntime(provider: ProviderConfig) {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-lineage-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-lineage-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-lineage-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-lineage-ws-"));
     const runtime = new AgentRuntime({ providers: [provider], sessionsDir: dir });
     return { runtime, dir, workspace };
   }
@@ -4247,8 +4269,8 @@ describe("AgentRuntime repeated read short-circuit", () => {
   });
 
   it("returns a stub for the same unchanged file range", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "hello\nworld\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -4279,8 +4301,8 @@ describe("AgentRuntime repeated read short-circuit", () => {
   });
 
   it("falls back to full content after the file is edited", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(workspace, "a.txt"), "hello\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
@@ -4348,8 +4370,8 @@ describe("AgentRuntime read_many coverage reuse", () => {
   });
 
   it("registers batch ranges so a later read_file is stubbed", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const ws = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const ws = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(ws, "a.txt"), "hello\nworld\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(ws);
@@ -4372,8 +4394,8 @@ describe("AgentRuntime read_many coverage reuse", () => {
   });
 
   it("short-circuits a file that read_file already read in full", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const ws = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const ws = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(ws, "a.txt"), "hello\nworld\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(ws);
@@ -4403,8 +4425,8 @@ describe("AgentRuntime compaction quality", () => {
   });
 
   it("counts files re-read inside the window and journals the metric", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const ws = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const ws = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(ws, "a.txt"), "hello\nworld\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(ws);
@@ -4440,8 +4462,8 @@ describe("AgentRuntime compaction quality", () => {
   });
 
   it("does not carry the baseline into another session", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const ws = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const ws = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     await writeFile(path.join(ws, "a.txt"), "hello\nworld\n");
     const runtime = makeRuntime(dir);
     await runtime.newSession(ws);
@@ -4472,8 +4494,8 @@ describe("AgentRuntime compaction quality", () => {
 
 describe("turn file change summary", () => {
   it("reports this turn's edited files with line stats and a rewind target", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ws-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ws-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -4517,7 +4539,7 @@ describe("turn file change summary", () => {
   });
 
   it("omits files for a turn that touched nothing", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);

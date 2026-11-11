@@ -204,7 +204,7 @@ export async function createCompactionSummary(options: {
         if (isAbortError(error) || !isCacheReuseMismatch(error)) throw error;
         // 网关不认识 tool_choice / 缓存字段 → 回退到专用摘要路径
         console.error(
-          `[meowcode] compaction prefix reuse rejected, falling back: ${
+          `[klockcode] compaction prefix reuse rejected, falling back: ${
             error instanceof Error ? error.message : String(error)
           }`,
         );

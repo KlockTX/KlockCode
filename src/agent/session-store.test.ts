@@ -6,7 +6,7 @@ import { SessionStore, flushSessionIndex, listSessions } from "./session-store";
 import type { ChatMessage } from "./types.js";
 
 async function makeStore(): Promise<{ dir: string; filePath: string; session: SessionStore }> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
   const filePath = path.join(dir, "session.jsonl");
   const session = await SessionStore.create(filePath, "D:/work");
   return { dir, filePath, session };
@@ -14,7 +14,7 @@ async function makeStore(): Promise<{ dir: string; filePath: string; session: Se
 
 describe("SessionStore", () => {
   it("persists and reloads messages", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "hello" });
@@ -27,13 +27,13 @@ describe("SessionStore", () => {
   });
 
   it("round-trips worktree metadata through header and summary", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const worktree = {
       sourceCwd: "D:/work",
       repoRoot: "D:/work",
       path: "C:/data/worktrees/work-1",
-      branch: "meowcode/work-1",
+      branch: "klockcode/work-1",
       baseSha: "abc123",
       createdAt: "2026-10-25T00:00:00.000Z",
     };
@@ -47,7 +47,7 @@ describe("SessionStore", () => {
     expect(summary.worktree).toEqual(worktree);
   });
 
-  it("persists plans and compaction summaries, and slices effective messages", async () => {    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+  it("persists plans and compaction summaries, and slices effective messages", async () => {    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "before" });
@@ -78,7 +78,7 @@ describe("SessionStore", () => {
   });
 
   it("interleaves context notes into effective messages without showing them as chat history", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "before" });
@@ -228,7 +228,7 @@ describe("SessionStore", () => {
   });
 
   it("reports whether there are messages after the last compaction summary", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     expect(session.hasUncompactedMessages).toBe(false);
@@ -243,7 +243,7 @@ describe("SessionStore", () => {
   });
 
   it("persists usage entries without polluting chat messages", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "hi" });
@@ -266,7 +266,7 @@ describe("SessionStore", () => {
   });
 
   it("exposes per-call usage samples for the live hit-rate curve", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const session = await SessionStore.create(path.join(dir, "session.jsonl"), "D:/work");
     await session.appendUsage({
       inputTokens: 100,
@@ -298,7 +298,7 @@ describe("SessionStore", () => {
   });
 
   it("persists turn metrics without polluting chat messages", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "hi" });
@@ -314,7 +314,7 @@ describe("SessionStore", () => {
   });
 
   it("never overwrites an existing session file", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "same.jsonl");
     await SessionStore.create(filePath, "D:/work");
     await expect(SessionStore.create(filePath, "D:/work")).rejects.toMatchObject({
@@ -323,7 +323,7 @@ describe("SessionStore", () => {
   });
 
   it("uses the latest plan when several were appended", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendPlan([{ title: "Old", status: "pending" }]);
@@ -814,7 +814,7 @@ describe("checkpoints", () => {
 
 describe("SessionStore compaction quality", () => {
   it("records the metric without touching effective messages", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-sessions-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-sessions-"));
     const filePath = path.join(dir, "session.jsonl");
     const session = await SessionStore.create(filePath, "D:/work");
     await session.appendMessage({ role: "user", content: "hello" });

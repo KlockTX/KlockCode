@@ -8,6 +8,7 @@ import {
   estimateMessagesTokens,
   estimateTokens,
   estimateToolDefinitionsTokens,
+  indexAtTokenBudget,
   repairToolPairs,
   shouldRecommendCompaction,
   shrinkToolOutputs,
@@ -15,7 +16,7 @@ import {
 } from "./context";
 import type { ChatMessage } from "./types";
 
-const system: ChatMessage = { role: "system", content: "You are MeowCode." };
+const system: ChatMessage = { role: "system", content: "You are KlockCode." };
 const user = (text: string): ChatMessage => ({ role: "user", content: text });
 const assistant = (text: string): ChatMessage => ({ role: "assistant", content: text });
 const toolResult = (id: string, text: string): ChatMessage => ({
@@ -39,6 +40,53 @@ describe("estimateTokens", () => {
     expect(estimateTokens("，。")).toBe(2); // CJK 标点同按 1 字计
     expect(estimateTokens("안녕")).toBe(2); // Hangul 也按 CJK 口径
     expect(estimateTokens("한국어")).toBe(3);
+  });
+
+  it("非拉丁文不能按 ASCII 口径除以 4（俄语/印地语会被低估一半以上）", () => {
+    // 旧版把西里尔/天城文混进 "其余 4 字符 ≈ 1 token"，实测这类文字 1.5–3 字符/token，
+    // 上下文一满就直接 400 溢出。现在按 0.5 token/字符计（宁可高估）。
+    const russian = "Документ"; // 8 个西里尔字符
+    expect(estimateTokens(russian)).toBe(Math.ceil(russian.length * 0.5));
+    const hindi = "दस्तावेज़"; // 天城文（含组合符号，长度按 code unit 算）
+    expect(estimateTokens(hindi)).toBe(Math.ceil(hindi.length * 0.5));
+    // 与旧口径的差距是可验证的：旧口径是 ceil(len/4)，不到新值的一半
+    expect(estimateTokens(russian)).toBeGreaterThan(Math.ceil(russian.length / 4));
+  });
+
+  it("长 base64 / hex 串按更重的权重计（这类串没有可合并的子词）", () => {
+    const base64 = Buffer.from("hello world hello world!").toString("base64");
+    expect(base64.length).toBeGreaterThanOrEqual(32);
+    // 单段无空白 → 全部按 blob 口径；短串不足 40 字符仍按 0.25
+    expect(estimateTokens(base64)).toBe(Math.ceil(base64.length * (base64.length >= 40 ? 0.6 : 0.25)));
+    const hex = "a3f5c7d91b2e4f6089ab".repeat(4); // 80 字符高熵 hex
+    expect(estimateTokens(hex)).toBe(Math.ceil(hex.length * 0.6));
+  });
+
+  it("重复字符 / JSON 结构不算 blob（可压缩，按 0.6 计会高估两倍以上）", () => {
+    // 4000 个相同字符：BPE 能压到十几个 token，旧口径 1000 就够高估了
+    expect(estimateTokens("a".repeat(4_000))).toBe(1_000);
+    // markdown 表格的分隔行、CSV 空字段同属可压缩重复串
+    expect(estimateTokens("|".repeat(200))).toBe(50);
+    // JSON 里的长串带大量标点，字母数字占比低于 90%
+    const json = '{"type":"function","function":{"name":"list_dir","parameters":{}}}';
+    expect(estimateTokens(json)).toBe(Math.ceil(json.length / 4));
+  });
+
+  it("indexAtTokenBudget 与 estimateTokens 是同一把尺子", () => {
+    for (const text of [
+      "the quick brown fox jumps over the lazy dog",
+      "中".repeat(200),
+      Buffer.from("x".repeat(500)).toString("base64"),
+      `START-${"x".repeat(2_000)}-END`,
+    ]) {
+      const budget = 50;
+      const head = text.slice(0, indexAtTokenBudget(text, budget));
+      expect(estimateTokens(head)).toBeLessThanOrEqual(budget);
+      // 再多取一个字符就会超预算（除非切点就落在末尾）
+      if (head.length < text.length) {
+        expect(estimateTokens(text.slice(0, head.length + 1))).toBeGreaterThan(budget);
+      }
+    }
   });
 
   it("统计消息时把 tool_calls 的参数也算进去", () => {
@@ -506,18 +554,18 @@ describe("shrinkToolOutputs", () => {
       });
     }
     const spilled = new Map([
-      ["call-0", ".meowcode/tool-output/run_command-x.log"],
-      ["call-1", ".meowcode/tool-output/run_command-y.log"],
+      ["call-0", ".klockcode/tool-output/run_command-x.log"],
+      ["call-1", ".klockcode/tool-output/run_command-y.log"],
     ]);
     const { messages: shrunk, changed } = shrinkToolOutputs(messages, { spilled });
     expect(changed).toBe(true);
     const tools = shrunk.filter((message) => message.role === "tool");
     // 默认 keepRecentUnits=2：只有最旧两个工具单元被收缩，locator 只出现在它们身上
     expect(tools[0] && tools[0].role === "tool" ? tools[0].content : "").toContain(
-      "full text saved to .meowcode/tool-output/run_command-x.log; read it with read_file",
+      "full text saved to .klockcode/tool-output/run_command-x.log; read it with read_file",
     );
     expect(tools[1] && tools[1].role === "tool" ? tools[1].content : "").toContain(
-      "full text saved to .meowcode/tool-output/run_command-y.log",
+      "full text saved to .klockcode/tool-output/run_command-y.log",
     );
     expect(tools[2] && tools[2].role === "tool" ? tools[2].content : "").not.toContain("full text saved");
     expect(

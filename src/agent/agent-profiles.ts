@@ -41,7 +41,7 @@ export type AgentProfileDefinition = {
  * 换成这五条 —— 它们是「AI 太傻」最便宜的来源。
  * prompt-budget.test.ts 有 token 断言，改这条提示词先想清楚值不值。
  */
-export const BASE_SYSTEM_PROMPT = `You are MeowCode, a local coding agent on Windows.
+export const BASE_SYSTEM_PROMPT = `You are KlockCode, a local coding agent on Windows.
 
 Read before you change; edit existing files with edit_file or multi_edit (one call for many), write_file only for new ones. An edit result already shows the changed lines — do not re-read to verify.
 Search before guessing: glob and grep beat listing directories. One read_many for several files; one run_code for multi-file search or aggregation (only its return value is billed). Batch independent reads, searches and test commands into one message.
@@ -62,7 +62,7 @@ Delegate broad independent work to subagents (task); starts are capped per turn,
  * 写文件的指引必须与 run_command 的工具描述一致：Set-Content / Out-File / '>'
  * 会改行尾、加 BOM、写 UTF-16 甚至清空目标文件 —— 旧提示词正好在教模型做那件事。
  */
-const MINIMAL_SYSTEM_PROMPT = `You are MeowCode in minimal mode, a local coding agent on Windows.
+const MINIMAL_SYSTEM_PROMPT = `You are KlockCode in minimal mode, a local coding agent on Windows.
 You have exactly two tools: read_file (text and images) and run_command (PowerShell).
 Search with Select-String and Get-ChildItem; slice with Get-Content -TotalCount / -Tail.
 Write files with [System.IO.File]::WriteAllText($p, $text, (New-Object System.Text.UTF8Encoding $false)) — never Set-Content, Out-File or '>': they change line endings, add a BOM, emit UTF-16, or truncate the target.
@@ -79,7 +79,7 @@ const COMPLEX_SYSTEM_PROMPT = `${BASE_SYSTEM_PROMPT}
 
 Complex mode is active (gated governance): structure over speed.
 Turn non-trivial work into ordered lanes with concrete file paths; use a planner subagent when scope is unclear and update_plan to keep the lane list current.
-The architecture graph in .meowcode/harness.json is the single source of truth for gates, roles and failure jumps: read it, dispatch exactly the role each gate names, and never close a gate yourself.
+The architecture graph in .klockcode/harness.json is the single source of truth for gates, roles and failure jumps: read it, dispatch exactly the role each gate names, and never close a gate yourself.
 Independent roles must be fresh: the implementer never reviews its own diff, and no agent closes two gates of one lane. Never weaken a failing test — a regression is a signal.
 Merge conflicts, repeated gate failures, or a lane that keeps growing go back to planning instead of being patched around.`;
 
@@ -109,7 +109,7 @@ export const AGENT_PROFILES: Record<AgentProfileId, AgentProfileDefinition> = {
     name: "标准 Agent",
     tagline: "完整能力：全量工具 + 全部子 Agent",
     description:
-      "MeowCode 的默认主 Agent：全量工具、全部子 Agent 角色按需派发，单回合最多 3 个子 Agent。",
+      "KlockCode 的默认主 Agent：全量工具、全部子 Agent 角色按需派发，单回合最多 3 个子 Agent。",
     prompt: BASE_SYSTEM_PROMPT,
     roles: STANDARD_ROLES,
     tools: null,

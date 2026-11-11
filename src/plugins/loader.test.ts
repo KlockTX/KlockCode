@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { hasDynamicTool } from "../agent/tools.js";
 import { PluginRegistry } from "./registry.js";
 import { discoverPlugins, loadPlugins } from "./loader.js";
@@ -14,17 +14,17 @@ const tempDirs: string[] = [];
  * 隔离内置插件根：指向一个空的临时目录，避免测试捡到产品自带的
  * builtin/claude-code-hooks（descriptors 断言只关心 project/user 层）。
  */
-const originalBuiltinEnv = process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
+const originalBuiltinEnv = process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
 let emptyBuiltinDir = "";
 
 beforeAll(async () => {
   emptyBuiltinDir = await fs.mkdtemp(path.join(os.tmpdir(), "meow-builtin-"));
-  process.env.MEOWCODE_BUILTIN_PLUGINS_DIR = emptyBuiltinDir;
+  process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR = emptyBuiltinDir;
 });
 
 afterAll(async () => {
-  if (originalBuiltinEnv === undefined) delete process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
-  else process.env.MEOWCODE_BUILTIN_PLUGINS_DIR = originalBuiltinEnv;
+  if (originalBuiltinEnv === undefined) delete process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
+  else process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR = originalBuiltinEnv;
   await fs.rm(emptyBuiltinDir, { recursive: true, force: true }).catch(() => {});
 });
 
@@ -93,26 +93,26 @@ describe("discoverPlugins", () => {
 
   it("目录不存在时静默跳过", async () => {
     const { plugins } = await discoverPlugins([
-      { dir: "Z:/definitely/missing/.meowcode/plugins", source: "project" },
+      { dir: "Z:/definitely/missing/.klockcode/plugins", source: "project" },
     ]);
     expect(plugins).toEqual([]);
   });
 
   it("内置根目录（无 env 覆盖时）能发现随包的 builtin 插件", async () => {
-    const saved = process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
-    delete process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
+    const saved = process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
+    delete process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
     try {
       const builtinDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "builtin");
       const { plugins } = await discoverPlugins([{ dir: builtinDir, source: "builtin" }]);
       expect(plugins.map((item) => item.id)).toContain("claude-code-hooks");
     } finally {
-      if (saved !== undefined) process.env.MEOWCODE_BUILTIN_PLUGINS_DIR = saved;
+      if (saved !== undefined) process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR = saved;
     }
   });
 
   it("loadPlugins 给 builtin 描述符填元数据（显示名/介绍/图标 dataUrl）", async () => {
-    const saved = process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
-    delete process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
+    const saved = process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
+    delete process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
     try {
       const workspace = await makeTempRoot();
       const registry = new PluginRegistry();
@@ -126,7 +126,7 @@ describe("discoverPlugins", () => {
       // 元数据不依赖加载成功：即使工厂抛错，描述符仍带介绍
       registry.unregisterAll();
     } finally {
-      if (saved !== undefined) process.env.MEOWCODE_BUILTIN_PLUGINS_DIR = saved;
+      if (saved !== undefined) process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR = saved;
     }
   });
 });
@@ -134,7 +134,7 @@ describe("discoverPlugins", () => {
 describe("loadPlugins", () => {
   it("成功插件完成注册并产出 descriptor，坏插件被隔离", async () => {
     const root = await makeTempRoot();
-    const pluginsDir = path.join(root, ".meowcode", "plugins");
+    const pluginsDir = path.join(root, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginsDir, "good.ts"),
@@ -193,7 +193,7 @@ describe("loadPlugins", () => {
 
   it("import 失败（语法错误）被隔离，后续插件继续加载", async () => {
     const root = await makeTempRoot();
-    const pluginsDir = path.join(root, ".meowcode", "plugins");
+    const pluginsDir = path.join(root, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(path.join(pluginsDir, "broken.ts"), "export default ((((");
     await fs.writeFile(
@@ -212,7 +212,7 @@ describe("loadPlugins", () => {
 
   it("disabled 列表跳过加载但不缺失 descriptor", async () => {
     const root = await makeTempRoot();
-    const pluginsDir = path.join(root, ".meowcode", "plugins");
+    const pluginsDir = path.join(root, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginsDir, "off.ts"),
@@ -230,7 +230,7 @@ describe("loadPlugins", () => {
 
   it("非工厂导出报清晰错误", async () => {
     const root = await makeTempRoot();
-    const pluginsDir = path.join(root, ".meowcode", "plugins");
+    const pluginsDir = path.join(root, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(path.join(pluginsDir, "nofn.ts"), "export default { notAFunction: true };");
 
@@ -247,7 +247,7 @@ describe("createPluginSystem.reload", () => {
     const { createPluginSystem } = await import("./index.js");
     const workspace = await makeTempRoot();
     const home = await makeTempRoot();
-    const pluginsDir = path.join(workspace, ".meowcode", "plugins");
+    const pluginsDir = path.join(workspace, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginsDir, "v1.ts"),
@@ -275,7 +275,7 @@ describe("createPluginSystem.reload", () => {
 describe("插件 UI 面板探测", () => {
   it("目录插件带 ui/index.html 时 descriptor.ui 登记，单文件插件没有", async () => {
     const root = await makeTempRoot();
-    const pluginsDir = path.join(root, ".meowcode", "plugins");
+    const pluginsDir = path.join(root, ".klockcode", "plugins");
     const withUi = path.join(pluginsDir, "with-ui");
     await fs.mkdir(path.join(withUi, "ui"), { recursive: true });
     await fs.writeFile(path.join(withUi, "index.ts"), "export default () => {}");
@@ -294,7 +294,7 @@ describe("插件 UI 面板探测", () => {
 
   it("ui 文件缺失（只有目录）不算面板", async () => {
     const root = await makeTempRoot();
-    const pluginsDir = path.join(root, ".meowcode", "plugins");
+    const pluginsDir = path.join(root, ".klockcode", "plugins");
     const dirOnly = path.join(pluginsDir, "dir-only");
     await fs.mkdir(path.join(dirOnly, "ui"), { recursive: true });
     await fs.writeFile(path.join(dirOnly, "index.ts"), "export default () => {}");
@@ -308,13 +308,13 @@ describe("插件 UI 面板探测", () => {
 });
 
 describe("插件头注释与宿主注入", () => {
-  it("读文件头 @meowcode name/description，列表显示中文名", async () => {
+  it("读文件头 @klockcode name/description，列表显示中文名", async () => {
     const home = await makeTempRoot();
-    const pluginsDir = path.join(home, ".meowcode", "plugins");
+    const pluginsDir = path.join(home, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginsDir, "branded.ts"),
-      "// @meowcode name: 字数统计\n// @meowcode description: 统计文本字数\nexport default () => {}",
+      "// @klockcode name: 字数统计\n// @klockcode description: 统计文本字数\nexport default () => {}",
     );
     const registry = new PluginRegistry();
     const workspace = await makeTempRoot();
@@ -328,7 +328,7 @@ describe("插件头注释与宿主注入", () => {
 
   it("host 能力通过 api.host 注入给插件", async () => {
     const home = await makeTempRoot();
-    const pluginsDir = path.join(home, ".meowcode", "plugins");
+    const pluginsDir = path.join(home, ".klockcode", "plugins");
     await fs.mkdir(pluginsDir, { recursive: true });
     await fs.writeFile(
       path.join(pluginsDir, "needs-host.ts"),
@@ -351,8 +351,8 @@ describe("插件头注释与宿主注入", () => {
 
 describe("内置创作插件", () => {
   it("extension-authoring 注入 host 后注册 create_skill / create_plugin", async () => {
-    const saved = process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
-    delete process.env.MEOWCODE_BUILTIN_PLUGINS_DIR;
+    const saved = process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
+    delete process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR;
     try {
       const workspace = await makeTempRoot();
       const registry = new PluginRegistry();
@@ -369,7 +369,7 @@ describe("内置创作插件", () => {
       );
       registry.unregisterAll();
     } finally {
-      if (saved !== undefined) process.env.MEOWCODE_BUILTIN_PLUGINS_DIR = saved;
+      if (saved !== undefined) process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR = saved;
     }
   });
 });
@@ -381,7 +381,7 @@ describe("plugin.json manifest", () => {
     manifest: unknown,
     files: Record<string, string> = {},
   ): Promise<string> {
-    const dir = path.join(home, ".meowcode", "plugins", id);
+    const dir = path.join(home, ".klockcode", "plugins", id);
     await fs.mkdir(path.join(dir, "ui"), { recursive: true });
     await fs.writeFile(path.join(dir, "index.ts"), "export default () => {}");
     await fs.writeFile(path.join(dir, "plugin.json"), JSON.stringify(manifest));
@@ -485,7 +485,7 @@ describe("plugin.json manifest", () => {
 
   it("没有 plugin.json 的旧插件不加载 client", async () => {
     const home = await makeTempRoot();
-    const dir = path.join(home, ".meowcode", "plugins", "legacy");
+    const dir = path.join(home, ".klockcode", "plugins", "legacy");
     await fs.mkdir(path.join(dir, "ui"), { recursive: true });
     await fs.writeFile(path.join(dir, "index.ts"), "export default () => {}");
     await fs.writeFile(path.join(dir, "ui", "client.js"), "return { apply() {} }");
@@ -499,6 +499,26 @@ describe("plugin.json manifest", () => {
     const descriptor = descriptors.find((item) => item.id === "legacy");
     expect(descriptor?.manifest).toBeUndefined();
     expect(descriptor?.ui?.client).toBeUndefined();
+    registry.unregisterAll();
+  });
+
+  it("没有 plugin.json 时告警：全开权限与进程内执行都不静默", async () => {
+    const home = await makeTempRoot();
+    const dir = path.join(home, ".klockcode", "plugins", "legacy-warn");
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(path.join(dir, "index.ts"), "export default () => {}");
+    const registry = new PluginRegistry();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    let lines: string[] = [];
+    try {
+      await loadPlugins({ workspace: await makeTempRoot(), homeDir: home, registry });
+      lines = warn.mock.calls.map((args) => args.join(" "));
+    } finally {
+      warn.mockRestore();
+    }
+    const line = lines.find((text) => text.includes("legacy-warn"));
+    expect(line).toContain("no plugin.json");
+    expect(line).toContain("in-process");
     registry.unregisterAll();
   });
 });

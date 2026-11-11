@@ -54,7 +54,7 @@ function toolCall(command: string) {
 }
 
 async function readyRuntime() {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-delete-confirm-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-delete-confirm-"));
   const runtime = makeRuntime(dir);
   await runtime.newSession();
   runtime.setApprovalMode("full");
@@ -152,6 +152,29 @@ describe("file deletion confirmation", () => {
 
   it("skips the confirmation when the setting is off", async () => {
     enableWorkspaceWrite(false);
+    const runtime = await readyRuntime();
+    streamMock
+      .mockResolvedValueOnce(toolCall("Remove-Item out.txt"))
+      .mockResolvedValueOnce({ message: { role: "assistant", content: "done" } });
+
+    const events: MeowEvent[] = [];
+    runtime.onEvent((event) => events.push(event));
+    await runtime.prompt("go");
+
+    expect(events.some((event) => event.type === "approval_required")).toBe(false);
+    expect(executeToolMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips the confirmation in read-only sandbox mode", async () => {
+    // 只读模式下删除会被 OS 直接拒（缺写能力 SID），再弹一次"确认删除"只是噪音
+    setSandboxSettings({
+      enabled: true,
+      mode: "read-only",
+      writableRoots: [],
+      allowTemp: true,
+      grantTimeoutMs: 30_000,
+      confirmDelete: true,
+    });
     const runtime = await readyRuntime();
     streamMock
       .mockResolvedValueOnce(toolCall("Remove-Item out.txt"))

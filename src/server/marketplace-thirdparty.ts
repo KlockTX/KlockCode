@@ -511,12 +511,12 @@ export function createThirdPartySource(options: ThirdPartySourceOptions = {}) {
   }
 
   function skillsDir(ctx: ThirdPartyContext): string {
-    return path.join(ctx.homeDir, ".meowcode", "skills");
+    return path.join(ctx.homeDir, ".klockcode", "skills");
   }
 
   function markerFile(id: string, ctx: ThirdPartyContext): string {
     assertSafeId(id);
-    return path.join(ctx.homeDir, ".meowcode", ".marketplace", `skill-${id}.json`);
+    return path.join(ctx.homeDir, ".klockcode", ".marketplace", `skill-${id}.json`);
   }
 
   async function isInstalled(id: string, ctx: ThirdPartyContext): Promise<boolean> {
@@ -627,7 +627,7 @@ export function createThirdPartySource(options: ThirdPartySourceOptions = {}) {
 
     /**
      * 安装：按文件清单逐个下载到临时目录（sha256 校验），整体 rename 进
-     * ~/.meowcode/skills/<id>，写官方同款安装标记（卸载走官方 /marketplace/uninstall）。
+     * ~/.klockcode/skills/<id>，写官方同款安装标记（卸载走官方 /marketplace/uninstall）。
      */
     async install(
       id: string,
@@ -653,7 +653,7 @@ export function createThirdPartySource(options: ThirdPartySourceOptions = {}) {
 
       const target = path.join(skillsDir(ctx), id);
       const overwritten = await isInstalled(id, ctx);
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "meowcode-thirdparty-"));
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "klockcode-thirdparty-"));
       try {
         let actualTotal = 0;
         for (const file of files) {

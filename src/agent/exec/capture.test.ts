@@ -88,7 +88,7 @@ describe("runCapture", () => {
 
   it("reports a spawn error instead of throwing", async () => {
     const result = await runCapture({
-      file: "meowcode-definitely-missing-binary",
+      file: "klockcode-definitely-missing-binary",
       args: [],
       cwd: process.cwd(),
       env: commandEnv(),

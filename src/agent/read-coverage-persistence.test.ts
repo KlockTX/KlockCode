@@ -13,7 +13,7 @@ import type { ChatMessage, ToolCall } from "./types";
  */
 
 async function workspace(lines = 600): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-readstate-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-readstate-"));
   await writeFile(
     path.join(dir, "a.ts"),
     Array.from({ length: lines }, (_, index) => `line ${index + 1}`).join("\n"),

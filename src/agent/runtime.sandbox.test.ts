@@ -69,8 +69,8 @@ function toolCall(id: string) {
 }
 
 async function readyRuntime() {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-sandbox-"));
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-runtime-sandbox-ws-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-sandbox-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-runtime-sandbox-ws-"));
   const runtime = makeRuntime(dir);
   await runtime.newSession(workspace);
   runtime.setApprovalMode("full");

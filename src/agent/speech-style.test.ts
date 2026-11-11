@@ -8,11 +8,11 @@ import {
   TAFFY_SPEECH_PROMPT,
 } from "./speech-style.js";
 
-const original = process.env.MEOWCODE_SPEECH_STYLE;
+const original = process.env.KLOCKCODE_SPEECH_STYLE;
 
 afterEach(() => {
-  if (original === undefined) delete process.env.MEOWCODE_SPEECH_STYLE;
-  else process.env.MEOWCODE_SPEECH_STYLE = original;
+  if (original === undefined) delete process.env.KLOCKCODE_SPEECH_STYLE;
+  else process.env.KLOCKCODE_SPEECH_STYLE = original;
 });
 
 describe("语色归一化", () => {
@@ -29,15 +29,15 @@ describe("语色归一化", () => {
   });
 
   it("从 env 读取并容忍大小写与空白", () => {
-    process.env.MEOWCODE_SPEECH_STYLE = " TAFEI ";
+    process.env.KLOCKCODE_SPEECH_STYLE = " TAFEI ";
     expect(readSpeechStyleFromEnv()).toBe("tafei");
-    process.env.MEOWCODE_SPEECH_STYLE = "DAZUI";
+    process.env.KLOCKCODE_SPEECH_STYLE = "DAZUI";
     expect(readSpeechStyleFromEnv()).toBe("dazui");
-    process.env.MEOWCODE_SPEECH_STYLE = "normal";
+    process.env.KLOCKCODE_SPEECH_STYLE = "normal";
     expect(readSpeechStyleFromEnv()).toBe("normal");
-    process.env.MEOWCODE_SPEECH_STYLE = "unknown";
+    process.env.KLOCKCODE_SPEECH_STYLE = "unknown";
     expect(readSpeechStyleFromEnv()).toBe("normal");
-    delete process.env.MEOWCODE_SPEECH_STYLE;
+    delete process.env.KLOCKCODE_SPEECH_STYLE;
     expect(readSpeechStyleFromEnv()).toBe("normal");
   });
 });

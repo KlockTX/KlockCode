@@ -24,8 +24,8 @@ async function setup(): Promise<{
   runtime: InstanceType<typeof AgentRuntime>;
   workspace: string;
 }> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-ptc-runtime-"));
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-ptc-ws-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-ptc-runtime-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-ptc-ws-"));
   const runtime = new AgentRuntime({
     providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],
     sessionsDir: dir,

@@ -13,7 +13,7 @@ describe("web tool registration", () => {
 
 describe("web_search execution", () => {
   it("formats sources and forwards side-request usage", async () => {
-    const result = await executeTool("web_search", { query: "latest meowcode" }, workspace, {
+    const result = await executeTool("web_search", { query: "latest klockcode" }, workspace, {
       webSearch: async (query) => ({
         sources: [{ url: "https://example.com/a", title: query, summary: "summary" }],
         usage: { inputTokens: 12, outputTokens: 34 },
@@ -22,8 +22,8 @@ describe("web_search execution", () => {
 
     expect(result.ok).toBe(true);
     expect(result.output).toContain("untrusted data");
-    expect(result.output).toContain("Web search results for \"latest meowcode\"");
-    expect(result.output).toContain("[latest meowcode](https://example.com/a)");
+    expect(result.output).toContain("Web search results for \"latest klockcode\"");
+    expect(result.output).toContain("[latest klockcode](https://example.com/a)");
     expect(result.usage).toEqual({ inputTokens: 12, outputTokens: 34 });
   });
 

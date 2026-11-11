@@ -12,11 +12,11 @@ const fakeTsserver = fileURLToPath(
 const dirs: string[] = [];
 
 async function workspace(config: unknown): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-lsp-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-lsp-"));
   dirs.push(dir);
-  await mkdir(path.join(dir, ".meowcode"), { recursive: true });
+  await mkdir(path.join(dir, ".klockcode"), { recursive: true });
   await writeFile(
-    path.join(dir, ".meowcode", "lsp.json"),
+    path.join(dir, ".klockcode", "lsp.json"),
     JSON.stringify(config),
     "utf8",
   );
@@ -102,7 +102,7 @@ describe("LspManager", () => {
     const root = await workspace({
       servers: {
         missing: {
-          command: "meowcode-no-such-lsp-binary",
+          command: "klockcode-no-such-lsp-binary",
           args: [],
           extensions: ["nope"],
         },

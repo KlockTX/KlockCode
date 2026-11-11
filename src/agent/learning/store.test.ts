@@ -33,8 +33,8 @@ afterEach(async () => {
 });
 
 async function makeWorkspace(): Promise<{ workspace: string; homeDir: string }> {
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-learning-"));
-  const homeDir = await mkdtemp(path.join(tmpdir(), "meowcode-home-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-learning-"));
+  const homeDir = await mkdtemp(path.join(tmpdir(), "klockcode-home-"));
   tempRoots.push(workspace, homeDir);
   return { workspace, homeDir };
 }
@@ -64,10 +64,10 @@ describe("learning roots", () => {
   it("separates user and project scopes", async () => {
     const { workspace, homeDir } = await makeWorkspace();
     expect(learningRootFor("project", workspace, homeDir)).toBe(
-      path.join(workspace, ".meowcode", "learning"),
+      path.join(workspace, ".klockcode", "learning"),
     );
     expect(learningRootFor("user", workspace, homeDir)).toBe(
-      path.join(homeDir, ".meowcode", "learning"),
+      path.join(homeDir, ".klockcode", "learning"),
     );
   });
 });

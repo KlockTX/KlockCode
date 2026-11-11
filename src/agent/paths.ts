@@ -10,7 +10,7 @@ export const IGNORED_ENTRY_NAMES = new Set([
   ".git",
   ".hg",
   ".svn",
-  ".meowcode",
+  ".klockcode",
   "node_modules",
   "dist",
   "build",
@@ -61,11 +61,11 @@ export function isWithinWorkspace(workspace: string, target: string): boolean {
 }
 
 /**
- * 应用自己的用户数据根（~/.meowcode）：user 记忆、技能、插件与 MCP 配置都在这里。
+ * 应用自己的用户数据根（~/.klockcode）：user 记忆、技能、插件与 MCP 配置都在这里。
  * 它和工作区一样属于可信根——工作区内自动模式不该因为“在工作区外”就拒绝读写。
  * 缺省按 os.homedir() 算；Runtime 构造时用注入的 homeDir 覆盖（测试/嵌入用临时目录）。
  */
-let appDataRoot = path.join(os.homedir(), ".meowcode");
+let appDataRoot = path.join(os.homedir(), ".klockcode");
 
 export function setAppDataRoot(root: string | null): void {
   appDataRoot = root ? path.resolve(root) : "";

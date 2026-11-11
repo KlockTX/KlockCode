@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { executeTool } from "./tools";
+import { runInSandboxHost, spawnSandboxHost } from "./code-sandbox";
 import {
   CODE_MODE_MAX_CALLS,
   CODE_MODE_MAX_RESULT_CHARS,
@@ -16,7 +17,7 @@ afterEach(async () => {
 });
 
 async function tempWorkspace(): Promise<string> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-code-mode-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-code-mode-"));
   workspaces.push(root);
   return root;
 }
@@ -172,14 +173,14 @@ describe("run_code sandbox", () => {
     expect(result.output.length).toBeLessThan(CODE_MODE_MAX_RESULT_CHARS + 300);
   });
 
-  it("persists the execution log under .meowcode/tool-output", async () => {
+  it("persists the execution log under .klockcode/tool-output", async () => {
     const root = await tempWorkspace();
     await writeFile(path.join(root, "a.txt"), "hi");
     const result = await executeTool("run_code", {
       code: `console.log("marker-log-line"); return await meow.read("a.txt");`,
     }, root);
     expect(result.ok).toBe(true);
-    const match = result.output.match(/log: (\.meowcode\/tool-output\/run_code-[^.\n]+\.log)/);
+    const match = result.output.match(/log: (\.klockcode\/tool-output\/run_code-[^.\n]+\.log)/);
     expect(match).toBeTruthy();
     const log = await readFile(path.join(root, match![1].split("/").join(path.sep)), "utf8");
     expect(log).toContain("marker-log-line");
@@ -188,7 +189,7 @@ describe("run_code sandbox", () => {
 
   it("sweeps expired logs from the shared tool-output directory", async () => {
     const root = await tempWorkspace();
-    const dir = path.join(root, ".meowcode", "tool-output");
+    const dir = path.join(root, ".klockcode", "tool-output");
     await mkdir(dir, { recursive: true });
     const stale = path.join(dir, "run_code-stale.log");
     await writeFile(stale, "old");
@@ -233,5 +234,99 @@ describe("run_code sandbox", () => {
     expect(result.ok).toBe(true);
     expect(result.output).toContain("keep.txt");
     expect(result.output).not.toContain("node_modules");
+  });
+});
+
+/**
+ * 进程边界自身的可回归性质。上面那组测"沙箱能做什么"，这一组测"沙箱失控时会发生什么"——
+ * 而后者才是把 vm 搬进子进程的唯一理由：
+ *  - 挂起的 Promise 必须被**真杀掉**，而不是让调用方不再等（Promise.race 只做到后者）；
+ *  - 写爆堆只死沙箱，宿主进程照常工作；
+ *  - 两段并发代码不共享任何状态；
+ *  - 宿主 realm 的构造器进不了沙箱。
+ */
+describe("run_code process boundary", () => {
+  it("kills the sandbox process instead of abandoning a hung promise", async () => {
+    const child = spawnSandboxHost();
+    const exited = new Promise<void>((resolve) => {
+      child.once("exit", () => resolve());
+    });
+    const startedAt = Date.now();
+    const outcome = await runInSandboxHost(child, {
+      code: "await new Promise(() => {});",
+      budgetMs: 500,
+      dispatch: async () => JSON.stringify({ ok: true, value: null }),
+      log: () => {},
+    });
+    expect(outcome.ok).toBe(false);
+    if (outcome.ok) return;
+    expect(outcome.error).toContain("exceeded the 500ms limit");
+    // 关键断言：不是"松手不管"，进程真的没了
+    await exited;
+    expect(child.exitCode !== null || child.signalCode !== null).toBe(true);
+    expect(Date.now() - startedAt).toBeLessThan(10_000);
+  });
+
+  it("reports a budget overrun through the public entry point", async () => {
+    const root = await tempWorkspace();
+    const result = await runCodeInSandbox({
+      workspace: root,
+      code: "await new Promise(() => {});",
+      timeoutMs: 500,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.output).toContain("exceeded the 500ms limit");
+  });
+
+  it("survives a heap blow-up: only the sandbox dies", async () => {
+    const root = await tempWorkspace();
+    const exploded = await runCodeInSandbox({
+      workspace: root,
+      code: "const a = []; while (true) a.push(new Array(1e6).fill(1));",
+      timeoutMs: 60_000,
+    });
+    expect(exploded.ok).toBe(false);
+    // 子进程被 V8 abort：父进程看到的是"没给结果就退出了"，而不是 OOM 崩到宿主
+    expect(exploded.output).toContain("sandbox process exited");
+
+    // 宿主进程还活着，能立刻再起一个沙箱跑正常代码
+    const healthy = await runCodeInSandbox({ workspace: root, code: "return 7;" });
+    expect(healthy.ok).toBe(true);
+    expect(healthy.output).toContain("\n7");
+  }, 60_000);
+
+  it("keeps concurrent runs from sharing state", async () => {
+    const first = await tempWorkspace();
+    const second = await tempWorkspace();
+    await writeFile(path.join(first, "which.txt"), "first-marker");
+    await writeFile(path.join(second, "which.txt"), "second-marker");
+    const [a, b] = await Promise.all([
+      executeTool("run_code", { code: `return await meow.read("which.txt");` }, first),
+      executeTool("run_code", { code: `return await meow.read("which.txt");` }, second),
+    ]);
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    expect(a.output).toContain("first-marker");
+    expect(a.output).not.toContain("second-marker");
+    expect(b.output).toContain("second-marker");
+    expect(b.output).not.toContain("first-marker");
+  });
+
+  it("keeps host realm constructors out of the sandbox", async () => {
+    const root = await tempWorkspace();
+    const globals = await runCodeInSandbox({
+      workspace: root,
+      code: `return [typeof process, typeof require, typeof module, typeof fetch].join(",");`,
+    });
+    expect(globals.ok).toBe(true);
+    expect(globals.output).toContain("undefined,undefined,undefined,undefined");
+
+    // codeGeneration.strings=false：绕到构造器也没法把字符串编译成代码
+    const escape = await runCodeInSandbox({
+      workspace: root,
+      code: `return this.constructor.constructor("return typeof process")();`,
+    });
+    expect(escape.ok).toBe(false);
+    expect(escape.output).toContain("Code generation from strings disallowed");
   });
 });

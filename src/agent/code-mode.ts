@@ -1,6 +1,6 @@
 /**
- * PTC 式 code mode（run_code）：模型写一段异步 JS，在 Node vm 受限沙箱里执行，
- * 代码内部通过 `meow.*` 桥调用宿主工具。
+ * PTC 式 code mode（run_code）：模型写一段异步 JS，在**独立子进程**的 Node vm realm
+ * 里执行，代码内部通过 `meow.*` 桥调用宿主工具。
  *
  * 省 Token 语义（参考 deepseek-harness 的 PTC，"only the outer curated result enters
  * model history"）：子工具调用的中间结果只留在沙箱内存和执行日志里，**绝不进模型上下文**；
@@ -14,15 +14,20 @@
  *    "Each operation retains its permissions, tool budget and trace"）。没有注入
  *    桥时（例如只读子 Agent）这四个方法直接报错，不静默降级。
  *
- * 安全边界：沙箱只暴露 meow 桥和受限 console，没有 require / process / fetch / import；
- * 只读桥是白名单，写操作一律经过宿主审批。vm 超时兜住同步死循环；
- * 墙钟预算 + 桥逐次预算检查兜住异步挂起。
+ * 安全边界：vm 只是"另一个 realm"，不是边界。用户代码跑在独立子进程里
+ * （见 code-host.ts / code-sandbox.ts）：一次逃逸拿到的是那个进程，而不是 agent
+ * 进程；死循环/异步挂起由父侧墙钟直接 kill（不是 Promise.race 假装超时）；内存有
+ * --max-old-space-size 上限，写爆了死的是沙箱。子进程里没有 require / process /
+ * fetch / import，只暴露 meow 桥和受限 console；只读桥是白名单，写操作一律经过
+ * 宿主审批。同步死循环另有 vm 自身的 timeout 兜一层。
  */
 
 import { randomUUID } from "node:crypto";
+import type { ChildProcess } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import vm from "node:vm";
+import { budgetLabel, killChild, runInSandboxHost, spawnSandboxHost, type SandboxOutcome } from "./code-sandbox.js";
+import { serializeResultValue } from "./code-mode-serialize.js";
 import { readTextFile } from "./edit-content.js";
 import { canonicalPathSync, IGNORED_ENTRY_NAMES, resolveToolPath } from "./paths.js";
 import { recordRead } from "./read-state.js";
@@ -39,60 +44,7 @@ export const CODE_MODE_MAX_CALLS = 200;
 const CODE_MODE_MAX_LOG_CHARS = 40_000;
 const CONSOLE_TAIL_LINES = 8;
 
-/**
- * 沙箱内的桥/console 工厂：必须在 vm realm 里创建宿主函数的包装器。
- * 直接把宿主函数挂进 context 会被 `fn.constructor("return process")()` 逃逸；
- * 这里宿主函数只存在于闭包里，跨边界只传 JSON 字符串。
- */
-const SANDBOX_FACTORY_SOURCE = `(hostCall, hostLog) => {
-  "use strict";
-  const requirePayload = (raw) => {
-    const result = JSON.parse(raw);
-    if (!result || result.ok !== true) {
-      throw new Error(result && result.error ? String(result.error) : "meow: host call failed");
-    }
-    return result.value;
-  };
-  const call = (method) => async (...args) => {
-    let payload;
-    try {
-      payload = JSON.stringify({ method, args });
-    } catch {
-      throw new Error("meow: arguments are not JSON-serializable.");
-    }
-    return requirePayload(await hostCall(payload));
-  };
-  const meow = Object.create(null);
-  for (const name of ["read", "readMany", "grep", "glob", "listDir", "write", "edit", "multiEdit", "run"]) {
-    meow[name] = call(name);
-  }
-  const log = (prefix) => (...args) => {
-    const parts = [];
-    for (const item of args) {
-      try {
-        if (typeof item === "string") {
-          parts.push(item.slice(0, 500));
-        } else {
-          const text = JSON.stringify(item);
-          parts.push(text === undefined ? String(item) : text.slice(0, 500));
-        }
-      } catch {
-        parts.push("[unprintable]");
-      }
-    }
-    hostLog(prefix + parts.join(" ").slice(0, 4000));
-  };
-  const contextConsole = Object.create(null);
-  contextConsole.log = log("console: ");
-  contextConsole.info = log("console: ");
-  contextConsole.warn = log("console.warn: ");
-  contextConsole.error = log("console.error: ");
-  return { meow, console: contextConsole };
-}`;
-const sandboxFactoryScript = new vm.Script(SANDBOX_FACTORY_SOURCE, {
-  filename: "run_code_bridge.js",
-});
-const CODE_MODE_LOG_DIR = path.join(".meowcode", "tool-output");
+const CODE_MODE_LOG_DIR = path.join(".klockcode", "tool-output");
 
 export type CodeModeResult = { output: string; ok: boolean };
 
@@ -146,10 +98,6 @@ export async function runCodeInSandbox(input: {
   const controller = new AbortController();
   const onOuterAbort = () => controller.abort();
   input.signal?.addEventListener("abort", onOuterAbort, { once: true });
-  const timer = setTimeout(abort, budgetMs);
-  function abort(): void {
-    controller.abort();
-  }
 
   const logLines: string[] = [];
   const pushLog = (line: string): void => {
@@ -161,7 +109,7 @@ export async function runCodeInSandbox(input: {
   const assertBudget = (): void => {
     if (input.signal?.aborted) throw new Error("run_code aborted.");
     if (Date.now() >= deadline) {
-      throw new Error(`run_code ${Math.round(budgetMs / 1000)}s time budget exhausted.`);
+      throw new Error(`run_code ${budgetLabel(budgetMs)} time budget exhausted.`);
     }
     calls += 1;
     if (calls > CODE_MODE_MAX_CALLS) {
@@ -359,43 +307,17 @@ export async function runCodeInSandbox(input: {
     }
   };
 
-  // Object.create(null) 做载体：contextify 的全局代理会把属性查找回落到载体对象
-  // 的原型链上，普通对象会把宿主 realm 的 Object/Function 构造器泄漏进沙箱。
-  // 空原型载体只放原始值与 context realm 内创建的桥/console；codegen（字符串
-  // 与 wasm）在 context 内禁用，`fn.constructor("return process")()` 无法再编译。
-  const sandbox: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
-  sandbox.process = undefined;
-  sandbox.require = undefined;
-  sandbox.module = undefined;
-  sandbox.exports = undefined;
-  sandbox.global = undefined;
-  sandbox.globalThis = undefined;
-  const context = vm.createContext(sandbox, {
-    codeGeneration: { strings: false, wasm: false },
-  });
-
-  const sandboxRuntime = sandboxFactoryScript.runInContext(context) as (
-    hostCall: (payload: string) => Promise<string>,
-    hostLog: (line: string) => void,
-  ) => { meow: Record<string, unknown>; console: Record<string, unknown> };
-  const runtimeGlobals = sandboxRuntime(
-    (payload) => dispatchHostCall(payload),
-    (line) => {
-      if (typeof line === "string") pushLog(line);
-    },
-  );
-  sandbox.meow = runtimeGlobals.meow;
-  sandbox.console = runtimeGlobals.console;
-
+  // 用户代码不在这里跑：vm 在同进程里不是边界，一次逃逸拿到的就是整个宿主。
+  // 这里只起一个子进程并泵消息，桥、路径守卫、审批、读取登记全部留在本进程。
   const seconds = () => `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
 
-  let pending: Promise<unknown> | null = null;
+  let child: ChildProcess | null = null;
 
   const finishError = async (error: unknown): Promise<CodeModeResult> => {
-    clearTimeout(timer);
     input.signal?.removeEventListener("abort", onOuterAbort);
     controller.abort(); // 让仍在跑的 rg / 读取尽快退出
-    if (pending) void Promise.resolve(pending).catch(() => undefined); // 挂起沙箱的后续 rejection 不外泄
+    killChild(child);
+    child = null;
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
     const logPath = await persistLog(workspace, logLines);
     const tail = logLines.slice(-CONSOLE_TAIL_LINES).join("\n");
@@ -408,38 +330,31 @@ export async function runCodeInSandbox(input: {
     };
   };
 
+  // 启动前就已被中止：不必再起一个进程
+  if (input.signal?.aborted) return finishError(new Error("run_code aborted."));
+
+  let outcome: SandboxOutcome;
   try {
-    const script = new vm.Script(`(async () => {\n${input.code}\n})()`, {
-      filename: "run_code.js",
+    child = spawnSandboxHost();
+  } catch (error) {
+    return finishError(error);
+  }
+  const active = child;
+  try {
+    outcome = await runInSandboxHost(active, {
+      code: input.code,
+      budgetMs,
+      dispatch: dispatchHostCall,
+      log: pushLog,
+      ...(input.signal ? { signal: input.signal } : {}),
     });
-    // vm timeout 只管同步执行（死循环在这里抛）；异步挂起由下面的墙钟竞速兜底
-    pending = script.runInContext(context, {
-      timeout: budgetMs,
-      breakOnSigint: true,
-    }) as Promise<unknown>;
-  } catch (error) {
-    return finishError(error);
+  } finally {
+    killChild(active);
+    child = null;
+    input.signal?.removeEventListener("abort", onOuterAbort);
   }
-
-  let value: unknown;
-  try {
-    value = await Promise.race([
-      pending,
-      new Promise<never>((_, reject) => {
-        const raceTimer = setTimeout(
-          () => reject(new Error(`run_code exceeded the ${Math.round(budgetMs / 1000)}s limit`)),
-          Math.max(deadline - Date.now(), 0),
-        );
-        (raceTimer as NodeJS.Timeout).unref?.();
-      }),
-    ]);
-  } catch (error) {
-    return finishError(error);
-  }
-
-  clearTimeout(timer);
-  input.signal?.removeEventListener("abort", onOuterAbort);
-  void Promise.resolve(pending).catch(() => undefined);
+  if (!outcome.ok) return finishError(new Error(outcome.error));
+  const value: unknown = outcome.value;
 
   const logPath = await persistLog(workspace, logLines);
   const serialized = serializeResultValue(value);
@@ -454,17 +369,6 @@ export async function runCodeInSandbox(input: {
       (logPath ? `; log: ${logPath}` : "") +
       `\n${clamped}`,
   };
-}
-
-function serializeResultValue(value: unknown): string {
-  if (typeof value === "string") return value;
-  if (value === undefined) return "(no return value)";
-  try {
-    const json = JSON.stringify(value);
-    return json === undefined ? String(value) : json;
-  } catch {
-    return String(value);
-  }
 }
 
 /** 执行日志落盘到与工具输出同一目录；失败不影响主结果（返回 null 表示无日志可提）。 */

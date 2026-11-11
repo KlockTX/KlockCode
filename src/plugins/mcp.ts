@@ -23,10 +23,10 @@ export type McpServerConfig = {
   headers?: Record<string, string>;
   /**
    * OAuth（仅 streamable HTTP）：authorization_code + PKCE 公开客户端，
-   * 授权码走 127.0.0.1 回环回调，token 落 ~/.meowcode/mcp-oauth/。缺省或 stdio 无此字段。
+   * 授权码走 127.0.0.1 回环回调，token 落 ~/.klockcode/mcp-oauth/。缺省或 stdio 无此字段。
    *
    * 客户端身份：`clientId` 为非 URL 时预注册跳过 DCR；HTTPS URL 或 `clientMetadataUrl`
-   * 走 CIMD（SEP-991）。都没配则默认带 MeowCode 官方 CIMD URL（仅 AS 广播支持时生效）。
+   * 走 CIMD（SEP-991）。都没配则默认带 KlockCode 官方 CIMD URL（仅 AS 广播支持时生效）。
    */
   auth?: {
     type: "oauth";
@@ -85,7 +85,7 @@ export function unresolvedEnvVars(config: McpServerConfig): string[] {
 }
 
 /**
- * 读取 .meowcode/mcp.json：user 根在前、project 根在后 → 同名 server project 覆盖 user。
+ * 读取 .klockcode/mcp.json：user 根在前、project 根在后 → 同名 server project 覆盖 user。
  * 文件不存在或 JSON 损坏 → 跳过（损坏时告警，不让一个坏文件拖垮启动）。
  */
 export async function readMcpConfig(roots: {
@@ -95,8 +95,8 @@ export async function readMcpConfig(roots: {
   const servers: Record<string, McpServerConfig> = {};
   const errors: string[] = [];
   const files = [
-    path.join(roots.homeDir, ".meowcode", "mcp.json"),
-    path.join(roots.workspace, ".meowcode", "mcp.json"),
+    path.join(roots.homeDir, ".klockcode", "mcp.json"),
+    path.join(roots.workspace, ".klockcode", "mcp.json"),
   ];
   for (const file of files) {
     let raw: string;
@@ -450,7 +450,7 @@ export class McpManager {
     if (typeof entry.config.url !== "string" || entry.config.url.length === 0) {
       throw new Error(`MCP server "${name}" is not an HTTP server; OAuth does not apply`);
     }
-    const homeDir = process.env.MEOWCODE_HOME_DIR || os.homedir();
+    const homeDir = process.env.KLOCKCODE_HOME_DIR || os.homedir();
     const provider = createMcpOAuthProvider(entry.config, name, homeDir);
     // prepare() 先起回环监听：redirectUrl 缺位时 SDK 会走 non-interactive 换 token，首次授权必败
     await provider.prepare();
@@ -482,7 +482,7 @@ export class McpManager {
     if (typeof entry.config.url !== "string" || entry.config.url.length === 0) {
       throw new Error(`MCP server "${name}" is not an HTTP server; OAuth does not apply`);
     }
-    const homeDir = process.env.MEOWCODE_HOME_DIR || os.homedir();
+    const homeDir = process.env.KLOCKCODE_HOME_DIR || os.homedir();
     await createMcpOAuthProvider(entry.config, name, homeDir).clearTokens();
     // 断开也进生命周期链：别和并发的 reload / 授权抢同一个 server
     await this.serialize(async () => {
@@ -770,13 +770,13 @@ export const createStdioOrHttpClient: McpClientFactory = async (config, serverNa
     // 已授权的 token 直接当 Bearer 带上，不传 authProvider：
     // SDK 拿到 authProvider 后遇 401 会走 auth() 弹浏览器并等回环回调，连接就卡死了。
     if (!hasAuthHeader) {
-      const homeDir = process.env.MEOWCODE_HOME_DIR || os.homedir();
+      const homeDir = process.env.KLOCKCODE_HOME_DIR || os.homedir();
       const tokens = await createMcpOAuthProvider(config, serverName ?? url.host, homeDir)
         .tokens()
         .catch(() => undefined);
       if (tokens?.access_token) headers.Authorization = `Bearer ${tokens.access_token}`;
     }
-    const client = new Client({ name: "meowcode", version: "1.2.1" });
+    const client = new Client({ name: "klockcode", version: "1.2.1" });
     const transport = new StreamableHTTPClientTransport(url, { requestInit: { headers } });
     try {
       // 裸连：Firecrawl 这类免 key HTTP MCP 直接通
@@ -787,7 +787,7 @@ export const createStdioOrHttpClient: McpClientFactory = async (config, serverNa
       throw new McpAuthRequiredError(serverName ?? url.host);
     }
   }
-  const client = new Client({ name: "meowcode", version: "1.2.0" });
+  const client = new Client({ name: "klockcode", version: "1.2.0" });
   if (typeof config.command === "string" && config.command.length > 0) {
     const env: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {

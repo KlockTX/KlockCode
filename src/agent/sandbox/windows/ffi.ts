@@ -1,7 +1,7 @@
 /**
  * Ported from deepseek-harness packages/sandbox/sandbox-windows-acl/src/ffi.ts and
  * packages/subprocess/win32-process/src/{ffi,abi}.ts
- * (MIT License, Copyright (c) 2026 DeepSeek). MeowCode: OS-level run_command isolation.
+ * (MIT License, Copyright (c) 2026 DeepSeek). KlockCode: OS-level run_command isolation.
  *
  * 只被 runner 进程加载：server 永不 import 本文件，因此生产进程不依赖 koffi。
  */
@@ -22,10 +22,10 @@ export type NativePtr = bigint & { readonly [nativePtrBrand]: true };
 
 let cachedKoffi: Koffi | undefined;
 
-/** 懒加载 koffi；打包后可用 MEOWCODE_SANDBOX_KOFFI 指向包目录。 */
+/** 懒加载 koffi；打包后可用 KLOCKCODE_SANDBOX_KOFFI 指向包目录。 */
 function koffi(): Koffi {
   if (cachedKoffi !== undefined) return cachedKoffi;
-  const override = process.env.MEOWCODE_SANDBOX_KOFFI;
+  const override = process.env.KLOCKCODE_SANDBOX_KOFFI;
   const base = override
     ? /\.(?:c|m)?js$/i.test(override)
       ? override
@@ -36,7 +36,7 @@ function koffi(): Koffi {
     cachedKoffi = require("koffi") as Koffi;
   } catch (error) {
     throw new Error(
-      `koffi is required for the Windows sandbox runner; set MEOWCODE_SANDBOX_KOFFI to the koffi package directory (${
+      `koffi is required for the Windows sandbox runner; set KLOCKCODE_SANDBOX_KOFFI to the koffi package directory (${
         error instanceof Error ? error.message : String(error)
       })`,
     );

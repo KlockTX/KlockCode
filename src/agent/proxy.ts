@@ -3,7 +3,7 @@
  *
  * 三种模式：
  *  - direct：直连（默认，与加代理之前的行为完全一致）
- *  - system：跟随系统 —— 优先用桌面端解析好的 MEOWCODE_PROXY_URL，
+ *  - system：跟随系统 —— 优先用桌面端解析好的 KLOCKCODE_PROXY_URL，
  *            其次 HTTPS_PROXY / HTTP_PROXY / ALL_PROXY（Node 生态的通行约定），
  *            并按 NO_PROXY 跳过本地地址
  *  - manual：用户手填代理地址
@@ -89,12 +89,12 @@ export function shouldBypassProxy(target: string, noProxy: string): boolean {
 
 /** 从环境变量读初始配置（server 启动时用）。 */
 export function readProxyFromEnv(env: NodeJS.ProcessEnv = process.env): ProxyConfig {
-  const mode = env.MEOWCODE_PROXY_MODE;
+  const mode = env.KLOCKCODE_PROXY_MODE;
   if (isProxyMode(mode)) {
-    return { mode, url: (env.MEOWCODE_PROXY_URL ?? "").trim() };
+    return { mode, url: (env.KLOCKCODE_PROXY_URL ?? "").trim() };
   }
   // 只给了地址没给模式：按手动配置处理（env 用户的直觉）
-  const url = (env.MEOWCODE_PROXY_URL ?? "").trim();
+  const url = (env.KLOCKCODE_PROXY_URL ?? "").trim();
   return url ? { mode: "manual", url } : { ...DEFAULT_PROXY_CONFIG };
 }
 
@@ -127,7 +127,7 @@ export function resolveProxyUrl(
   if (config.mode === "direct") return undefined;
   if (config.mode === "manual") return normalizeProxyUrl(config.url);
   const systemUrl =
-    normalizeProxyUrl(env.MEOWCODE_PROXY_URL ?? "") ??
+    normalizeProxyUrl(env.KLOCKCODE_PROXY_URL ?? "") ??
     normalizeProxyUrl(env.HTTPS_PROXY ?? "") ??
     normalizeProxyUrl(env.https_proxy ?? "") ??
     normalizeProxyUrl(env.HTTP_PROXY ?? "") ??

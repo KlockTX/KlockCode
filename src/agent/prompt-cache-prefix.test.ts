@@ -93,8 +93,8 @@ afterEach(() => {
 
 describe("prompt cache prefix", () => {
   it("keeps tools, system and history byte-identical across turns", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-cache-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache-ws-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-cache-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache-ws-"));
     await writeFile(path.join(workspace, "AGENTS.md"), "Always run the tests before claiming success.\n");
 
     const runtime = new AgentRuntime({
@@ -164,8 +164,8 @@ describe("prompt cache prefix", () => {
   });
 
   it("keeps the same tool bytes after a second session in the same workspace", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-cache2-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache2-ws-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-cache2-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache2-ws-"));
     const runtime = new AgentRuntime({
       providers: [provider],
       sessionsDir,
@@ -187,8 +187,8 @@ describe("prompt cache prefix", () => {
   });
 
   it("keeps the old tool breakpoint when an MCP tool is appended mid-session", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-cache3-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache3-ws-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-cache3-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache3-ws-"));
     const runtime = new AgentRuntime({ providers: [provider], sessionsDir, workspace, homeDir: sessionsDir });
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -217,8 +217,8 @@ describe("prompt cache prefix", () => {
   });
 
   it("drops a disappeared MCP tool at the next turn boundary", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-cache4-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache4-ws-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-cache4-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache4-ws-"));
     const runtime = new AgentRuntime({ providers: [provider], sessionsDir, workspace, homeDir: sessionsDir });
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -246,8 +246,8 @@ describe("prompt cache prefix", () => {
   });
 
   it("applies deferred removals on an explicit catalog rebuild", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-cache5-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache5-ws-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-cache5-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache5-ws-"));
     const runtime = new AgentRuntime({ providers: [provider], sessionsDir, workspace, homeDir: sessionsDir });
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");
@@ -271,8 +271,8 @@ describe("prompt cache prefix", () => {
   });
 
   it("applies profile tool whitelists immediately", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-cache6-"));
-    const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-cache6-ws-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-cache6-"));
+    const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-cache6-ws-"));
     const runtime = new AgentRuntime({ providers: [provider], sessionsDir, workspace, homeDir: sessionsDir });
     await runtime.newSession(workspace);
     runtime.setApprovalMode("full");

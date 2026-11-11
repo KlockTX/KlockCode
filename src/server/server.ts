@@ -15,10 +15,11 @@ import {
   AGENT_PROFILE_IDS,
   isAgentProfile,
 } from "../agent/agent-profiles.js";
-import { toolDefinitions } from "../agent/tools.js";
+import { knownToolNames, toolDefinitions } from "../agent/tools.js";
 import { readPdfPageCount } from "../agent/pdf.js";
 import { isSpeechStyle, readSpeechStyleFromEnv } from "../agent/speech-style.js";
 import { createAgentLogger, pruneAgentLogs } from "../agent/logging.js";
+import { applyLegacyEnvFallback } from "./legacy-env.js";
 import type { TraceSpan } from "../agent/trace.js";
 import {
   clearApprovalRules,
@@ -55,6 +56,7 @@ import {
   renameHarnessArchitecture,
   saveHarnessDocument,
 } from "../agent/harness-document.js";
+import { lintHarnessDocument, type HarnessFinding } from "../agent/harness-lint.js";
 import { SessionStore, newEntryId, sessionFileName } from "../agent/session-store.js";
 import { deriveSessionAtCheckpoint } from "./session-derive.js";
 import {
@@ -163,11 +165,11 @@ function parseImportRequest(body: { appId?: unknown; groups?: unknown }):
   return undefined;
 }
 
-/** 本地（我的/自建）技能详情：市场索引没有该 id 时读 ~/.meowcode/skills/<id>/SKILL.md。 */
+/** 本地（我的/自建）技能详情：市场索引没有该 id 时读 ~/.klockcode/skills/<id>/SKILL.md。 */
 async function readLocalSkillDetail(homeDir: string, id: string): Promise<MarketplaceDetail | null> {
   if (!/^[a-z0-9][a-z0-9._-]*$/i.test(id) || id.includes("..")) return null;
   try {
-    const raw = await readFile(path.join(homeDir, ".meowcode", "skills", id, "SKILL.md"), "utf8");
+    const raw = await readFile(path.join(homeDir, ".klockcode", "skills", id, "SKILL.md"), "utf8");
     const { meta, body } = parseMarkdownFrontmatter(raw);
     return {
       item: {
@@ -203,7 +205,7 @@ import type {
 } from "../agent/types.js";
 
 const APP_VERSION = "1.2.1";
-const DEFAULT_SESSIONS_DIR = path.join(os.homedir(), "AppData", "Roaming", "MeowCode", "agent", "sessions");
+const DEFAULT_SESSIONS_DIR = path.join(os.homedir(), "AppData", "Roaming", "KlockCode", "agent", "sessions");
 
 /** 插件命令 chip 的展示标记：首行是名称/插件/命令，空行后才是实际 `/command` 文本 */
 const PLUGIN_COMMAND_PREFIX = "【插件命令】";
@@ -234,7 +236,7 @@ const SSE_REPLAY_MAX_EVENTS = 5_000;
 const SSE_REPLAY_MAX_CHARS = 4_000_000;
 
 function readProvidersFromEnv(): ProviderConfig[] {
-  const raw = process.env.MEOWCODE_PROVIDERS;
+  const raw = process.env.KLOCKCODE_PROVIDERS;
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as ProviderConfig[];
@@ -244,13 +246,13 @@ function readProvidersFromEnv(): ProviderConfig[] {
   }
 }
 
-/** 实验开关（MEOWCODE_EXPERIMENTAL，JSON）：未设置/解析失败一律全关。 */
+/** 实验开关（KLOCKCODE_EXPERIMENTAL，JSON）：未设置/解析失败一律全关。 */
 function readExperimentalFromEnv(): {
   midstreamToolExec?: boolean;
   incrementalResponses?: boolean;
   nativeCompaction?: boolean;
 } | null {
-  const raw = process.env.MEOWCODE_EXPERIMENTAL;
+  const raw = process.env.KLOCKCODE_EXPERIMENTAL;
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as {
@@ -276,9 +278,9 @@ function readExperimentalFromEnv(): {
   }
 }
 
-/** 插件禁用清单（MEOWCODE_PLUGINS，JSON：{ disabled: string[] }）：解析失败按空处理。 */
+/** 插件禁用清单（KLOCKCODE_PLUGINS，JSON：{ disabled: string[] }）：解析失败按空处理。 */
 function readPluginsConfigFromEnv(): { disabled: string[] } {
-  const raw = process.env.MEOWCODE_PLUGINS;
+  const raw = process.env.KLOCKCODE_PLUGINS;
   if (!raw) return { disabled: [] };
   try {
     const parsed = JSON.parse(raw) as { disabled?: unknown };
@@ -289,19 +291,19 @@ function readPluginsConfigFromEnv(): { disabled: string[] } {
       : [];
     return { disabled };
   } catch {
-    console.error("[plugins] invalid MEOWCODE_PLUGINS JSON; ignoring");
+    console.error("[plugins] invalid KLOCKCODE_PLUGINS JSON; ignoring");
     return { disabled: [] };
   }
 }
 
 /**
- * 回合后记忆蒸馏开关（MEOWCODE_MEMORY_EXTRACTION）：桌面端 settings.json 的
+ * 回合后记忆蒸馏开关（KLOCKCODE_MEMORY_EXTRACTION）：桌面端 settings.json 的
  * 初始值。未设置视为开（服务端直跑/测试场景跟随默认）。运行中可经
  * PUT /config/memory-extraction 实时切换，settings.json 由桌面端另行落盘。
  */
 function readMemoryFromEnv(): boolean {
-  // 兼容旧的 MEOWCODE_MEMORY_EXTRACTION（语义是现在的一个子集：只关蒸馏）
-  const raw = process.env.MEOWCODE_MEMORY ?? process.env.MEOWCODE_MEMORY_EXTRACTION;
+  // 兼容旧的 KLOCKCODE_MEMORY_EXTRACTION（语义是现在的一个子集：只关蒸馏）
+  const raw = process.env.KLOCKCODE_MEMORY ?? process.env.KLOCKCODE_MEMORY_EXTRACTION;
   if (raw === undefined || raw.trim() === "") return true;
   const normalized = raw.trim().toLowerCase();
   return normalized !== "0" && normalized !== "false";
@@ -309,7 +311,7 @@ function readMemoryFromEnv(): boolean {
 
 /** 自我学习：**默认关闭**，只有显式写 1/true/on 才开启。 */
 function readLearningFromEnv(): boolean {
-  const raw = process.env.MEOWCODE_SELF_LEARNING;
+  const raw = process.env.KLOCKCODE_SELF_LEARNING;
   if (raw === undefined || raw.trim() === "") return false;
   const normalized = raw.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "on";
@@ -317,7 +319,7 @@ function readLearningFromEnv(): boolean {
 
 /** 供应商故障转移：**默认关闭**，设置里显式开启才在临时故障时切备用服务商。 */
 function readProviderFallbackFromEnv(): boolean {
-  const raw = process.env.MEOWCODE_PROVIDER_FALLBACK;
+  const raw = process.env.KLOCKCODE_PROVIDER_FALLBACK;
   if (raw === undefined || raw.trim() === "") return false;
   const normalized = raw.trim().toLowerCase();
   return normalized === "1" || normalized === "true" || normalized === "on";
@@ -467,14 +469,14 @@ const PROMPT_DOCUMENT_TYPES = new Set(["application/pdf"]);
 const MAX_PROMPT_TEXT_CHARS = 1_000_000;
 /** 允许运行时热更新的 MCP 凭据 env（desktop OAuth 登录/手动令牌后写入；不接受任意环境变量）。 */
 const MCP_CREDENTIAL_ENV_NAMES = new Set([
-  "MEOWCODE_GITHUB_TOKEN",
-  "MEOWCODE_GITEE_TOKEN",
-  "MEOWCODE_GITCODE_TOKEN",
-  "MEOWCODE_UNDERMIND_TOKEN",
-  "MEOWCODE_FIGMA_TOKEN",
+  "KLOCKCODE_GITHUB_TOKEN",
+  "KLOCKCODE_GITEE_TOKEN",
+  "KLOCKCODE_GITCODE_TOKEN",
+  "KLOCKCODE_UNDERMIND_TOKEN",
+  "KLOCKCODE_FIGMA_TOKEN",
   "LUCKIN_MCP_TOKEN",
-  "MEOWCODE_LARK_APP_ID",
-  "MEOWCODE_LARK_APP_SECRET",
+  "KLOCKCODE_LARK_APP_ID",
+  "KLOCKCODE_LARK_APP_SECRET",
 ]);
 
 type ParsedAttachments = {
@@ -549,19 +551,28 @@ export type AgentServer = http.Server & {
   shutdown: (reason?: string) => Promise<void>;
 };
 
+/**
+ * 架构图语义提示：只提示，不阻断保存（结构校验才是准入条件）。
+ * 工具清单由 agent/tools.ts 提供唯一真源，校验器不自己另存一份。
+ */
+function harnessFindingsOf(document: Parameters<typeof lintHarnessDocument>[0]): HarnessFinding[] {
+  return lintHarnessDocument(document, { knownTools: knownToolNames() });
+}
+
 export async function startServer(options: { port?: number; token?: string } = {}): Promise<AgentServer> {
-  const authToken = options.token ?? process.env.MEOWCODE_SERVER_TOKEN;
+  applyLegacyEnvFallback();
+  const authToken = options.token ?? process.env.KLOCKCODE_SERVER_TOKEN;
   if (!authToken) {
-    throw new Error("MEOWCODE_SERVER_TOKEN is required (or pass startServer({ token })).");
+    throw new Error("KLOCKCODE_SERVER_TOKEN is required (or pass startServer({ token })).");
   }
-  delete process.env.MEOWCODE_SERVER_TOKEN;
+  delete process.env.KLOCKCODE_SERVER_TOKEN;
   // 服务商列表：env 给初值，PUT /config/providers 运行中实时替换（不重启进程）
   let providers = readProvidersFromEnv();
   // 密钥只留在内存：删掉环境变量后，模型通过 run_command 读 env 也拿不到。
-  delete process.env.MEOWCODE_PROVIDERS;
-  const sessionsDir = process.env.MEOWCODE_SESSIONS_DIR ?? DEFAULT_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_PROVIDERS;
+  const sessionsDir = process.env.KLOCKCODE_SESSIONS_DIR ?? DEFAULT_SESSIONS_DIR;
   /** 诊断日志与 sessions 同级：<agent>/logs，随数据目录迁移一起搬走 */
-  const agentLogDir = process.env.MEOWCODE_LOG_DIR ?? path.join(path.dirname(sessionsDir), "logs");
+  const agentLogDir = process.env.KLOCKCODE_LOG_DIR ?? path.join(path.dirname(sessionsDir), "logs");
   const agentLogger = createAgentLogger({ dir: agentLogDir });
   void pruneAgentLogs(agentLogDir).catch(() => undefined);
   const traceSink = (span: TraceSpan): void => {
@@ -572,9 +583,9 @@ export async function startServer(options: { port?: number; token?: string } = {
     });
   };
   const worktreesDir =
-    process.env.MEOWCODE_WORKTREES_DIR ?? path.join(path.dirname(sessionsDir), "worktrees");
-  const providerId = process.env.MEOWCODE_PROVIDER_ID;
-  const workspace = process.env.MEOWCODE_WORKSPACE;
+    process.env.KLOCKCODE_WORKTREES_DIR ?? path.join(path.dirname(sessionsDir), "worktrees");
+  const providerId = process.env.KLOCKCODE_PROVIDER_ID;
+  const workspace = process.env.KLOCKCODE_WORKSPACE;
   // 回合后记忆蒸馏：env 给初值，PUT /config/memory-extraction 运行中实时切换
   let memoryEnabled = readMemoryFromEnv();
   // 自我学习：env 给初值，PUT /config/learning 运行中实时切换
@@ -587,8 +598,8 @@ export async function startServer(options: { port?: number; token?: string } = {
   let proxyConfig = getProxyConfig();
   // AGENTS.md / CLAUDE.md 导入开关：env 给初值，PUT /config/instructions 运行中实时切换
   let instructionSettings: InstructionSettings = {
-    includeAgentsMd: process.env.MEOWCODE_INCLUDE_AGENTS_MD !== "0",
-    includeClaudeMd: process.env.MEOWCODE_INCLUDE_CLAUDE_MD !== "0",
+    includeAgentsMd: process.env.KLOCKCODE_INCLUDE_AGENTS_MD !== "0",
+    includeClaudeMd: process.env.KLOCKCODE_INCLUDE_CLAUDE_MD !== "0",
   };
   // 语色：env 给初值，PUT /config/speech-style 运行中实时切换
   let speechStyle = readSpeechStyleFromEnv();
@@ -596,12 +607,12 @@ export async function startServer(options: { port?: number; token?: string } = {
   setSandboxSettings(readSandboxSettingsFromEnv());
   // 实验开关（桌面端经环境变量注入；默认全关）
   const experimental = readExperimentalFromEnv();
-  // 插件系统：目录发现 + jiti 加载 + MCP；desktop 经 MEOWCODE_PLUGINS 注入禁用清单
+  // 插件系统：目录发现 + jiti 加载 + MCP；desktop 经 KLOCKCODE_PLUGINS 注入禁用清单
   const pluginsWorkspace = workspace ?? process.cwd();
   // 用户层根目录（MCP 配置 / 命令索引 / 技能 / 记忆 / 市场）：默认真实 home，
-  // 测试经 MEOWCODE_HOME_DIR 整体隔离——缺了它单测会把真实 ~/.meowcode/mcp.json
+  // 测试经 KLOCKCODE_HOME_DIR 整体隔离——缺了它单测会把真实 ~/.klockcode/mcp.json
   // 的 MCP 服务器拉起来，重连退避能把回合拖过测试超时（server.test.ts SSE 用例踩过）。
-  const homeDir = process.env.MEOWCODE_HOME_DIR || os.homedir();
+  const homeDir = process.env.KLOCKCODE_HOME_DIR || os.homedir();
   /** 「我的」历史技能补标记只跑一次：首次打开「我的」时执行（避免测试进程无谓写盘） */
   let mineBackfillDone = false;
   // AI 自建技能/插件：宿主能力先建（回调在下面定义后用可变引用回填），
@@ -639,8 +650,8 @@ export async function startServer(options: { port?: number; token?: string } = {
     homeDir,
     registry: pluginSystem.registry,
   });
-  // 插件市场：bundles 目录（desktop 注入 MEOWCODE_MARKETPLACE_DIR；未设置=市场功能为空）
-  const marketplace = createMarketplaceStore(process.env.MEOWCODE_MARKETPLACE_DIR);
+  // 插件市场：bundles 目录（desktop 注入 KLOCKCODE_MARKETPLACE_DIR；未设置=市场功能为空）
+  const marketplace = createMarketplaceStore(process.env.KLOCKCODE_MARKETPLACE_DIR);
   // 社区市场源：GitCode 收录仓库（展示/安装；提交/删除走主进程 IPC，不经此服务端）
   const communityMarket = createCommunitySource();
   // 第三方市场源：ClawHub + SkillHub 聚合（仅 skill）
@@ -680,7 +691,7 @@ export async function startServer(options: { port?: number; token?: string } = {
   mkdirSync(sessionsDir, { recursive: true });
   /** 桌面端注入的内嵌浏览器桥（env）；CLI / 测试环境没有，浏览器工具自动不注册 */
   const browserHost = createBrowserHostFromEnv();
-  delete process.env.MEOWCODE_BROWSER_HOST_TOKEN;
+  delete process.env.KLOCKCODE_BROWSER_HOST_TOKEN;
   const clients = new Set<SseClient>();
   /** 全局单调递增的事件序号：SSE id + 重放游标都靠它 */
   let lastSeq = 0;
@@ -1194,12 +1205,27 @@ export async function startServer(options: { port?: number; token?: string } = {
       // 诊断摘要：日志目录 + 当前链路 id + span 汇总；范围可选 sessionId
       if (pathname === "/diagnostics/summary" && request.method === "GET") {
         const target = resolveRuntime(url.searchParams.get("session") ?? undefined) ?? runtime;
+        const sandbox = getSandboxSettings();
         sendJson(response, 200, {
           logDir: agentLogDir,
           logFile: agentLogger.filePath(),
           traceId: target.getTraceId(),
           summary: target.getTraceSummary(),
           spans: target.getTraceSpans(50),
+          // 架构图真值：磁盘签名 vs 已装载签名，回答「改了配置为什么没生效」
+          harness: target.getHarnessSnapshot(),
+          // 命令沙箱真值：回答「这条命令到底在不在沙箱里跑」
+          sandbox: {
+            enabled: sandbox.enabled,
+            mode: sandbox.mode,
+            supported: process.platform === "win32",
+            /** 没生效时的原因；enabled 为 true 时是 null */
+            inactiveReason: sandbox.enabled
+              ? null
+              : process.platform === "win32"
+                ? "disabled-by-user"
+                : "not-windows",
+          },
         });
         return;
       }
@@ -1212,6 +1238,35 @@ export async function startServer(options: { port?: number; token?: string } = {
           traceId: target.getTraceId(),
           spans: target.getTraceSpans(limit),
         });
+        return;
+      }
+
+      // 决策链：回答「这一回合里 harness 为什么放行 / 拒绝 / 裁剪」
+      if (pathname === "/diagnostics/decisions" && request.method === "GET") {
+        const target = resolveRuntime(url.searchParams.get("session") ?? undefined) ?? runtime;
+        const raw = Number(url.searchParams.get("limit"));
+        const limit = Number.isFinite(raw) ? Math.min(1000, Math.max(1, Math.floor(raw))) : 200;
+        const kind = url.searchParams.get("kind");
+        const traceId = url.searchParams.get("traceId") ?? undefined;
+        sendJson(response, 200, {
+          traceId: target.getTraceId(),
+          decisions: target.getDecisions({
+            ...(traceId ? { traceId } : {}),
+            ...(kind === "policy" || kind === "context" ? { kind } : {}),
+            limit,
+          }),
+        });
+        return;
+      }
+
+      // 完整轨迹导出：性能 span + 决策，可用于回合回放与回归对比
+      if (pathname === "/diagnostics/trace/export" && request.method === "GET") {
+        const target = resolveRuntime(url.searchParams.get("session") ?? undefined) ?? runtime;
+        sendJson(
+          response,
+          200,
+          target.exportTrace(url.searchParams.get("traceId") ?? undefined),
+        );
         return;
       }
 
@@ -3195,7 +3250,7 @@ export async function startServer(options: { port?: number; token?: string } = {
       }
 
       // 可编辑架构图（metis 式 harness 文档）：每个主 Agent 档位一张独立图
-      // （.meowcode/harness/<profile>.json；缺省回该档位的内置种子）。
+      // （.klockcode/harness/<profile>.json；缺省回该档位的内置种子）。
       // workspace 缺省取当前会话目录；保存后空闲的治理 run 在下一次 admit 前装载新图。
       if (pathname === "/harness" && request.method === "GET") {
         const workspace = (url.searchParams.get("workspace") ?? "").trim() || runtime.current?.cwd;
@@ -3225,7 +3280,14 @@ export async function startServer(options: { port?: number; token?: string } = {
         const baseProfile = isBuiltinHarnessId(profile) ? profile : runtime.currentAgentProfile;
         const agentPrompt =
           (typeof override === "string" && override.trim()) || AGENT_PROFILES[baseProfile].prompt;
-        sendJson(response, 200, { workspace, profile, document, agentPrompt });
+        sendJson(response, 200, {
+          workspace,
+          profile,
+          document,
+          agentPrompt,
+          // 打开编辑器时就告诉用户这张图有几处语义问题，而不是等保存后才说
+          findings: harnessFindingsOf(document),
+        });
         return;
       }
       if (pathname === "/harness" && request.method === "PUT") {
@@ -3258,9 +3320,18 @@ export async function startServer(options: { port?: number; token?: string } = {
           sendError(response, 400, "invalid_harness", saved.errors.join("\n"));
           return;
         }
-        // 只有保存的是当前档位的图才需要重载；notice=true：下一回合追加 in-history 提醒
-        if (profile === runtime.currentAgentProfile) runtime.refreshHarness(true);
-        sendJson(response, 200, { workspace, profile, saved: true });
+        // 语义提示随保存结果一起回：结构合法但"跑起来不会按你画的跑"必须当场说出来。
+        // 不阻断保存——删掉一段流程是用户的自由，静默失效才是问题。
+        const findings = harnessFindingsOf(body.document as Parameters<typeof lintHarnessDocument>[0]);
+        // 只有保存的是当前档位的图才需要重载；notice=true：下一回合追加 in-history 提醒。
+        // pendingReload=true 表示治理 run 正活跃、图要等回合边界才生效——保存成功≠已生效，
+        // 这个字段就是让界面能把「已保存，下回合生效」说清楚，而不是假装已经生效。
+        let pendingReload = false;
+        if (profile === runtime.currentAgentProfile) {
+          runtime.refreshHarness(true);
+          pendingReload = runtime.getHarnessSnapshot().pendingReload;
+        }
+        sendJson(response, 200, { workspace, profile, saved: true, pendingReload, findings });
         return;
       }
 
@@ -3581,14 +3652,14 @@ export async function startServer(options: { port?: number; token?: string } = {
             sendError(response, 400, "invalid_request", "runMode must be auto or ask");
             return;
           }
-          process.env.MEOWCODE_HOOKS_RUN_MODE = body.runMode;
+          process.env.KLOCKCODE_HOOKS_RUN_MODE = body.runMode;
         }
         if (body.includeWorkspace !== undefined) {
           if (typeof body.includeWorkspace !== "boolean") {
             sendError(response, 400, "invalid_request", "includeWorkspace must be a boolean");
             return;
           }
-          process.env.MEOWCODE_CC_HOOKS_SCOPE = JSON.stringify({
+          process.env.KLOCKCODE_CC_HOOKS_SCOPE = JSON.stringify({
             user: true,
             workspace: body.includeWorkspace,
           });
@@ -3597,11 +3668,11 @@ export async function startServer(options: { port?: number; token?: string } = {
         return;
       }
 
-      // Claude Code hooks 配置摘要：设置页只读展示 + 打开编辑（不在 MeowCode 内写文件）
+      // Claude Code hooks 配置摘要：设置页只读展示 + 打开编辑（不在 KlockCode 内写文件）
       if (pathname === "/hooks/config" && request.method === "GET") {
-        const scope = parseHooksScope(process.env.MEOWCODE_CC_HOOKS_SCOPE);
-        const runMode = parseRunMode(process.env.MEOWCODE_HOOKS_RUN_MODE);
-        const hooksHome = process.env.MEOWCODE_CC_HOOKS_HOME || os.homedir();
+        const scope = parseHooksScope(process.env.KLOCKCODE_CC_HOOKS_SCOPE);
+        const runMode = parseRunMode(process.env.KLOCKCODE_HOOKS_RUN_MODE);
+        const hooksHome = process.env.KLOCKCODE_CC_HOOKS_HOME || os.homedir();
         const config = await loadHooksConfig({
           homeDir: hooksHome,
           workspace: pluginsWorkspace,
@@ -3621,7 +3692,7 @@ export async function startServer(options: { port?: number; token?: string } = {
         return;
       }
 
-      // 数据导入：探测其他应用数据 + 执行导入（只写 ~/.meowcode 与 sessions，不碰来源）
+      // 数据导入：探测其他应用数据 + 执行导入（只写 ~/.klockcode 与 sessions，不碰来源）
       if (pathname === "/import/sources" && request.method === "GET") {
         sendJson(response, 200, { sources: await detectImportSources(homeDir) });
         return;
@@ -3706,8 +3777,8 @@ export async function startServer(options: { port?: number; token?: string } = {
         const cwd = query.get("cwd")?.trim() || pluginsWorkspace;
         const skills = await discoverSkills(
           [
-            { dir: path.join(cwd, ".meowcode", "skills"), source: "project" },
-            { dir: path.join(homeDir, ".meowcode", "skills"), source: "user" },
+            { dir: path.join(cwd, ".klockcode", "skills"), source: "project" },
+            { dir: path.join(homeDir, ".klockcode", "skills"), source: "user" },
             // 内置技能（AI 自建能力等）随包分发，不需要安装
             { dir: builtinSkillsDir(), source: "builtin" },
           ],
@@ -3870,7 +3941,7 @@ export async function startServer(options: { port?: number; token?: string } = {
         return;
       }
 
-      // 插件市场：bundles 索引 + 安装/卸载（目标固定 ~/.meowcode/）
+      // 插件市场：bundles 索引 + 安装/卸载（目标固定 ~/.klockcode/）
       if (pathname === "/marketplace" && request.method === "GET") {
         const listing = await marketplace.list({ homeDir });
         sendJson(response, 200, { items: listing.entries, icons: listing.icons });
@@ -4602,6 +4673,7 @@ export async function startServer(options: { port?: number; token?: string } = {
       if (pathname === "/config/sandbox" && request.method === "PUT") {
         const body = await readJsonBody<{
           enabled?: unknown;
+          mode?: unknown;
           writableRoots?: unknown;
           allowTemp?: unknown;
           grantTimeoutMs?: unknown;
@@ -4609,6 +4681,19 @@ export async function startServer(options: { port?: number; token?: string } = {
         }>(request);
         if (body.enabled !== undefined && typeof body.enabled !== "boolean") {
           sendError(response, 400, "invalid_request", "enabled must be a boolean");
+          return;
+        }
+        if (
+          body.mode !== undefined &&
+          body.mode !== "workspace-write" &&
+          body.mode !== "read-only"
+        ) {
+          sendError(
+            response,
+            400,
+            "invalid_request",
+            'mode must be "workspace-write" or "read-only"',
+          );
           return;
         }
         if (body.confirmDelete !== undefined && typeof body.confirmDelete !== "boolean") {
@@ -4635,7 +4720,7 @@ export async function startServer(options: { port?: number; token?: string } = {
         }
         const next = normalizeSandboxSettings({
           enabled,
-          mode: "workspace-write",
+          mode: body.mode ?? current.mode,
           writableRoots,
           allowTemp:
             typeof body.allowTemp === "boolean" ? body.allowTemp : current.allowTemp,
@@ -4659,8 +4744,10 @@ export async function startServer(options: { port?: number; token?: string } = {
         }
         const rootsChanged =
           JSON.stringify(next.writableRoots) !== JSON.stringify(current.writableRoots);
+        // 切模式也要探测：read-only 走的是另一条令牌路径（零授权），不能沿用旧结论
+        const modeChanged = next.mode !== current.mode;
         let probeDurationMs: number | undefined;
-        if (next.enabled && (!current.enabled || rootsChanged)) {
+        if (next.enabled && (!current.enabled || rootsChanged || modeChanged)) {
           if (!workspace) {
             sendError(response, 400, "invalid_request", "workspace is required");
             return;
@@ -5099,7 +5186,7 @@ export async function startServer(options: { port?: number; token?: string } = {
         return;
       }
 
-      // 项目规则（设置页）：cwd 跟随当前工作区，文件落在 .meowcode/rules/*.md
+      // 项目规则（设置页）：cwd 跟随当前工作区，文件落在 .klockcode/rules/*.md
       if (pathname === "/rules" && request.method === "GET") {
         const query = new URL(request.url ?? "/", "http://localhost").searchParams;
         const cwd = query.get("cwd")?.trim() || runtime.current?.cwd || pluginsWorkspace;
@@ -5265,10 +5352,10 @@ export async function startServer(options: { port?: number; token?: string } = {
   // 未处理拒绝只记日志继续服务；真正的同步崩溃先结算回合再退出，让桌面端看到干净退出。
   const onRejection = (reason: unknown): void => {
     const detail = reason instanceof Error ? (reason.stack ?? reason.message) : String(reason);
-    console.error(`[meowcode] unhandled rejection: ${detail}`);
+    console.error(`[klockcode] unhandled rejection: ${detail}`);
   };
   const onFatalException = (error: Error): void => {
-    console.error(`[meowcode] uncaught exception: ${error.stack ?? error.message}`);
+    console.error(`[klockcode] uncaught exception: ${error.stack ?? error.message}`);
     void shutdown("uncaught-exception").finally(() => process.exit(1));
   };
   process.on("message", onProcessMessage);
@@ -5286,7 +5373,7 @@ export async function startServer(options: { port?: number; token?: string } = {
     process.off("uncaughtException", onFatalException);
   });
 
-  const port = (options.port ?? Number(process.env.MEOWCODE_SERVER_PORT ?? 0)) || 0;
+  const port = (options.port ?? Number(process.env.KLOCKCODE_SERVER_PORT ?? 0)) || 0;
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, "127.0.0.1", () => resolve());
@@ -5326,14 +5413,14 @@ function isEntrypoint(): boolean {
 }
 
 if (isEntrypoint()) {
-  const envToken = process.env.MEOWCODE_SERVER_TOKEN?.trim();
+  const envToken = process.env.KLOCKCODE_SERVER_TOKEN?.trim();
   const token = envToken || randomBytes(32).toString("base64url");
   void startServer({ token })
     .then(() => {
       if (!envToken) process.stdout.write(`server token: ${token}\n`);
     })
     .catch((error) => {
-      console.error(`[meowcode] ${error instanceof Error ? error.message : String(error)}`);
+      console.error(`[klockcode] ${error instanceof Error ? error.message : String(error)}`);
       process.exitCode = 1;
     });
 }

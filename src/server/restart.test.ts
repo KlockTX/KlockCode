@@ -30,7 +30,7 @@ async function request(
 }
 
 async function start(): Promise<string> {
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     { id: "p", name: "P", baseUrl: "http://127.0.0.1:1", model: "m" },
   ]);
   running = await startServer({ port: 0, token: TOKEN });
@@ -47,18 +47,18 @@ async function stop(): Promise<void> {
 }
 
 beforeAll(async () => {
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-restart-"));
-  process.env.MEOWCODE_SESSIONS_DIR = sessionsDir;
-  process.env.MEOWCODE_PROVIDER_ID = "";
-  process.env.MEOWCODE_WORKSPACE = "";
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-restart-"));
+  process.env.KLOCKCODE_SESSIONS_DIR = sessionsDir;
+  process.env.KLOCKCODE_PROVIDER_ID = "";
+  process.env.KLOCKCODE_WORKSPACE = "";
 });
 
 afterAll(async () => {
   await stop();
   await rm(sessionsDir, { recursive: true, force: true });
-  delete process.env.MEOWCODE_SESSIONS_DIR;
-  delete process.env.MEOWCODE_PROVIDER_ID;
-  delete process.env.MEOWCODE_WORKSPACE;
+  delete process.env.KLOCKCODE_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_PROVIDER_ID;
+  delete process.env.KLOCKCODE_WORKSPACE;
 });
 
 describe("agent server restart", () => {

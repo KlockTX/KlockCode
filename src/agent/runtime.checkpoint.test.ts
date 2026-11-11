@@ -18,12 +18,12 @@ const { AgentRuntime } = await import("./runtime.js");
 const createdWorkspaces: string[] = [];
 
 async function makeWorkspace(): Promise<string> {
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-ws-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-ws-"));
   createdWorkspaces.push(workspace);
   // 显式禁用写后验证：测试只关心检查点，不让启发式探测去跑真实 tsc
-  await mkdir(path.join(workspace, ".meowcode"), { recursive: true });
+  await mkdir(path.join(workspace, ".klockcode"), { recursive: true });
   await writeFile(
-    path.join(workspace, ".meowcode", "verify.json"),
+    path.join(workspace, ".klockcode", "verify.json"),
     JSON.stringify({ typecheck: false }),
     "utf8",
   );
@@ -80,7 +80,7 @@ afterEach(async () => {
 
 describe("session checkpoints", () => {
   it("appends one automatic checkpoint at the start of every user turn, with a file snapshot", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace();
     const runtime = makeRuntime(sessionsDir);
@@ -114,7 +114,7 @@ describe("session checkpoints", () => {
   });
 
   it("captures before/after snapshots when a write tool runs during the turn", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace();
     const runtime = makeRuntime(sessionsDir);
@@ -146,7 +146,7 @@ describe("session checkpoints", () => {
   });
 
   it("appends an automatic checkpoint on plain conversation turns too", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace();
     const runtime = makeRuntime(sessionsDir);
@@ -161,7 +161,7 @@ describe("session checkpoints", () => {
   });
 
   it("skips a duplicate automatic checkpoint right after a manual one", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace();
     const runtime = makeRuntime(sessionsDir);
@@ -176,7 +176,7 @@ describe("session checkpoints", () => {
   });
 
   it("does not write snapshots when the snapshot store is disabled", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace();
     const runtime = new AgentRuntime({
@@ -195,7 +195,7 @@ describe("session checkpoints", () => {
   });
 
   it("supports manual checkpoints on the current session", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-checkpoint-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-checkpoint-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace();
     const runtime = makeRuntime(sessionsDir);

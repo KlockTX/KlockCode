@@ -14,8 +14,8 @@ const describeGit = hasGit ? describe : describe.skip;
 const slow = (name: string, fn: () => Promise<void>) => it(name, fn, 30_000);
 
 async function makeRepo(): Promise<{ root: string; worktreesDir: string }> {
-  const root = await mkdtemp(path.join(tmpdir(), "meowcode-worktree-"));
-  const worktreesDir = await mkdtemp(path.join(tmpdir(), "meowcode-worktrees-"));
+  const root = await mkdtemp(path.join(tmpdir(), "klockcode-worktree-"));
+  const worktreesDir = await mkdtemp(path.join(tmpdir(), "klockcode-worktrees-"));
   await runGit(root, ["init", "-q", "-b", "main"]).catch(async () => {
     await runGit(root, ["init", "-q"]);
   });
@@ -33,9 +33,9 @@ describeGit("session worktree", () => {
   const dirs: string[] = [];
 
   beforeAll(() => {
-    process.env.GIT_AUTHOR_NAME = "MeowCode Test";
+    process.env.GIT_AUTHOR_NAME = "KlockCode Test";
     process.env.GIT_AUTHOR_EMAIL = "test@example.com";
-    process.env.GIT_COMMITTER_NAME = "MeowCode Test";
+    process.env.GIT_COMMITTER_NAME = "KlockCode Test";
     process.env.GIT_COMMITTER_EMAIL = "test@example.com";
   });
 
@@ -62,7 +62,7 @@ describeGit("session worktree", () => {
     expect(created.worktree.repoRoot).toBe(path.resolve(root));
     expect(created.worktree.sourceCwd).toBe(path.resolve(root));
     expect(created.worktree.baseSha).toBe(baseSha);
-    expect(created.worktree.branch).toMatch(/^meowcode\//);
+    expect(created.worktree.branch).toMatch(/^klockcode\//);
     expect(created.cwd).toBe(created.worktree.path);
     expect(created.dirty).toBe(false);
     expect((await readFile(path.join(created.cwd, "README.md"), "utf8")).trim()).toBe("hello");
@@ -101,8 +101,8 @@ describeGit("session worktree", () => {
   });
 
   slow("rejects a non-repository workspace", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-notgit-"));
-    const worktreesDir = await mkdtemp(path.join(tmpdir(), "meowcode-worktrees-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-notgit-"));
+    const worktreesDir = await mkdtemp(path.join(tmpdir(), "klockcode-worktrees-"));
     dirs.push(dir, worktreesDir);
     await expect(createSessionWorktree(dir, worktreesDir)).rejects.toMatchObject({
       code: "not_a_repo",
@@ -159,7 +159,7 @@ describeGit("session worktree", () => {
       await runGit(root, [
         "for-each-ref",
         "--format=%(refname)",
-        "refs/meowcode-backup/",
+        "refs/klockcode-backup/",
       ])
     ).stdout.toString("utf8");
     expect(refs).toContain(path.basename(oldest.worktree.path));

@@ -24,12 +24,12 @@ const IGNORED_BASENAMES = /\.(d\.ts|test\.tsx?|spec\.tsx?)$/i;
 
 /**
  * 内置插件根目录：与 loader 同级的 builtin/（src 与 dist 的目录布局一致，
- * 开发期跑 src、生产跑 dist 都能解析到）。可用 MEOWCODE_BUILTIN_PLUGINS_DIR
+ * 开发期跑 src、生产跑 dist 都能解析到）。可用 KLOCKCODE_BUILTIN_PLUGINS_DIR
  * 覆盖（测试隔离 / 打包布局特殊时）。同 id 时 project > user > builtin。
  */
 function builtinPluginsDir(): string {
   return (
-    process.env.MEOWCODE_BUILTIN_PLUGINS_DIR ||
+    process.env.KLOCKCODE_BUILTIN_PLUGINS_DIR ||
     path.join(path.dirname(fileURLToPath(import.meta.url)), "builtin")
   );
 }
@@ -153,10 +153,10 @@ export async function readPluginManifest(
 
   const engines =
     object.engines && typeof object.engines === "object"
-      ? (object.engines as { meowcode?: unknown })
+      ? (object.engines as { klockcode?: unknown })
       : undefined;
-  if (engines?.meowcode !== undefined && typeof engines.meowcode !== "string") {
-    throw new Error("plugin.json engines.meowcode must be a string");
+  if (engines?.klockcode !== undefined && typeof engines.klockcode !== "string") {
+    throw new Error("plugin.json engines.klockcode must be a string");
   }
 
   return {
@@ -167,14 +167,14 @@ export async function readPluginManifest(
     ...(typeof object.main === "string" ? { main: object.main } : {}),
     ...(client ? { client } : {}),
     permissions,
-    ...(engines?.meowcode !== undefined ? { engines: { meowcode: engines.meowcode } } : {}),
+    ...(engines?.klockcode !== undefined ? { engines: { klockcode: engines.klockcode } } : {}),
   };
 }
 
 /** AI 创作工具写的标记：该插件由对话里的模型生成，渲染层免二次授权。 */
 async function hasAiPluginMarker(homeDir: string, id: string): Promise<boolean> {
   try {
-    await fs.access(path.join(homeDir, ".meowcode", ".marketplace", `ai-plugin-${id}.json`));
+    await fs.access(path.join(homeDir, ".klockcode", ".marketplace", `ai-plugin-${id}.json`));
     return true;
   } catch {
     return false;
@@ -191,7 +191,7 @@ function clientDescriptor(manifest: PluginManifest | undefined): PluginUiDescrip
 }
 
 /**
- * 插件文件头元数据：`// @meowcode name: ...` / `// @meowcode description: ...`。
+ * 插件文件头元数据：`// @klockcode name: ...` / `// @klockcode description: ...`。
  * 自建插件没有市场条目，靠这两行在「已加载插件」里显示中文名与介绍。
  */
 async function readPluginHeaderMeta(
@@ -200,7 +200,7 @@ async function readPluginHeaderMeta(
   try {
     const head = (await fs.readFile(filePath, "utf8")).slice(0, 4_096);
     const pick = (key: string): string | undefined => {
-      const match = new RegExp(`^\\s*//\\s*@meowcode\\s+${key}:\\s*(.+)$`, "im").exec(head);
+      const match = new RegExp(`^\\s*//\\s*@klockcode\\s+${key}:\\s*(.+)$`, "im").exec(head);
       return match?.[1]?.trim().slice(0, 200) || undefined;
     };
     return { name: pick("name"), description: pick("description") };
@@ -220,9 +220,23 @@ export type DiscoveryRoot = { dir: string; source: PluginSource };
 
 let jitiInstance: Jiti | null = null;
 
+/**
+ * 插件模块加载器。
+ *
+ * **信任边界：插件在宿主进程内执行。** 这里不做进程隔离，原因不是"来不及"，而是
+ * 插件契约本身就是闭包 + 运行时句柄（factory 拿到 api 后返回 tools 的 execute 函数、
+ * hook handler、RPC handler，全部直接闭包住 fs / 会话 / 工具表）。要加边界就得把
+ * 每个 execute/hook 都 RPC 化，API 会变成另一套东西——这是一次协议重设计，不是一次
+ * 重构。所以插件的控场点是**安装时审查**，不是运行时沙箱：
+ *  - `plugin.json` 的 permissions 只约束"能注册什么"，不约束"能碰到什么"；
+ *  - 无 manifest 的旧插件合成全开清单（见 registry.legacyManifest），加载时告警；
+ *  - 与模型生成的 `run_code` 不同：后者是**模型写的代码**，必须在子进程里跑
+ *    （见 agent/code-host.ts），前者是人写的、由用户显式装进来的。
+ *
+ * fsCache / moduleCache 关闭：插件开发期改文件后重启 server 即生效，不残留旧模块。
+ */
 function getJiti(): Jiti {
   if (!jitiInstance) {
-    // fsCache/moduleCache 关闭：插件开发期改文件后重启 server 即生效，不残留旧模块
     jitiInstance = createJiti(import.meta.url, {
       interopDefault: true,
       fsCache: false,
@@ -328,6 +342,9 @@ export async function discoverPlugins(
   return { plugins, shadowed };
 }
 
+/** 已就"无 manifest → 全开权限"告警过的插件（`id|path`）：重启才会重复提醒，避免 reload 刷屏。 */
+const warnedLegacyPlugins = new Set<string>();
+
 export type LoadPluginsOptions = {
   workspace: string;
   homeDir: string;
@@ -346,8 +363,8 @@ export async function loadPlugins(options: LoadPluginsOptions): Promise<{
   descriptors: PluginDescriptor[];
   errors: PluginLoadError[];
 }> {
-  const projectDir = path.join(options.workspace, ".meowcode", "plugins");
-  const userDir = path.join(options.homeDir, ".meowcode", "plugins");
+  const projectDir = path.join(options.workspace, ".klockcode", "plugins");
+  const userDir = path.join(options.homeDir, ".klockcode", "plugins");
   const disabled = new Set(options.disabled ?? []);
 
   const { plugins, shadowed } = await discoverPlugins([
@@ -388,7 +405,7 @@ export async function loadPlugins(options: LoadPluginsOptions): Promise<{
         descriptor.iconUrl = iconSvgToDataUrl(meta.iconSvg);
       }
     } else {
-      // 用户/项目插件：读文件头 `// @meowcode name/description`，让自建插件在列表里有中文名
+      // 用户/项目插件：读文件头 `// @klockcode name/description`，让自建插件在列表里有中文名
       const header = await readPluginHeaderMeta(item.path);
       if (header.name) descriptor.displayName = header.name;
       if (header.description) descriptor.description = header.description;
@@ -411,6 +428,17 @@ export async function loadPlugins(options: LoadPluginsOptions): Promise<{
       descriptor.version = manifest.version;
       descriptor.manifest = manifest;
       if (manifest.name) descriptor.displayName = manifest.name;
+    } else if (item.source !== "builtin") {
+      // 无 manifest = 合成全开权限清单（registry.legacyManifest）。为了旧插件兼容不拦，
+      // 但"默认拿到所有权限"这件事必须说出来，不能安静地发生。
+      // 按 id|path 去重：这是安装的属性，不是每次 reload 的新闻，否则保存一次刷一行。
+      const key = `${item.id}|${item.path}`;
+      if (!warnedLegacyPlugins.has(key)) {
+        warnedLegacyPlugins.add(key);
+        console.warn(
+          `[plugin:${item.id}] no plugin.json; every permission is granted and the module runs in-process (${item.path})`,
+        );
+      }
     }
     if (item.source !== "builtin" && (await hasAiPluginMarker(options.homeDir, item.id))) {
       descriptor.aiAuthored = true;

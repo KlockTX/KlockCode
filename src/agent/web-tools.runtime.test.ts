@@ -14,7 +14,7 @@ function toolNames(runtime: AgentRuntime): string[] {
 
 describe("web tool gating", () => {
   it("exposes web_search only when the provider has its own search backend", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-web-tools-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-web-tools-"));
 
     const anthropic = new AgentRuntime({
       providers: [

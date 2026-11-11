@@ -69,7 +69,7 @@ export function createTurnTrace(): TurnTrace {
 /** 学习技能文件路径 → 技能名；不是学习技能返回 null。 */
 export function skillNameFromPath(filePath: string): string | null {
   const normalized = filePath.replace(/\\/g, "/");
-  const marker = "/.meowcode/learning/skills/";
+  const marker = "/.klockcode/learning/skills/";
   const index = normalized.indexOf(marker);
   if (index < 0) return null;
   const rest = normalized.slice(index + marker.length).split("/");
@@ -288,7 +288,7 @@ export function buildOutcomeRecord(input: {
 /** 学习根下的技能目录名集合（给 read_file 匹配用，纯字符串判断，不读盘）。 */
 export function looksLikeLearnedSkillPath(filePath: string): boolean {
   const normalized = filePath.replace(/\\/g, "/");
-  return normalized.includes("/.meowcode/learning/skills/");
+  return normalized.includes("/.klockcode/learning/skills/");
 }
 
 /** 便于日志里显示相对路径。 */

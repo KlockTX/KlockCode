@@ -1,4 +1,4 @@
-/** 子进程环境：剔除 MeowCode 自身与用户凭据，保留系统/路径等基础变量。 */
+/** 子进程环境：剔除 KlockCode 自身与用户凭据，保留系统/路径等基础变量。 */
 
 /** 这些变量即使命中敏感词也保留（系统运行必需） */
 const SAFE_ENV_NAMES = new Set([
@@ -27,14 +27,14 @@ const SENSITIVE_ENV_PATTERN =
 const SENSITIVE_ENV_PREFIXES = ["KUBECONFIG", "PGPASSFILE", "NETRC"];
 
 /**
- * 子进程环境：剔除 MeowCode 自身与用户凭据，保留系统/路径等基础变量。
+ * 子进程环境：剔除 KlockCode 自身与用户凭据，保留系统/路径等基础变量。
  * 与 codex 的 shell_environment_policy 同思路：命令默认不该继承 API key。
  */
 export function commandEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const result: NodeJS.ProcessEnv = {};
   for (const [key, value] of Object.entries(env)) {
     if (value === undefined) continue;
-    if (/^meowcode_/i.test(key)) continue;
+    if (/^klockcode_/i.test(key)) continue;
     const upper = key.toUpperCase();
     if (SAFE_ENV_NAMES.has(upper)) {
       result[key] = value;

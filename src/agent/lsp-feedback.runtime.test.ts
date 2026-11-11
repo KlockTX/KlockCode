@@ -25,8 +25,8 @@ const { AgentRuntime } = await import("./runtime.js");
 const workspaces: string[] = [];
 
 async function makeRuntime() {
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-lsp-runtime-"));
-  const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-lsp-sessions-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-lsp-runtime-"));
+  const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-lsp-sessions-"));
   workspaces.push(workspace, sessionsDir);
   const runtime = new AgentRuntime({
     providers: [{ id: "p", name: "P", baseUrl: "http://localhost", model: "m" }],

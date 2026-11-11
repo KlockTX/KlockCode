@@ -8,7 +8,7 @@ import { executeGitTool, isForceApprovalGitAction, isMutatingGitAction } from ".
 const gitAvailable = await isGitAvailable();
 
 async function repo(): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "meowcode-git-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "klockcode-git-"));
   await runGit(dir, ["init", "-q"]);
   await runGit(dir, ["config", "user.email", "test@example.com"]);
   await runGit(dir, ["config", "user.name", "Test"]);

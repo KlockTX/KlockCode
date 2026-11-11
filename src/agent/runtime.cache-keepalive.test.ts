@@ -66,8 +66,8 @@ async function makeRuntime(provider: ProviderConfig): Promise<{
   runtime: InstanceType<typeof AgentRuntime>;
   workspace: string;
 }> {
-  const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-keepalive-"));
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-keepalive-ws-"));
+  const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-keepalive-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-keepalive-ws-"));
   const runtime = new AgentRuntime({
     providers: [provider],
     sessionsDir,

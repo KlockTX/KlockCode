@@ -5,7 +5,7 @@ import { writeTextAtomic } from "./atomic-json.js";
 
 /**
  * 项目级审批规则：用户批准一次后可「本项目不再询问」。
- * 规则落在 <workspace>/.meowcode/approvals.json（该目录已在 paths.ts 的忽略集里，
+ * 规则落在 <workspace>/.klockcode/approvals.json（该目录已在 paths.ts 的忽略集里，
  * 不会被 list_dir / 搜索看到）。删除项目目录即撤销全部规则。
  */
 export type ApprovalRuleKind = "tool" | "path" | "command-exact" | "command-prefix";
@@ -23,7 +23,7 @@ export type ApprovalRule = {
   createdAt: string;
 };
 
-export const APPROVALS_FILE = path.join(".meowcode", "approvals.json");
+export const APPROVALS_FILE = path.join(".klockcode", "approvals.json");
 const MAX_RULES = 200;
 
 const SHELL_META = /[;&|><`$(){}[\]\n\r]/;

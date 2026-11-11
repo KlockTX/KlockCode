@@ -104,7 +104,7 @@ export class LspManager {
       return {
         serverNames: [],
         diagnostics: [],
-        unavailable: "LSP diagnostics are disabled by .meowcode/lsp.json.",
+        unavailable: "LSP diagnostics are disabled by .klockcode/lsp.json.",
       };
     }
     const timeoutMs = Math.max(

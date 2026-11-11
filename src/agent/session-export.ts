@@ -346,7 +346,7 @@ export function buildExportDoc(
 export function renderJson(doc: ExportDoc, exportedAt = new Date().toISOString()): string {
   return `${JSON.stringify(
     {
-      format: "meowcode.session.export",
+      format: "klockcode.session.export",
       version: 1,
       exportedAt,
       session: doc.session,

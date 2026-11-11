@@ -4,10 +4,10 @@ import { writeTextAtomic } from "./atomic-json.js";
 import { resolveWithinWorkspace } from "./paths.js";
 
 /**
- * 项目规则：工作区 `.meowcode/rules/<name>.md`，每个文件一条规则。
+ * 项目规则：工作区 `.klockcode/rules/<name>.md`，每个文件一条规则。
  * 与 AGENTS.md 的区别是规则由设置页显式创建/编辑，注入时带独立标题与预算。
  */
-export const RULES_DIR = path.join(".meowcode", "rules");
+export const RULES_DIR = path.join(".klockcode", "rules");
 export const MAX_RULE_NAME_LENGTH = 64;
 export const MAX_RULE_BYTES = 64 * 1024;
 /** 规则注入指令的字符预算：不和 AGENTS.md / 技能索引抢满 16k 总预算 */

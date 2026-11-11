@@ -69,7 +69,7 @@ describe("classifySandboxDenial", () => {
     expect(classifySandboxDenial(input({ exitCode: 0, output: "Access is denied" }))).toBeUndefined();
     expect(
       classifySandboxDenial(
-        input({ exitCode: 127, output: "meowcode-sandbox-run: koffi missing" }),
+        input({ exitCode: 127, output: "klockcode-sandbox-run: koffi missing" }),
       ),
     ).toBeUndefined();
     expect(classifySandboxDenial(input({ timedOut: true, output: "Access is denied" }))).toBeUndefined();

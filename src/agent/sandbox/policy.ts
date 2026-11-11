@@ -7,7 +7,13 @@ import {
   type SandboxSettings,
 } from "./types.js";
 
-/** 把 settings.json / env 里的沙箱段归一化；非法值一律回落到关闭，绝不静默当已开。 */
+/**
+ * 把 settings.json / env 里的沙箱段归一化；非法值一律回落到关闭，绝不静默当已开。
+ *
+ * mode 是例外：写错一个词不该等于「关掉沙箱」。未知 mode 收敛到最严的
+ * read-only 并报错——命令会因写被拒而失败，问题立刻可见；悄悄降级成
+ * 「完全不隔离」才是最坏的一种"容错"。
+ */
 export function normalizeSandboxSettings(
   raw: unknown,
   platform: NodeJS.Platform = process.platform,
@@ -16,8 +22,8 @@ export function normalizeSandboxSettings(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? (raw as Record<string, unknown>)
       : {};
-  const modeSupported = parsed.mode === undefined || parsed.mode === "workspace-write";
-  const enabled = parsed.enabled === true && platform === "win32" && modeSupported;
+  const mode = normalizeMode(parsed.mode);
+  const enabled = parsed.enabled === true && platform === "win32";
   const writableRoots = normalizeRoots(parsed.writableRoots, platform);
   const allowTemp = parsed.allowTemp !== false;
   const grantTimeoutMs =
@@ -29,12 +35,22 @@ export function normalizeSandboxSettings(
       : DEFAULT_SANDBOX_TIMEOUT_MS;
   return {
     enabled,
-    mode: "workspace-write",
+    mode,
     writableRoots,
     allowTemp,
     grantTimeoutMs,
     confirmDelete: parsed.confirmDelete === true,
   };
+}
+
+function normalizeMode(raw: unknown): "workspace-write" | "read-only" {
+  if (raw === undefined) return "workspace-write";
+  if (raw === "read-only") return "read-only";
+  if (raw === "workspace-write") return "workspace-write";
+  console.error(
+    `[sandbox] unknown mode ${JSON.stringify(raw)}; falling back to the strictest mode (read-only)`,
+  );
+  return "read-only";
 }
 
 function normalizeRoots(raw: unknown, platform: NodeJS.Platform): string[] {
@@ -53,17 +69,17 @@ function normalizeRoots(raw: unknown, platform: NodeJS.Platform): string[] {
   return roots;
 }
 
-/** MEOWCODE_SANDBOX = JSON；解析失败视为关闭并报错，不静默当已开。 */
+/** KLOCKCODE_SANDBOX = JSON；解析失败视为关闭并报错，不静默当已开。 */
 export function readSandboxSettingsFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): SandboxSettings {
-  const raw = env.MEOWCODE_SANDBOX;
+  const raw = env.KLOCKCODE_SANDBOX;
   if (!raw) return { ...DEFAULT_SANDBOX_SETTINGS };
   try {
     return normalizeSandboxSettings(JSON.parse(raw));
   } catch (error) {
     console.error(
-      `[sandbox] ignoring invalid MEOWCODE_SANDBOX: ${
+      `[sandbox] ignoring invalid KLOCKCODE_SANDBOX: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );

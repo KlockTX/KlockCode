@@ -2,8 +2,8 @@
  * 技能与插件创作（内置插件）。
  *
  * 给 agent 两个工具，把「用户想要的新能力」直接做成已安装的技能或插件：
- *  - create_skill  → 写 ~/.meowcode/skills/<id>/SKILL.md，写「我的」标记，刷新技能索引；
- *  - create_plugin → 写 ~/.meowcode/plugins/<id>.ts，写「我的」标记，热重载插件系统。
+ *  - create_skill  → 写 ~/.klockcode/skills/<id>/SKILL.md，写「我的」标记，刷新技能索引；
+ *  - create_plugin → 写 ~/.klockcode/plugins/<id>.ts，写「我的」标记，热重载插件系统。
  * 落盘、校验、覆盖策略与热更新都由宿主（api.host → src/server/extensions.ts）负责，
  * 插件本身不碰文件系统。插件是任意代码，create_plugin 每次调用先走审批流。
  */
@@ -40,7 +40,7 @@ const extensionAuthoringPlugin: PluginFactory = (api: PluginAPI) => {
   api.registerTool({
     name: "plugin_authoring_guide",
     description:
-      "写 MeowCode 插件前先调用：返回完整插件 API 速查（后端工具/命令/RPC/hook、client 槽位、pages、ctx、示例与规则）。不要阅读仓库源码来推断插件 API。",
+      "写 KlockCode 插件前先调用：返回完整插件 API 速查（后端工具/命令/RPC/hook、client 槽位、pages、ctx、示例与规则）。不要阅读仓库源码来推断插件 API。",
     parameters: {
       type: "object",
       properties: {
@@ -64,7 +64,7 @@ const extensionAuthoringPlugin: PluginFactory = (api: PluginAPI) => {
   api.registerTool({
     name: "create_skill",
     description:
-      "创建或覆盖一个 MeowCode 技能：把流程/知识写成 SKILL.md，安装到全局 ~/.meowcode/skills/<id>，创建后立即出现在「我的」与输入框 / 面板，下一轮即可被索引使用。用户要求把某套做法沉淀成可复用技能时调用。",
+      "创建或覆盖一个 KlockCode 技能：把流程/知识写成 SKILL.md，安装到全局 ~/.klockcode/skills/<id>，创建后立即出现在「我的」与输入框 / 面板，下一轮即可被索引使用。用户要求把某套做法沉淀成可复用技能时调用。",
     parameters: {
       type: "object",
       properties: {
@@ -108,7 +108,7 @@ const extensionAuthoringPlugin: PluginFactory = (api: PluginAPI) => {
   api.registerTool({
     name: "create_plugin",
     description:
-      "创建或覆盖一个 MeowCode 插件包（写入全局 ~/.meowcode/plugins/<id>/：plugin.json + index.ts，可带 ui/client.js 或 ui/index.html），成功后热重载，新工具/命令/界面槽位/整页立刻可用。写之前先调用 plugin_authoring_guide 取完整 API，不要翻仓库源码。插件是任意代码，调用前会弹审批。需要新增工具、命令或界面入口时调用；已有技能能覆盖的场景不要建插件。",
+      "创建或覆盖一个 KlockCode 插件包（写入全局 ~/.klockcode/plugins/<id>/：plugin.json + index.ts，可带 ui/client.js 或 ui/index.html），成功后热重载，新工具/命令/界面槽位/整页立刻可用。写之前先调用 plugin_authoring_guide 取完整 API，不要翻仓库源码。插件是任意代码，调用前会弹审批。需要新增工具、命令或界面入口时调用；已有技能能覆盖的场景不要建插件。",
     requiresApproval: true,
     parameters: {
       type: "object",

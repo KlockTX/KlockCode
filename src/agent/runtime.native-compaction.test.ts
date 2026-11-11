@@ -66,7 +66,7 @@ beforeEach(() => {
 
 describe("runtime native compaction", () => {
   it("服务端原生摘要成功时不再发本地摘要请求", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -93,7 +93,7 @@ describe("runtime native compaction", () => {
   });
 
   it("OpenAI 加密 item 落成 native_compaction 并进入后续请求", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     nativeRequestMock.mockResolvedValueOnce({
@@ -118,7 +118,7 @@ describe("runtime native compaction", () => {
   });
 
   it("原生压缩不可用时退回本地摘要", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     const events = await collectEvents(runtime);
@@ -136,7 +136,7 @@ describe("runtime native compaction", () => {
   });
 
   it("连续失败两次后不再尝试原生压缩，避免每轮白撞同一堵墙", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-runtime-"));
     const runtime = makeRuntime(dir);
     await runtime.newSession();
     nativeRequestMock.mockRejectedValue(new Error("unsupported"));
@@ -161,7 +161,7 @@ describe("runtime native compaction", () => {
   });
 
   it("协议不支持时不产生任何原生压缩请求", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-native-runtime-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-native-runtime-"));
     nativeModeMock.mockReturnValue(null);
     const runtime = makeRuntime(dir);
     await runtime.newSession();

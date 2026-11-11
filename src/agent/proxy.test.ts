@@ -57,21 +57,21 @@ describe("readProxyFromEnv", () => {
   });
 
   it("honours an explicit mode", () => {
-    expect(readProxyFromEnv({ MEOWCODE_PROXY_MODE: "system" })).toEqual({
+    expect(readProxyFromEnv({ KLOCKCODE_PROXY_MODE: "system" })).toEqual({
       mode: "system",
       url: "",
     });
   });
 
   it("treats a bare url as manual", () => {
-    expect(readProxyFromEnv({ MEOWCODE_PROXY_URL: "http://127.0.0.1:7890" })).toEqual({
+    expect(readProxyFromEnv({ KLOCKCODE_PROXY_URL: "http://127.0.0.1:7890" })).toEqual({
       mode: "manual",
       url: "http://127.0.0.1:7890",
     });
   });
 
   it("ignores an unknown mode and falls back to direct", () => {
-    expect(readProxyFromEnv({ MEOWCODE_PROXY_MODE: "bogus" }).mode).toBe("direct");
+    expect(readProxyFromEnv({ KLOCKCODE_PROXY_MODE: "bogus" }).mode).toBe("direct");
   });
 });
 
@@ -100,7 +100,7 @@ describe("resolveProxyUrl", () => {
     expect(
       resolveProxyUrl(
         { mode: "system", url: "" },
-        { MEOWCODE_PROXY_URL: "http://resolved:9", HTTPS_PROXY: "http://env:1" },
+        { KLOCKCODE_PROXY_URL: "http://resolved:9", HTTPS_PROXY: "http://env:1" },
       ),
     ).toBe("http://resolved:9");
   });

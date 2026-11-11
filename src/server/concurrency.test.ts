@@ -55,7 +55,7 @@ async function waitFor<T>(read: () => Promise<T | null>, timeoutMs = 8000): Prom
 }
 
 beforeAll(async () => {
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-parallel-"));
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-parallel-"));
   // 挂起的 SSE provider：立即回响应头，但永不发送 data，回合会一直处于运行中
   provider = http.createServer((request, response) => {
     request.resume();
@@ -71,7 +71,7 @@ beforeAll(async () => {
   const address = provider.address();
   if (!address || typeof address === "string") throw new Error("Provider server has no port.");
 
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     {
       id: "p",
       name: "Hanging provider",
@@ -80,9 +80,9 @@ beforeAll(async () => {
       apiKey: "secret",
     },
   ]);
-  process.env.MEOWCODE_SESSIONS_DIR = sessionsDir;
-  process.env.MEOWCODE_PROVIDER_ID = "p";
-  process.env.MEOWCODE_WORKSPACE = "";
+  process.env.KLOCKCODE_SESSIONS_DIR = sessionsDir;
+  process.env.KLOCKCODE_PROVIDER_ID = "p";
+  process.env.KLOCKCODE_WORKSPACE = "";
 
   server = await startServer({ port: 0, token: TOKEN });
   const serverAddress = server.address();

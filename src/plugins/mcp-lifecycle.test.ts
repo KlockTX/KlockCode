@@ -158,7 +158,7 @@ describe("McpManager diff 式 restart", () => {
       return client;
     };
     const manager = new McpManager(factory);
-    const envName = "MEOWCODE_TEST_TOKEN_XYZ";
+    const envName = "KLOCKCODE_TEST_TOKEN_XYZ";
     const saved = process.env[envName];
     const servers = { demo: { command: "a", env: { K: `\${${envName}}` } } };
 

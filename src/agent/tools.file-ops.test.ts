@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { executeTool } from "./tools.js";
 
 async function workspace(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), "meowcode-fileops-"));
+  return mkdtemp(path.join(tmpdir(), "klockcode-fileops-"));
 }
 
 describe("delete_file / move_file / apply_patch tools", () => {

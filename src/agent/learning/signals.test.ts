@@ -79,7 +79,7 @@ describe("zero-token gate", () => {
     const trace = createTurnTrace();
     recordToolCall(trace, {
       name: "read_file",
-      args: { path: "D:/proj/.meowcode/learning/skills/release/SKILL.md" },
+      args: { path: "D:/proj/.klockcode/learning/skills/release/SKILL.md" },
       ok: true,
     });
     const signals = detectSignals(trace);
@@ -176,8 +176,8 @@ describe("outcome record", () => {
 
 describe("skill path detection", () => {
   it("extracts the skill name from both separator styles", () => {
-    expect(skillNameFromPath("D:/p/.meowcode/learning/skills/release/SKILL.md")).toBe("release");
-    expect(skillNameFromPath("D:\\p\\.meowcode\\learning\\skills\\release\\SKILL.md")).toBe("release");
-    expect(skillNameFromPath("D:/p/.meowcode/skills/handwritten/SKILL.md")).toBeNull();
+    expect(skillNameFromPath("D:/p/.klockcode/learning/skills/release/SKILL.md")).toBe("release");
+    expect(skillNameFromPath("D:\\p\\.klockcode\\learning\\skills\\release\\SKILL.md")).toBe("release");
+    expect(skillNameFromPath("D:/p/.klockcode/skills/handwritten/SKILL.md")).toBeNull();
   });
 });

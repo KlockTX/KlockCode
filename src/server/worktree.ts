@@ -20,7 +20,7 @@ const MAX_ATTEMPTS = 3;
 const ADD_TIMEOUT_MS = 60_000;
 const FETCH_TIMEOUT_MS = 30_000;
 /** 清理前把 worktree HEAD 存到主仓库的备份 ref，用户可随时恢复。 */
-const BACKUP_REF_PREFIX = "refs/meowcode-backup/";
+const BACKUP_REF_PREFIX = "refs/klockcode-backup/";
 
 export type WorktreeCleanupResult = {
   removed: number;
@@ -193,7 +193,7 @@ export async function createSessionWorktree(
     let lastError: unknown;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
       const id = `${baseName}-${stamp(now)}-${randomBytes(2).toString("hex")}`;
-      const branch = `meowcode/${id}`;
+      const branch = `klockcode/${id}`;
       const worktreeRoot = path.join(worktreesDir, id);
       if ((await pathExists(worktreeRoot)) || (await branchExists(repoRoot, branch))) {
         continue;
@@ -284,14 +284,14 @@ async function worktreeCommonDir(worktreePath: string): Promise<string | null> {
   }
 }
 
-/** node_modules 是创建时链接进来的，.meowcode 是运行时产物：都不算用户的未提交改动。 */
+/** node_modules 是创建时链接进来的，.klockcode 是运行时产物：都不算用户的未提交改动。 */
 function meaningfulStatusLines(text: string): string[] {
   return text
     .split(/\r?\n/)
     .filter((line) => line.trim())
     .filter((line) => {
       const target = line.length > 3 ? line.slice(3) : line;
-      return !/(^|[\\/])(node_modules|\.meowcode)([\\/]|$)/.test(target);
+      return !/(^|[\\/])(node_modules|\.klockcode)([\\/]|$)/.test(target);
     });
 }
 
@@ -301,7 +301,7 @@ function meaningfulStatusLines(text: string): string[] {
  * 只删「没有被任何会话引用、且没有用户未提交改动」的目录：
  *  - 被会话引用的（包括已归档会话）永远保留，避免打开旧会话时目录消失；
  *  - 有未提交改动的保留（Git 备份只能保证已提交内容，不能保证工作区文件）；
- *  - 删除前把 HEAD 写进 refs/meowcode-backup/<目录名>，之后可从备份恢复。
+ *  - 删除前把 HEAD 写进 refs/klockcode-backup/<目录名>，之后可从备份恢复。
  */
 export async function pruneSessionWorktrees(options: {
   worktreesDir: string;
@@ -388,7 +388,7 @@ export async function pruneSessionWorktrees(options: {
       result.failed += 1;
       continue;
     }
-    if (branch.startsWith("meowcode/")) {
+    if (branch.startsWith("klockcode/")) {
       await runGit(repoRoot, ["branch", "-D", branch], { timeoutMs: 15_000 }).catch(
         () => undefined,
       );

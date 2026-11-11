@@ -46,8 +46,8 @@ function tailOf(text: string, start: number): JobChunk["data"] {
 }
 
 export function createJobManager(env: NodeJS.ProcessEnv = process.env): JobManager {
-  const baseUrl = env.MEOWCODE_JOB_HOST;
-  const token = env.MEOWCODE_JOB_HOST_TOKEN;
+  const baseUrl = env.KLOCKCODE_JOB_HOST;
+  const token = env.KLOCKCODE_JOB_HOST_TOKEN;
   if (baseUrl && token) return createHttpJobManager({ baseUrl, token });
   return createLocalJobManager();
 }

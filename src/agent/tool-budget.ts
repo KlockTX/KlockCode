@@ -1,76 +1,22 @@
 /**
  * 工具输出的 token 预算裁剪。
  *
- * 统计口径与 context.estimateTokens 一致：CJK 1 字 ≈ 1 token，其余 4 字符 ≈ 1 token。
- * 工具输出按字符配预算时，中文会被放大 4 倍；Codex 默认按 10KB bytes 截断并保留头尾，
+ * 度量只有一处真源：`context.estimateTokens` / `indexAtTokenBudget`。这里**不再**
+ * 自带一份"CJK 1 + 其余 0.25"的副本——那份副本曾经和估算器一起漂移：估算器开始把
+ * base64 / 西里尔字符按更重的权重计费后，按旧口径切出来的片段实测是预算的 2.4 倍。
+ * 工具输出按字符配预算时中文会被放大 4 倍；Codex 默认按 10KB bytes 截断并保留头尾，
  * 这里用 token 口径做同一件事，避免中文仓库把单次读取撑到几万 token。
  */
-
-const CJK_RANGES: Array<[number, number]> = [
-  [0x1100, 0x11ff],
-  [0x3000, 0x30ff],
-  [0x3400, 0x4dbf],
-  [0x4e00, 0x9fff],
-  [0xac00, 0xd7af],
-  [0xf900, 0xfaff],
-  [0xff00, 0xffef],
-];
-
-function isCjkUnit(code: number): boolean {
-  return CJK_RANGES.some(([start, end]) => code >= start && code <= end);
-}
-
-function isLowSurrogate(code: number): boolean {
-  return code >= 0xdc00 && code <= 0xdfff;
-}
-
-/** 前缀最多保留多少字符；surrogate pair 不劈开 */
-function headIndexByTokens(text: string, budget: number): number {
-  if (budget <= 0) return 0;
-  let used = 0;
-  let index = 0;
-  while (index < text.length) {
-    const code = text.charCodeAt(index);
-    const cost = isCjkUnit(code) ? 1 : 0.25;
-    if (used + cost > budget) break;
-    used += cost;
-    index += 1;
-  }
-  if (index > 0 && index < text.length && isLowSurrogate(text.charCodeAt(index))) index -= 1;
-  return index;
-}
-
-/** 后缀从哪个字符开始；surrogate pair 不劈开 */
-function tailIndexByTokens(text: string, budget: number): number {
-  if (budget <= 0) return text.length;
-  let used = 0;
-  let index = text.length;
-  while (index > 0) {
-    const code = text.charCodeAt(index - 1);
-    const cost = isCjkUnit(code) ? 1 : 0.25;
-    if (used + cost > budget) break;
-    used += cost;
-    index -= 1;
-  }
-  if (index > 0 && index < text.length && isLowSurrogate(text.charCodeAt(index))) index -= 1;
-  return index;
-}
-
-function approxTokens(text: string): number {
-  let total = 0;
-  for (let index = 0; index < text.length; index += 1) {
-    total += isCjkUnit(text.charCodeAt(index)) ? 1 : 0.25;
-  }
-  return total;
-}
+import { estimateTokens, indexAtTokenBudget } from "./context.js";
 
 /** 只取前缀/后缀，不追加省略标记（调用方自己拼提示） */
 export function sliceHeadToTokens(text: string, maxTokens: number): string {
-  return text.slice(0, headIndexByTokens(text, maxTokens));
+  return text.slice(0, indexAtTokenBudget(text, maxTokens));
 }
 
 export function sliceTailToTokens(text: string, maxTokens: number): string {
-  return text.slice(tailIndexByTokens(text, maxTokens));
+  const start = indexAtTokenBudget(text, Math.max(0, estimateTokens(text) - maxTokens));
+  return text.slice(start);
 }
 
 export type TokenTruncation = {
@@ -92,7 +38,7 @@ export function truncateToTokens(
     note?: (omittedTokens: number) => string;
   } = {},
 ): TokenTruncation {
-  const total = approxTokens(text);
+  const total = estimateTokens(text);
   if (total <= maxTokens) return { text, truncated: false, omittedTokens: 0 };
 
   const headRatio = Math.min(1, Math.max(0, options.headRatio ?? 0.5));
@@ -100,9 +46,9 @@ export function truncateToTokens(
   const contentBudget = Math.max(0, maxTokens - Math.max(8, Math.ceil(maxTokens * 0.08)));
   const headBudget = Math.floor(contentBudget * headRatio);
   const tailBudget = contentBudget - headBudget;
-  const head = text.slice(0, headIndexByTokens(text, headBudget));
-  const tail = text.slice(tailIndexByTokens(text, tailBudget));
-  const omitted = Math.max(1, Math.round(total - approxTokens(head) - approxTokens(tail)));
+  const head = sliceHeadToTokens(text, headBudget);
+  const tail = sliceTailToTokens(text, tailBudget);
+  const omitted = Math.max(1, total - estimateTokens(head) - estimateTokens(tail));
   const note = options.note?.(omitted) ?? `... [truncated ${omitted} tokens]`;
   return {
     text: `${head}\n${note}\n${tail}`,

@@ -23,7 +23,7 @@ const IGNORED_GLOBS = [
   ".git/**",
   ".hg/**",
   ".svn/**",
-  ".meowcode/**",
+  ".klockcode/**",
   "node_modules/**",
   "dist/**",
   "build/**",
@@ -62,10 +62,10 @@ function binaryName(): string {
 }
 
 async function resolveRipgrepPath(): Promise<string> {
-  const configured = process.env.MEOWCODE_RIPGREP_PATH?.trim();
+  const configured = process.env.KLOCKCODE_RIPGREP_PATH?.trim();
   if (configured) return configured;
 
-  const resources = process.env.MEOWCODE_RESOURCES_PATH?.trim();
+  const resources = process.env.KLOCKCODE_RESOURCES_PATH?.trim();
   if (resources) {
     return path.join(resources, "agent-server", "ripgrep", binaryName());
   }
@@ -77,7 +77,7 @@ async function resolveRipgrepPath(): Promise<string> {
     return ripgrepPathCache;
   } catch {
     throw new Error(
-      "Built-in ripgrep is not available. Set MEOWCODE_RIPGREP_PATH to the rg executable.",
+      "Built-in ripgrep is not available. Set KLOCKCODE_RIPGREP_PATH to the rg executable.",
     );
   }
 }

@@ -5,7 +5,7 @@ import { executeTool } from "./tools.js";
 import type { ToolResult } from "./types.js";
 
 /**
- * 验证闭环（写后自动验证）：写类工具成功后跑 .meowcode/verify.json 声明的命令
+ * 验证闭环（写后自动验证）：写类工具成功后跑 .klockcode/verify.json 声明的命令
  * （缺省启发式探测 typecheck），失败结果结构化压缩后由 runtime 附加到工具回执，
  * 模型在同一个回合内修复。所有函数都绝不 throw 阻断写流程。
  */
@@ -55,7 +55,7 @@ export const MAX_FEEDBACK_ERRORS = 20;
 const MAX_ERRORS_PER_FILE = 5;
 const MAX_GENERIC_FEEDBACK_CHARS = 3000;
 const GENERIC_HEAD_LINES = 20;
-const VERIFY_CONFIG_RELATIVE = path.join(".meowcode", "verify.json");
+const VERIFY_CONFIG_RELATIVE = path.join(".klockcode", "verify.json");
 const DEFAULT_MAX_FEEDBACK_PER_TURN = 2;
 
 // ---------- 配置加载 ----------
@@ -76,7 +76,7 @@ function normalizeCommandSpec(value: unknown): string | false | undefined {
 
 let lastConfigWarning: string | undefined;
 function warnInvalidConfig(reason: string): void {
-  const message = `[meowcode] .meowcode/verify.json ignored (${reason}); falling back to auto-detection.`;
+  const message = `[klockcode] .klockcode/verify.json ignored (${reason}); falling back to auto-detection.`;
   if (message === lastConfigWarning) return;
   lastConfigWarning = message;
   console.warn(message);
@@ -132,7 +132,7 @@ export async function detectTypecheckCommandInWorkspace(
 }
 
 /**
- * 读取并归一化 .meowcode/verify.json。每次验证时重读（配置改动下一笔写即生效）。
+ * 读取并归一化 .klockcode/verify.json。每次验证时重读（配置改动下一笔写即生效）。
  * 缺失 → 启发式探测；坏 JSON / 非 object / 越界 symlink → 回退启发式并 console.warn。
  * 单字段类型错只丢该字段，其余照常生效。绝不 throw。
  */

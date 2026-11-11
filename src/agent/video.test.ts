@@ -57,7 +57,7 @@ function fakeRunner(options?: { ffmpeg?: boolean; failRender?: boolean }): Proce
 const tempDirs: string[] = [];
 
 async function makeVideo(): Promise<{ dir: string; file: string }> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "meowcode-video-src-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "klockcode-video-src-"));
   tempDirs.push(dir);
   const file = path.join(dir, "clip.mp4");
   await fs.writeFile(file, Buffer.alloc(2048, 1));
@@ -67,7 +67,7 @@ async function makeVideo(): Promise<{ dir: string; file: string }> {
 /** 列出 os.tmpdir() 下残留的本工具临时目录。 */
 async function leftoverTempDirs(): Promise<string[]> {
   const entries = await fs.readdir(os.tmpdir());
-  return entries.filter((entry) => entry.startsWith("meowcode-video-"));
+  return entries.filter((entry) => entry.startsWith("klockcode-video-"));
 }
 
 afterEach(async () => {
@@ -142,7 +142,7 @@ describe("probeVideo (meta)", () => {
     const result = await probeVideo(file, "clip.mp4", fakeRunner({ ffmpeg: false }));
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.output).toContain("MEOWCODE_FFMPEG");
+    expect(result.output).toContain("KLOCKCODE_FFMPEG");
   });
 });
 
@@ -249,7 +249,7 @@ describe("temp directory hygiene", () => {
     for (const dir of dirs) {
       await expect(fs.stat(dir)).rejects.toThrow();
     }
-    // 不残留新的 meowcode-video-* 目录
+    // 不残留新的 klockcode-video-* 目录
     const after = await leftoverTempDirs();
     expect(after.length).toBeLessThanOrEqual(before.length);
     vi.restoreAllMocks();

@@ -18,7 +18,7 @@ async function writeSkill(
   frontmatter: string,
   body: string,
 ): Promise<void> {
-  const dir = path.join(root, ".meowcode", "skills", name);
+  const dir = path.join(root, ".klockcode", "skills", name);
   await fs.mkdir(dir, { recursive: true });
   await fs.writeFile(path.join(dir, "SKILL.md"), `---\n${frontmatter}\n---\n${body}`);
 }
@@ -37,8 +37,8 @@ describe("discoverSkills", () => {
     await writeSkill(user, "beta", "description: Beta skill\nalways: true", "beta body");
 
     const skills = await discoverSkills([
-      { dir: path.join(project, ".meowcode", "skills"), source: "project" },
-      { dir: path.join(user, ".meowcode", "skills"), source: "user" },
+      { dir: path.join(project, ".klockcode", "skills"), source: "project" },
+      { dir: path.join(user, ".klockcode", "skills"), source: "user" },
     ]);
 
     expect(skills.map((s) => [s.name, s.source, s.always])).toEqual([
@@ -51,7 +51,7 @@ describe("discoverSkills", () => {
     const project = await makeTempDir();
     await writeSkill(project, "dirname", "description: desc only", "body");
     const skills = await discoverSkills([
-      { dir: path.join(project, ".meowcode", "skills"), source: "project" },
+      { dir: path.join(project, ".klockcode", "skills"), source: "project" },
     ]);
     expect(skills[0]?.name).toBe("dirname");
   });
@@ -64,7 +64,7 @@ describe("buildSkillIndexText", () => {
         name: "alpha",
         description: "Alpha skill",
         always: false,
-        path: "D:/w/.meowcode/skills/alpha/SKILL.md",
+        path: "D:/w/.klockcode/skills/alpha/SKILL.md",
         source: "project",
         body: "b",
       },
@@ -72,12 +72,12 @@ describe("buildSkillIndexText", () => {
         name: "beta",
         description: "Beta skill",
         always: true,
-        path: "D:/w/.meowcode/skills/beta/SKILL.md",
+        path: "D:/w/.klockcode/skills/beta/SKILL.md",
         source: "user",
         body: "B".repeat(5000),
       },
     ]);
-    expect(text).toContain("- alpha: Alpha skill (read D:/w/.meowcode/skills/alpha/SKILL.md for details)");
+    expect(text).toContain("- alpha: Alpha skill (read D:/w/.klockcode/skills/alpha/SKILL.md for details)");
     expect(text).toContain("## Skill: beta");
     expect(text).toContain('[skill "beta" truncated]');
   });

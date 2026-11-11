@@ -179,7 +179,7 @@ export class LanguageServer {
         "initialize",
         {
           processId: process.pid,
-          clientInfo: { name: "MeowCode" },
+          clientInfo: { name: "KlockCode" },
           rootUri: this.rootUri,
           rootPath: this.root,
           capabilities: {

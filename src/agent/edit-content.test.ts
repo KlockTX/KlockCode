@@ -141,7 +141,7 @@ describe("line ending helpers", () => {
 });
 
 describe("readTextFile", () => {
-  const root = async () => await mkdtemp(path.join(tmpdir(), "meowcode-edit-content-"));
+  const root = async () => await mkdtemp(path.join(tmpdir(), "klockcode-edit-content-"));
 
   it("reports missing files instead of throwing", async () => {
     const dir = await root();

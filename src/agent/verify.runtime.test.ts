@@ -30,12 +30,12 @@ const { AgentRuntime } = await import("./runtime.js");
 const createdWorkspaces: string[] = [];
 
 async function makeWorkspace(config?: unknown): Promise<string> {
-  const workspace = await mkdtemp(path.join(tmpdir(), "meowcode-verify-runtime-"));
+  const workspace = await mkdtemp(path.join(tmpdir(), "klockcode-verify-runtime-"));
   createdWorkspaces.push(workspace);
   if (config !== undefined) {
-    await mkdir(path.join(workspace, ".meowcode"), { recursive: true });
+    await mkdir(path.join(workspace, ".klockcode"), { recursive: true });
     await writeFile(
-      path.join(workspace, ".meowcode", "verify.json"),
+      path.join(workspace, ".klockcode", "verify.json"),
       JSON.stringify(config),
       "utf8",
     );
@@ -99,7 +99,7 @@ afterEach(async () => {
 
 describe("post-write verification loop", () => {
   it("feeds typecheck failures back and completes after the model fixes the code", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-verify-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-verify-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace(VERIFY_CONFIG);
     const runtime = makeRuntime(sessionsDir);
@@ -162,7 +162,7 @@ describe("post-write verification loop", () => {
   });
 
   it("keeps tool output clean when verification passes", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-verify-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-verify-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace(VERIFY_CONFIG);
     const runtime = makeRuntime(sessionsDir);
@@ -197,7 +197,7 @@ describe("post-write verification loop", () => {
   });
 
   it("stops feeding failures after maxFeedbackPerTurn and asks the model to report honestly", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-verify-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-verify-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace(VERIFY_CONFIG);
     const runtime = makeRuntime(sessionsDir);
@@ -248,7 +248,7 @@ describe("post-write verification loop", () => {
   });
 
   it("respects the include extension filter", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-verify-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-verify-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace(VERIFY_CONFIG);
     const runtime = makeRuntime(sessionsDir);
@@ -286,7 +286,7 @@ describe("post-write verification loop", () => {
   });
 
   it("does not verify when no verify command can be detected", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-verify-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-verify-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace(undefined);
     const runtime = makeRuntime(sessionsDir);
@@ -324,7 +324,7 @@ describe("post-write verification loop", () => {
   });
 
   it("reports honestly on the first failure when maxFeedbackPerTurn is 0", async () => {
-    const sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-verify-sessions-"));
+    const sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-verify-sessions-"));
     createdWorkspaces.push(sessionsDir);
     const workspace = await makeWorkspace({ ...VERIFY_CONFIG, maxFeedbackPerTurn: 0 });
     const runtime = makeRuntime(sessionsDir);

@@ -39,7 +39,7 @@ describe("searchGrep stream framing", () => {
 
   beforeEach(async () => {
     spawnMock.mockReset();
-    workspace = await mkdtemp(path.join(tmpdir(), "meowcode-search-stream-"));
+    workspace = await mkdtemp(path.join(tmpdir(), "klockcode-search-stream-"));
     await writeFile(path.join(workspace, "a.txt"), "hello\n");
   });
 

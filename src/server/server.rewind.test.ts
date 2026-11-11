@@ -93,14 +93,14 @@ async function switchTo(filePath: string): Promise<void> {
 }
 
 beforeAll(async () => {
-  sessionsDir = await mkdtemp(path.join(tmpdir(), "meowcode-rewind-server-"));
-  workspace = await mkdtemp(path.join(tmpdir(), "meowcode-rewind-ws-"));
-  process.env.MEOWCODE_SESSIONS_DIR = sessionsDir;
-  process.env.MEOWCODE_PROVIDERS = JSON.stringify([
+  sessionsDir = await mkdtemp(path.join(tmpdir(), "klockcode-rewind-server-"));
+  workspace = await mkdtemp(path.join(tmpdir(), "klockcode-rewind-ws-"));
+  process.env.KLOCKCODE_SESSIONS_DIR = sessionsDir;
+  process.env.KLOCKCODE_PROVIDERS = JSON.stringify([
     { id: "p", name: "P", baseUrl: "http://127.0.0.1:1", model: "m" },
   ]);
-  process.env.MEOWCODE_PROVIDER_ID = "";
-  process.env.MEOWCODE_WORKSPACE = workspace;
+  process.env.KLOCKCODE_PROVIDER_ID = "";
+  process.env.KLOCKCODE_WORKSPACE = workspace;
   running = await startServer({ port: 0, token: TOKEN });
   const address = running.address();
   if (!address || typeof address === "string") throw new Error("Server has no TCP port.");
@@ -115,10 +115,10 @@ afterAll(async () => {
   }
   await rm(sessionsDir, { recursive: true, force: true }).catch(() => undefined);
   await rm(workspace, { recursive: true, force: true }).catch(() => undefined);
-  delete process.env.MEOWCODE_SESSIONS_DIR;
-  delete process.env.MEOWCODE_PROVIDERS;
-  delete process.env.MEOWCODE_PROVIDER_ID;
-  delete process.env.MEOWCODE_WORKSPACE;
+  delete process.env.KLOCKCODE_SESSIONS_DIR;
+  delete process.env.KLOCKCODE_PROVIDERS;
+  delete process.env.KLOCKCODE_PROVIDER_ID;
+  delete process.env.KLOCKCODE_WORKSPACE;
 });
 
 describe("session rewind api", () => {

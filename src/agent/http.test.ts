@@ -152,8 +152,8 @@ describe("mergeExtraHeaders", () => {
     expect(
       mergeExtraHeaders({ authorization: "Bearer old", "content-type": "application/json" }, {
         authorization: "Bearer new",
-        "x-title": "MeowCode",
+        "x-title": "KlockCode",
       }),
-    ).toEqual({ authorization: "Bearer new", "content-type": "application/json", "x-title": "MeowCode" });
+    ).toEqual({ authorization: "Bearer new", "content-type": "application/json", "x-title": "KlockCode" });
   });
 });

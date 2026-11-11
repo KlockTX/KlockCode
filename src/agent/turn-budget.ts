@@ -21,16 +21,16 @@ export const ALTERNATING_REPEAT_REMIND = 3;
 export const ALTERNATING_REPEAT_BLOCK = 4;
 
 export const TURN_WRAPUP_NOTE =
-  "[meowcode] Round budget: this turn is close to its limit. Stop exploring, make the minimal change that satisfies the request, verify it once, and report — including anything you could not finish.";
+  "[klockcode] Round budget: this turn is close to its limit. Stop exploring, make the minimal change that satisfies the request, verify it once, and report — including anything you could not finish.";
 
 export const turnLimitNote = (rounds: number) =>
-  `[meowcode] Turn stopped: this turn reached its ${rounds}-round budget without finishing. Nothing further was executed. Report what is done and what remains, then continue in a new message.`;
+  `[klockcode] Turn stopped: this turn reached its ${rounds}-round budget without finishing. Nothing further was executed. Report what is done and what remains, then continue in a new message.`;
 
 export const TURN_TOKEN_LIMIT_NOTE =
-  "[meowcode] Turn stopped: this turn exceeded its token budget (roughly three context windows of billed input plus output). Nothing further was executed. Report what is done and what remains, then continue in a new message.";
+  "[klockcode] Turn stopped: this turn exceeded its token budget (roughly three context windows of billed input plus output). Nothing further was executed. Report what is done and what remains, then continue in a new message.";
 
 export const alternatingReminder = (tool: string, count: number) =>
-  `[meowcode] Warning: ${tool} has been called with identical arguments ${count} times this turn, with no file change in between. The output cannot have changed. Use different arguments, or summarize what you have and move on.`;
+  `[klockcode] Warning: ${tool} has been called with identical arguments ${count} times this turn, with no file change in between. The output cannot have changed. Use different arguments, or summarize what you have and move on.`;
 
 export const alternatingBlockedOutput = (tool: string, count: number) =>
   `Blocked: ${tool} has already been called with identical arguments ${count} times this turn and no file changed in between, so a repeat cannot return anything new. Change the arguments or take a different approach.`;
