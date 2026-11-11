@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="./MeowCode.png" alt="MeowCode — A programming agent whose architecture you can tweak freely" width="100%">
+  <img src="./KlockCode.png" alt="KlockCode — A programming agent whose architecture you can tweak freely" width="100%">
 </p>
 
-<h1 align="center">MeowCode —— 可自由修改架构的Agent</h1>
+<h1 align="center">KlockCode —— 可自由修改架构的Agent</h1>
 
 <p align="center">
   <a href="https://meowcode.cn"><img alt="官网" src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-meowcode.cn-1f6feb?style=flat-square"></a>
@@ -13,6 +13,10 @@
   <img alt="Downloads" src="https://img.shields.io/github/downloads/MuLiuSaMa/MeowCode/total?style=flat-square&amp;logo=github&amp;label=%E4%B8%8B%E8%BD%BD%E9%87%8F&amp;color=2ea043">
   <img alt="QQ群 1128483595" src="https://img.shields.io/badge/QQ%E7%BE%A4-1128483595-12B7F5?style=flat-square&amp;logo=tencentqq&amp;logoColor=white">
 </p>
+
+> **KlockCode 是基于 [MeowCode](https://github.com/MuLiuSaMa/MeowCode) 的派生版本**，原作者 MuLiu_SaMa，继续以 **GPL-3.0-or-later** 发布。上方徽章与仓库链接指向上游项目，用于保留归属；代码内指向上游官网 / OAuth well-known / 公告的服务端点予以保留（部署派生版本时应替换为自有端点）；更新检查已指向 `KlockCode` 自有 Release 仓库，需自行创建。品牌信息统一由根 `package.json` 的 `brand` 字段维护。
+>
+> **从上游升级**：`MEOWCODE_*` 环境变量在启动时会自动回退映射到 `KLOCKCODE_*`（新值优先）；工作区 `.meowcode/` 与用户级 `~/.meowcode/` 不会被自动改写，请显式运行 `pnpm migrate:config <工作区> --apply`（默认预演）完成一次性复制，原目录保留可回滚。
 
 一个**架构可以随你改**的本地编程 Agent 桌面应用。
 
@@ -42,24 +46,26 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 -   浏览器：`browser_navigate` / `browser_click` / `browser_type` / `browser_screenshot` / `browser_snapshot` / `browser_back` / `browser_reload`；直接驱动内嵌页签的 guest webContents，快照只收可见可交互元素（最多 200 个）。
 -   网络与文档：`web_search` / `web_fetch`；PDF 直接解析（pdfjs-dist）；视频走 ffprobe + 9 帧 storyboard（约 1.5k token），长视频不硬塞上下文。
 -   电脑控制（内置插件，Windows）：`computer_screenshot` / `click` / `drag` / `scroll` / `key` / `type` / `wait` / `window_list` / `window_activate` / `clipboard`；截图走 desktopCapturer，输入走 PowerShell SendInput。
--   审批四档：`read-only` / `ask` / `auto` / `full`；写文件与命令默认弹出 diff 审批，审批期间文件被外部改动会自动刷新 diff。批准过的操作可以沉淀成项目级规则（`.meowcode/approvals.json`），文件一改规则自动失效。
--   写后验证：写类工具成功后自动跑 `.meowcode/verify.json` 声明的 typecheck / lint / test，失败结果压缩后附在工具回执里，模型同一回合内修复。
+-   审批四档：`read-only` / `ask` / `auto` / `full`；写文件与命令默认弹出 diff 审批，审批期间文件被外部改动会自动刷新 diff。批准过的操作可以沉淀成项目级规则（`.klockcode/approvals.json`），文件一改规则自动失效。
+-   命令沙箱（Windows，可选：设置 → 沙箱）：`run_command` 换成受限令牌 + 工作区 ACL 运行，OS 层拒绝，不靠命令自己守规矩。两档语义——`workspace-write` 只能写工作区与额外可写根（私有 temp 单独授权、执行后删除），`read-only` 不授予任何写权限（连工作区也不能改，也不再发放 temp）。写/删被拦会单独询问是否在沙箱外重试一次，不会静默放行。**默认关闭**：`workspace-write` 会往你的工作区写入常驻 ACL 与 Low 完整性标签，这是会改动仓库目录的副作用，所以由设置页显式确认开启；只读模式不写任何 ACL，可直接切换。切回完全访问后 ACL 保留但不再生效，设置页可一键撤销。真机回归：`pnpm test:sandbox`（会真改临时目录 ACL，故不并入 `pnpm test`）。
+-   写后验证：写类工具成功后自动跑 `.klockcode/verify.json` 声明的 typecheck / lint / test，失败结果压缩后附在工具回执里，模型同一回合内修复。
 -   子 Agent（`task`）：每回合最多 3 个并发，可后台运行，子 Agent 的写操作审批记在父会话上。
 
 **多 Agent 编排**
 
 -   13 种内置角色：`general` / `explore` / `planner` / `scoper` / `depth-prober` / `implementer` / `reviewer` / `verifier` / `fresh-verifier` / `juror` / `sweeper` / `goal-checker` / `custom`；探索、评审、裁决类角色强制只读。
 -   分层编排：T0 / T1 / T2 三层，lane 可并行推进、各自声明负责的路径与验证命令；门禁按序关账，关账角色互不复用，失败按 `onFail` 回跳到指定门禁。
--   编排即配置：角色、层级、门禁、工具白名单与系统提示词都写在可编辑架构图里（`.meowcode/harness.json`），改完保存即生效，不用重新编译。
+-   编排即配置：角色、层级、门禁、工具白名单与系统提示词都写在可编辑架构图里（`.klockcode/harness/<id>.json`，每张图一个文件，标准档另兼容旧版 `.klockcode/harness.json`）。改完存盘即生效——手改文件与编辑器保存都在**下一个回合边界**重新装载（先按 mtime/size 判断是否真改过，没改就不重读，不破坏提示缓存）；正在跑的治理 run 用旧图跑完再换，门禁不在中途被换掉。改坏了（JSON 非法）不会被悄悄换成内置图，当前图继续用。
+-   图存下来不报错，不等于跑起来按你画的跑。保存/打开架构图时服务端会做一次**语义 lint**，把"结构合法但运行时会静默失效"的情况逐条说出来：门禁没挂到任何 tier（再也不会执行）、门禁没有关账角色（admit 直接拒绝）、`tier-gate` 边没写 type 或画反了（序列器不读）、`loop-to` 目标不在本 tier 序列（运行时静默回退到第一道门禁）、同 tier 内 order 重复（顺序退化成字典序）、同类型两个角色节点（后者覆盖前者）、`tools` 白名单里有不存在的工具名、根 agent 缺失或重复。提示不阻断保存（删流程是你的自由），但会同时出现在编辑器顶栏与服务端日志里；内置三档种子零提示。
 
 **会话与工作区**
 
 -   三种模式：`default` 常规对话；`plan` 只读研究并输出计划文档，确认后才实施；`goal` 围绕目标用 `update_plan` 自主推进。
 -   本地持久化、断点恢复、上下文压缩、自动会话标题、分支回溯、检查点与整轮撤销。
 -   会话全文检索：影子索引 + size/mtime 增量，零模型调用，跨会话命中直接跳转。
--   Git 工作区：会话级 Worktree（独立检出 + 独立分支 + `refs/meowcode-backup/` 备份 ref，`node_modules` 回链原目录）；分支切换、提交、历史、逐文件 Diff 都在侧栏完成。
+-   Git 工作区：会话级 Worktree（独立检出 + 独立分支 + `refs/klockcode-backup/` 备份 ref，`node_modules` 回链原目录）；分支切换、提交、历史、逐文件 Diff 都在侧栏完成。
 -   导出：会话可导出为 HTML 或 Markdown。
--   项目指令：自动读取工作区根目录与 `.meowcode/AGENTS.md` 作为项目级指引。
+-   项目指令：自动读取工作区根目录与 `.klockcode/AGENTS.md` 作为项目级指引。
 
 **邮件**
 
@@ -73,6 +79,7 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 -   服务端原生压缩（Anthropic `compact_20260112` / OpenAI `/responses/compact`）。
 -   本地摘要双路径，复用前缀命中提示缓存。
 -   工具输出三层治理：淘汰 / 抽头尾 / 模型纪要。
+-   token 估算按字符类分别计权（CJK 1、其它非拉丁 0.5、长 base64/hash 0.6、其余 ASCII 0.25），上下文裁剪与工具输出截断共用同一把尺子。旧口径是"CJK 1、其余除以 4"，会把俄语/印地语低估一半、把 base64 低估 2.4 倍——两者都会直接撞上窗口上限。
 -   逐请求输出预算预检，按真实用量锚点收紧 `max_tokens`。
 -   PTC `run_code`：写操作与命令仍走宿主审批。
 -   MCP schema 瘦身与 8k 预算（保名字、按档砍描述）。
@@ -94,11 +101,11 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 
 **插件与技能**
 
--   进程内 TypeScript 插件、MCP 客户端、markdown 命令与 `SKILL.md` 技能；目录约定 `<工作区>/.meowcode/` 与全局 `~/.meowcode/`，项目级覆盖用户级。
+-   进程内 TypeScript 插件、MCP 客户端、markdown 命令与 `SKILL.md` 技能；目录约定 `<工作区>/.klockcode/` 与全局 `~/.klockcode/`，项目级覆盖用户级。
 -   内置市场 186 条（随市场更新）：168 个技能 / 8 个插件 / 10 个 MCP，聚合官方内置与 Trae、ZCode、Codex、DSH、Metis 等来源。
 -   第三方源接 ClawHub 与 SkillHub：分页、图标、下载量，单源故障只标记「暂不可用」，不拖垮列表；另有社区投稿与本地手动导入。
 -   一键连接：GitHub / Gitee / GitCode OAuth，用于社区投稿与 Git 平台凭据，不用自建应用、不用手填 Client ID。
--   三个内置插件：`computer-control`（电脑控制）、`claude-code-hooks`（把 Claude Code 的 hooks 配置翻译成 MeowCode hook，CC 生态脚本尽量零改动可用）、`extension-authoring`（`create_skill` / `create_plugin`，让 Agent 把新能力直接做成已安装的技能或插件，写插件前走审批）。
+-   三个内置插件：`computer-control`（电脑控制）、`claude-code-hooks`（把 Claude Code 的 hooks 配置翻译成 KlockCode hook，CC 生态脚本尽量零改动可用）、`extension-authoring`（`create_skill` / `create_plugin`，让 Agent 把新能力直接做成已安装的技能或插件，写插件前走审批）。
 
 **数据导入**
 
@@ -109,7 +116,7 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 
 自我学习不是微调模型，而是把每回合验证过的经验写成本地可审阅的制品，在后续会话里按需召回；所有产物都是 Markdown/JSON，随时可以查看、修改或删除。
 
--   **默认关闭**，在「设置 → 自我学习」开启，或启动时设置 `MEOWCODE_SELF_LEARNING=1`。开启后每回合结束自动复盘，把值得复用的经验沉淀下来。
+-   **默认关闭**，在「设置 → 自我学习」开启，或启动时设置 `KLOCKCODE_SELF_LEARNING=1`。开启后每回合结束自动复盘，把值得复用的经验沉淀下来。
 -   **先观察，再决定学不学**：只有用户纠正、明确要求记住、同一命令反复失败、失败后恢复、工具调用密集这几类回合才会触发学习；普通回合连学习模型都不调用，成本可控。
 -   **四类产物**：用户画像（沟通风格 / 严谨程度 / 自主权 / 编码风格 / 工具链 / 领域）、带触发条件的项目经验、可复用的 `SKILL.md` 技能，以及只记录、不执行的工作流建议。
 -   **试用期机制**：新条目先标记为 `tentative`；被召回后帮上忙达到 3 次且没有帮倒忙才转正为 `active`，帮倒忙 2 次自动退役为 `retired`（文件保留，不再召回）。另有 15% 的回合作为对照组，避免把噪声当成经验。
@@ -117,7 +124,7 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 -   **安全边界**：学习产物只允许 Markdown 与自有 JSON，绝不产出可执行工具、hook 或配置；路径越界、控制面工具、绕过验证、配置文件、密钥等内容会被守卫拒绝或脱敏。
 -   **可审计、可回滚**：每次学习都记入 `helped/hurt` 账本与 `journal.jsonl`，覆盖前保存历史快照；设置页可以回滚单条技能、重新放回试用期或删除，也能一键「立即整理」合并近义经验。
 -   **成本与熔断**：学习请求单飞执行，每日最多 40 次模型调用，学到的技能上限 20 个；任何一步失败都静默降级，不会影响当前对话。
--   **存放位置**：跨项目产物在 `~/.meowcode/learning/`，项目级产物在 `<工作区>/.meowcode/learning/`，项目级优先；包含 `profile.json`、`guidelines.json`、`skills/`、`ledger.json` 等文件，可直接查看和备份。
+-   **存放位置**：跨项目产物在 `~/.klockcode/learning/`，项目级产物在 `<工作区>/.klockcode/learning/`，项目级优先；包含 `profile.json`、`guidelines.json`、`skills/`、`ledger.json` 等文件，可直接查看和备份。
 
 ## 架构
 
@@ -202,7 +209,7 @@ pnpm build
 
 ```powershell
 # 1. 生成未封装目录（内部会 deploy agent 并做打包冒烟检查）
-pnpm --filter @meowcode/desktop exec electron-builder --win --x64 --dir
+pnpm --filter @klockcode/desktop exec electron-builder --win --x64 --dir
 
 # 2. 用 Inno Setup 编译安装包（自动查找 ISCC；已加入 PATH 时可直接 ISCC.exe installer.iss）
 $iscc = (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
@@ -214,17 +221,17 @@ if (-not $iscc) {
 ```
 
 -   输入：`desktop\release\win-unpacked\`
--   产物：`installer-output\MeowCode-<版本>-setup.exe`
--   版本号自动读取 `win-unpacked\MeowCode.exe`，由 `desktop/package.json` 的 `version` 决定
+-   产物：`installer-output\KlockCode-<版本>-setup.exe`
+-   版本号自动读取 `win-unpacked\KlockCode.exe`，由 `desktop/package.json` 的 `version` 决定
 
 ### 微软商店版（MSIX）
 
 ```powershell
-pnpm --filter @meowcode/desktop exec electron-builder --win --x64 --config electron-builder.msix.config.cjs
+pnpm --filter @klockcode/desktop exec electron-builder --win --x64 --config electron-builder.msix.config.cjs
 ```
 
--   产物：`desktop\release\MeowCode-<版本>-x64.msix`，**保持未签名**上传 Partner Center，商店入库时会重签
--   商店身份已写在 `desktop/electron-builder.msix.config.cjs`；换产品时可分别用 `MEOWCODE_MSIX_IDENTITY_NAME`、`MEOWCODE_MSIX_PUBLISHER`、`MEOWCODE_MSIX_PUBLISHER_DISPLAY_NAME` 覆盖
+-   产物：`desktop\release\KlockCode-<版本>-x64.msix`，**保持未签名**上传 Partner Center，商店入库时会重签
+-   商店身份已写在 `desktop/electron-builder.msix.config.cjs`；换产品时可分别用 `KLOCKCODE_MSIX_IDENTITY_NAME`、`KLOCKCODE_MSIX_PUBLISHER`、`KLOCKCODE_MSIX_PUBLISHER_DISPLAY_NAME` 覆盖
 -   本地侧载测试：`pnpm test:msix`；换 Logo 后先跑 `pnpm make:msix-assets`
 -   商店要求修订号为 0（版本自动补成 `x.y.z.0`），发新版本改 `desktop/package.json` 的 `version` 即可
 
@@ -248,14 +255,14 @@ assets          README 截图与配图
 
 | 变量 | 说明 |
 | --- | --- |
-| `MEOWCODE_PROVIDERS` | 服务商配置 JSON（由桌面端注入，读取后立即从环境变量删除） |
-| `MEOWCODE_SERVER_TOKEN` | 本地服务鉴权 token（未提供时随机生成） |
-| `MEOWCODE_SESSIONS_DIR` | 会话存储目录，默认 `%APPDATA%\MeowCode\agent\sessions` |
-| `MEOWCODE_WORKSPACE` | 默认工作区目录 |
-| `MEOWCODE_SERVER_PORT` | 服务监听端口，默认随机分配 |
-| `MEOWCODE_SELF_LEARNING` | 自我学习开关，`1` / `true` / `on` 开启；默认关闭 |
-| `MEOWCODE_CC_HOOKS_SCOPE` | Claude Code hooks 作用域：默认只跑 user 级（`user=true`、`workspace=false`） |
-| `MEOWCODE_HOOKS_RUN_MODE` | hooks 运行模式：`auto` 直接执行 / `ask` 每次询问 |
+| `KLOCKCODE_PROVIDERS` | 服务商配置 JSON（由桌面端注入，读取后立即从环境变量删除） |
+| `KLOCKCODE_SERVER_TOKEN` | 本地服务鉴权 token（未提供时随机生成） |
+| `KLOCKCODE_SESSIONS_DIR` | 会话存储目录，默认 `%APPDATA%\KlockCode\agent\sessions` |
+| `KLOCKCODE_WORKSPACE` | 默认工作区目录 |
+| `KLOCKCODE_SERVER_PORT` | 服务监听端口，默认随机分配 |
+| `KLOCKCODE_SELF_LEARNING` | 自我学习开关，`1` / `true` / `on` 开启；默认关闭 |
+| `KLOCKCODE_CC_HOOKS_SCOPE` | Claude Code hooks 作用域：默认只跑 user 级（`user=true`、`workspace=false`） |
+| `KLOCKCODE_HOOKS_RUN_MODE` | hooks 运行模式：`auto` 直接执行 / `ask` 每次询问 |
 
 ## 安全说明
 
@@ -264,6 +271,8 @@ assets          README 截图与配图
 -   浏览器宿主、电脑控制宿主、后台任务宿主都只监听 `127.0.0.1`，并用随机 token 校验请求。
 -   电脑控制启用插件即视为授权，不再逐次审批；不需要时在插件页停用。
 -   第三方市场里的技能与插件是任意代码，安装前请自行审查来源。
+-   `run_code` 的模型代码跑在**独立子进程**里（`node:vm` 只是"另一个 realm"，同进程内一次逃逸就拿走整个 agent）：子进程里只有 `meow.*` 桥和受限 console，没有 `require` / `process` / `import`，跨边界只传 JSON 字符串；超时与中止直接 kill 进程，堆上限 512MB——死循环、异步挂起、写爆内存死的都是沙箱，不是应用。
+-   插件（含第三方市场插件）是**进程内**执行的可信代码：`plugin.json` 的 `permissions` 约束它能注册什么（tools / hooks / commands / storage / rpc / ui / prompt），不约束它能碰到什么。没有 `plugin.json` 的旧插件拿到全开清单，加载时会打一行 `console.warn`。
 -   会话与密钥数据仅保存在本机。
 
 ## 参与贡献
@@ -275,7 +284,7 @@ assets          README 截图与配图
 ```powershell
 pnpm lint
 pnpm build:agent
-pnpm --filter @meowcode/desktop typecheck
+pnpm --filter @klockcode/desktop typecheck
 pnpm test
 ```
 

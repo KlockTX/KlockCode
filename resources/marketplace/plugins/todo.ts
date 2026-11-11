@@ -2,9 +2,9 @@
  * Todo 清单插件（适配自 metis-main examples/extensions/todo.ts）
  *
  * 注册 todo 工具（list/add/toggle/clear）供模型管理任务清单，状态经 api.storage 持久化
- * （metis 版存会话条目以支持分支，MeowCode 无分支语义，改用 KV 存储）；/todos 命令查看。
+ * （metis 版存会话条目以支持分支，KlockCode 无分支语义，改用 KV 存储）；/todos 命令查看。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 
 type Todo = { id: number; text: string; done: boolean };
 

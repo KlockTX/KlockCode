@@ -1,10 +1,10 @@
 /**
  * 危险命令门禁插件（适配自 metis-main examples/extensions/permission-gate.ts）
  *
- * 拦截高危 shell 命令（rm -rf / sudo / chmod 777 等）。MeowCode 无进程内确认 UI，
+ * 拦截高危 shell 命令（rm -rf / sudo / chmod 777 等）。KlockCode 无进程内确认 UI，
  * 默认直接 block 并把原因作为工具结果返回给模型；用 /gate allow 临时放行下一回合。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 
 const DANGEROUS = [
   /\brm\s+(-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r|--recursive\b.*--force\b|--force\b.*--recursive\b)/i,

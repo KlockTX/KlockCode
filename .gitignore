@@ -1,7 +1,7 @@
-# MeowCode app
+# KlockCode app
 node_modules/
 dist/
-/.meowcode/
+/.klockcode/
 coverage/
 desktop/dist/
 desktop/release/
@@ -18,7 +18,7 @@ desktop/.vite/
 .env.*
 *.log
 
-# Reference repositories, never part of MeowCode source
+# Reference repositories, never part of KlockCode source
 /cc-haha-main/
 /claude-code-main/
 /codex-main/
@@ -31,8 +31,8 @@ desktop/.vite/
 /AllAgent.NET-main/
 /LanAgent-main/
 
-# 社区插件市场收录仓库（独立 GitCode 仓库 MeowCode-Plugins 的本地工作副本）
-/MeowCode-Plugins/
+# 社区插件市场收录仓库（独立 GitCode 仓库 KlockCode-Plugins 的本地工作副本）
+/KlockCode-Plugins/
 
 # Local agent / editor state（本机 AI 工具的缓存与计划草稿，不进仓库）
 /.workbuddy/

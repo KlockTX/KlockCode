@@ -6,9 +6,9 @@ import { createPluginSystem } from "../src/plugins/index.js";
 
 const ws = await mkdtemp(path.join(tmpdir(), "meow-e2e-"));
 try {
-  await mkdir(path.join(ws, ".meowcode", "plugins"), { recursive: true });
-  await cp("examples/plugins/hello-tool.ts", path.join(ws, ".meowcode", "plugins", "hello-tool.ts"));
-  await cp("examples/plugins/guard.ts", path.join(ws, ".meowcode", "plugins", "guard.ts"));
+  await mkdir(path.join(ws, ".klockcode", "plugins"), { recursive: true });
+  await cp("examples/plugins/hello-tool.ts", path.join(ws, ".klockcode", "plugins", "hello-tool.ts"));
+  await cp("examples/plugins/guard.ts", path.join(ws, ".klockcode", "plugins", "guard.ts"));
 
   const system = await createPluginSystem({ workspace: ws, homeDir: ws });
   console.log(
@@ -25,7 +25,7 @@ try {
   );
   console.log("hello_greet registered:", hasDynamicTool("hello_greet"));
 
-  const result = await executeTool("hello_greet", { name: "MeowCode" }, ws);
+  const result = await executeTool("hello_greet", { name: "KlockCode" }, ws);
   console.log("execute result:", JSON.stringify(result));
 
   // hook 端到端：模拟危险命令被 guard 拦截

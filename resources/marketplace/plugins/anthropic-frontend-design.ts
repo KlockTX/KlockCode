@@ -4,7 +4,7 @@
  * 插件内嵌 frontend-design 技能全文：安装后输入 /frontend-design <需求>，
  * 命令会把技能准则和需求一起交给模型，不依赖另行安装技能。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 
 const FRONTEND_DESIGN_SKILL = `This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
 

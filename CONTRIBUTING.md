@@ -1,6 +1,6 @@
 # 贡献指南
 
-感谢你愿意为 MeowCode 花时间。这份文档说明本地怎么跑起来、代码放在哪、提交前要过哪些检查。
+感谢你愿意为 KlockCode 花时间。这份文档说明本地怎么跑起来、代码放在哪、提交前要过哪些检查。
 
 ## 开始之前
 
@@ -12,7 +12,7 @@
 
 ```powershell
 git clone https://github.com/MuLiuSaMa/MeowCode.git
-cd MeowCode
+cd KlockCode
 pnpm install
 pnpm dev:desktop
 ```
@@ -48,7 +48,7 @@ server 起来后任何 HTTP 客户端都能接，UI 不是必需品。
 ```powershell
 pnpm lint
 pnpm build:agent
-pnpm --filter @meowcode/desktop typecheck
+pnpm --filter @klockcode/desktop typecheck
 pnpm test
 ```
 
@@ -93,7 +93,7 @@ style(diff): diff 增删色换成更鲜艳的绿/红
 `.gitignore` 已经挡掉大部分，这里列出来是为了避免你误用 `git add -f`：
 
 - `node_modules/`、`dist/`、`desktop/release/`、`*.tsbuildinfo`
-- `.meowcode/`、`.workbuddy/`、`.trae/`、`.zcode/` 等本机 Agent/编辑器状态
+- `.klockcode/`、`.workbuddy/`、`.trae/`、`.zcode/` 等本机 Agent/编辑器状态
 - API Key、真实 token、会话 JSONL、含个人路径的日志
 - 体积很大的二进制，除非是该技能运行所必需（例如市场里 `deployment` 技能的 CLI）
 
@@ -105,9 +105,9 @@ style(diff): diff 增删色换成更鲜艳的绿/红
 
 **令牌永不进仓库**。`desktop/update-check.cjs` 按这个顺序查找：
 
-1. 环境变量 `MEOWCODE_GITCODE_UPDATE_TOKEN`
+1. 环境变量 `KLOCKCODE_GITCODE_UPDATE_TOKEN`
 2. `resources/gitcode-update-token.txt`（打包时随 `resources` 进安装包，`.gitignore` 已挡）
-3. `~/.meowcode/gitcode-update-token.txt`（仅本机生效）
+3. `~/.klockcode/gitcode-update-token.txt`（仅本机生效）
 
 三者都没有时退回匿名请求，功能可用但容易撞限流，错误提示会说明原因。
 
@@ -115,7 +115,7 @@ style(diff): diff 增删色换成更鲜艳的绿/红
 
 1. 改 `desktop/package.json` 的 `version`
 2. `pnpm package`
-3. 在 GitCode 建 Release，tag 用 `v<version>`，上传 `MeowCode-Setup-<version>.exe`
+3. 在 GitCode 建 Release，tag 用 `v<version>`，上传 `KlockCode-Setup-<version>.exe`
 4. 客户端拿 `app.getVersion()` 和 release 的 `tag_name` 按数字段比较
 
 内置令牌会随安装包分发，拿到安装包的人都能提取出来。请只授予该仓库的**只读**权限，不要用带写权限的私钥。
@@ -133,7 +133,7 @@ style(diff): diff 增删色换成更鲜艳的绿/红
 
 **Bug**
 
-- MeowCode 版本、Windows 版本
+- KlockCode 版本、Windows 版本
 - 用的哪个服务商与模型
 - 最小复现步骤（能稳定复现最好）
 - 期望行为 vs 实际行为
@@ -146,7 +146,7 @@ style(diff): diff 增删色换成更鲜艳的绿/红
 
 **安全漏洞**
 
-不要开公开 Issue。请通过官网 [meowcode.cn](https://meowcode.cn) 上的联系方式私下告知，我会尽快回复。
+不要开公开 Issue。请通过上游项目官网 [meowcode.cn](https://meowcode.cn) 上的联系方式私下告知原作者；派生版本自身的安全问题请直接联系本仓库维护者。
 
 ## 一点约定
 

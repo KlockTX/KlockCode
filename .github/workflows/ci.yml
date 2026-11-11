@@ -29,7 +29,33 @@ jobs:
       # 根 tsconfig 含 src/plugins 等全部非测试源码
       - run: pnpm build:agent
 
-      - run: pnpm --filter @meowcode/desktop typecheck
+      - run: pnpm --filter @klockcode/desktop typecheck
 
       # vitest.config.ts 在 CI 下自带 retry:1，吸收残余网络级抖动
       - run: pnpm test
+
+  sandbox:
+    # 沙箱 e2e 要真改临时目录 ACL、真起受限令牌，还会真的 spawn 进程：
+    # 单独一个 job，不掺进主测试（主测试必须能在任何机器上无副作用跑完）。
+    # continue-on-error：托管 runner 的 ACL/完整性标签行为还没观察够，
+    # 先当信号跑几轮；稳定绿后再去掉这一行，改成阻断门禁。
+    continue-on-error: true
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # e2e 跑的是编译产物 dist/agent/sandbox/windows/runner.js
+      - run: pnpm build:agent
+
+      - run: node scripts/sandbox-e2e.mjs

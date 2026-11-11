@@ -5,7 +5,7 @@
  *    失败只警告、不阻塞 dev 启动（应用运行中 exe 被占用属于预期情况）。
  *  - --force：强制重打（要求应用完全退出，含托盘）。
  *
- * 打标内容：electron.exe → MeowCode.exe（同步 electron/path.txt），替换图标组
+ * 打标内容：electron.exe → KlockCode.exe（同步 electron/path.txt），替换图标组
  * （resources/icon.ico），版本信息改为作者 MuLiuSaMa、中文（简体）。幂等可重复执行；
  * 写盘失败时保持原状（原始 exe 不动、path.txt 不改）。
  *
@@ -19,18 +19,24 @@ import { fileURLToPath } from "node:url";
 import * as ResEdit from "resedit";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"));
+/** 品牌单一来源：改 package.json 的 brand 即可，不必再改本脚本。 */
+const brandConfig = typeof pkg.brand === "object" && pkg.brand ? pkg.brand : {};
+const APP_NAME = String(brandConfig.name ?? pkg.name ?? "KlockCode");
+const BRAND_SLUG = String(brandConfig.slug ?? APP_NAME.toLowerCase());
+const EXE_NAME = `${APP_NAME}.exe`;
+
 const electronDir = path.join(repoRoot, "desktop", "node_modules", "electron");
 const distDir = path.join(electronDir, "dist");
 const pathFile = path.join(electronDir, "path.txt");
 const iconPath = path.join(repoRoot, "resources", "icon.ico");
-const iconHashFile = path.join(distDir, ".meowcode-brand.sha256");
+const iconHashFile = path.join(distDir, `.${BRAND_SLUG}-brand.sha256`);
 const sourceExe = path.join(distDir, "electron.exe");
-const targetExe = path.join(distDir, "MeowCode.exe");
+const targetExe = path.join(distDir, EXE_NAME);
 
 const force = process.argv.includes("--force");
 const soft = !force;
 
-const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"));
 const version = String(pkg.version ?? "1.1.0");
 const [vMajor = 0, vMinor = 0, vPatch = 0, vBuild = 0] = version
   .split(".")
@@ -57,11 +63,11 @@ function brandFingerprint() {
     .digest("hex");
 }
 
-/** path.txt 指向 MeowCode.exe、文件存在、且嵌入的图标/版本指纹与当前构建一致。 */
+/** path.txt 指向 KlockCode.exe、文件存在、且嵌入的图标/版本指纹与当前构建一致。 */
 function isBranded() {
   try {
     const target = fs.readFileSync(pathFile, "utf8").trim();
-    if (target !== "MeowCode.exe" || !fs.existsSync(targetExe)) return false;
+    if (target !== EXE_NAME || !fs.existsSync(targetExe)) return false;
     return fs.readFileSync(iconHashFile, "utf8").trim() === brandFingerprint();
   } catch {
     return false;
@@ -106,12 +112,12 @@ function applyBranding(buffer) {
       info.setStringValues(
         { lang: VERSION_LANG, codepage: 1200 },
         {
-          FileDescription: "MeowCode",
-          ProductName: "MeowCode",
+          FileDescription: APP_NAME,
+          ProductName: APP_NAME,
           CompanyName: AUTHOR,
           Author: AUTHOR,
-          InternalName: "MeowCode",
-          OriginalFilename: "MeowCode.exe",
+          InternalName: APP_NAME,
+          OriginalFilename: EXE_NAME,
           LegalCopyright: copyright,
         },
       );
@@ -142,7 +148,7 @@ function writeAtomic(file, buffer) {
 }
 
 function brand() {
-  // 优先用未打标的 electron.exe 作源（electron 重装/升级后）；否则用现有 MeowCode.exe 重打
+  // 优先用未打标的 electron.exe 作源（electron 重装/升级后）；否则用现有 KlockCode.exe 重打
   let source = null;
   if (fs.existsSync(sourceExe)) source = sourceExe;
   else if (fs.existsSync(targetExe)) source = targetExe;
@@ -151,7 +157,7 @@ function brand() {
   const branded = applyBranding(fs.readFileSync(source));
   writeAtomic(targetExe, branded);
   // 先落盘 exe 再改 path.txt：任何一步失败都不会让启动指向不存在的文件
-  fs.writeFileSync(pathFile, "MeowCode.exe", "utf8");
+  fs.writeFileSync(pathFile, EXE_NAME, "utf8");
   fs.writeFileSync(iconHashFile, brandFingerprint(), "utf8");
   if (source === sourceExe) {
     try {
@@ -180,6 +186,6 @@ try {
     process.exit(0);
   }
   console.error(`[brand-electron] 打标失败：${error.message}`);
-  console.error("[brand-electron] 请完全退出 MeowCode（含托盘）后重试。");
+  console.error("[brand-electron] 请完全退出 KlockCode（含托盘）后重试。");
   process.exit(1);
 }

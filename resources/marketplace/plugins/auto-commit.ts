@@ -4,7 +4,7 @@
  * turn_end 且状态 completed 时，若工作区是 git 仓库且有未提交改动，自动 commit。
  * **默认关闭**（自动提交有风险）：/autocommit on 开启、/autocommit off 关闭，状态持久化。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 import { execFile } from "node:child_process";
 
 function git(cwd: string, args: string[]): Promise<{ ok: boolean; output: string }> {

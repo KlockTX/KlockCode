@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const file = fileURLToPath(import.meta.url);
 const release = path.resolve(process.argv[2] || path.join(path.dirname(file), "../desktop/release/win-unpacked"));
-const executable = path.join(release, "MeowCode.exe");
+const executable = path.join(release, "KlockCode.exe");
 
 // 与生产环境一样使用同一份 Electron Node 运行时，避免 V8 IPC 序列化版本不同。
 if (!process.versions.electron) {
@@ -28,7 +28,7 @@ if (process.platform === "win32") {
   }
 }
 
-const temp = await fs.mkdtemp(path.join(os.tmpdir(), "meowcode-release-smoke-"));
+const temp = await fs.mkdtemp(path.join(os.tmpdir(), "klockcode-release-smoke-"));
 let child;
 try {
   const runtime = path.join(temp, "agent-server");
@@ -47,14 +47,14 @@ try {
     HOME: temp,
     USERPROFILE: temp,
     ELECTRON_RUN_AS_NODE: "1",
-    MEOWCODE_SERVER_TOKEN: token,
-    MEOWCODE_SERVER_PORT: "0",
-    MEOWCODE_HOME_DIR: temp,
-    MEOWCODE_WORKSPACE: workspace,
-    MEOWCODE_SESSIONS_DIR: path.join(temp, "sessions"),
-    MEOWCODE_LOG_DIR: path.join(temp, "logs"),
-    MEOWCODE_MEMORY: "0",
-    MEOWCODE_SELF_LEARNING: "0",
+    KLOCKCODE_SERVER_TOKEN: token,
+    KLOCKCODE_SERVER_PORT: "0",
+    KLOCKCODE_HOME_DIR: temp,
+    KLOCKCODE_WORKSPACE: workspace,
+    KLOCKCODE_SESSIONS_DIR: path.join(temp, "sessions"),
+    KLOCKCODE_LOG_DIR: path.join(temp, "logs"),
+    KLOCKCODE_MEMORY: "0",
+    KLOCKCODE_SELF_LEARNING: "0",
   };
   child = fork(path.join(runtime, "dist", "server", "server.js"), [], {
     execPath: executable,

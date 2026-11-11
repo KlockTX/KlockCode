@@ -4,8 +4,8 @@
  * 用法：pnpm tsx scripts/build-marketplace.ts
  * - 幂等可重跑：每次重建 skills/ mcp/ index.json；plugins/ 是手工维护源，不触碰
  * - 同名去重优先级：Trae(skills) > Trae(builtin) > Trae(plugins 内嵌) > ZCode(仓库/官方市场) > dsh > codex
- * - ZCode 子进程 hooks 一律丢弃（与 MeowCode 进程内 hook 形态不兼容）
- * - Trae ${connector.x.ACCESS_TOKEN} 凭据占位 → ${MEOWCODE_X_TOKEN}（expandEnvTemplates 只认纯环境变量名）
+ * - ZCode 子进程 hooks 一律丢弃（与 KlockCode 进程内 hook 形态不兼容）
+ * - Trae ${connector.x.ACCESS_TOKEN} 凭据占位 → ${KLOCKCODE_X_TOKEN}（expandEnvTemplates 只认纯环境变量名）
  */
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -41,10 +41,10 @@ type MarketItem = {
 };
 
 const TRAE = "C:/Users/MuLiu/.trae-cn";
-const ZCODE = "D:/MeowCode/ZCode-main/apps/zcode-cli/packages";
-const DSH = "D:/MeowCode/deepseek-harness-master/packages/skill/skill-office/assets";
-const CODEX = "D:/MeowCode/codex-main/codex-rs/skills/src/assets/samples";
-const REPO = "D:/MeowCode";
+const ZCODE = "D:/KlockCode/ZCode-main/apps/zcode-cli/packages";
+const DSH = "D:/KlockCode/deepseek-harness-master/packages/skill/skill-office/assets";
+const CODEX = "D:/KlockCode/codex-main/codex-rs/skills/src/assets/samples";
+const REPO = "D:/KlockCode";
 const OUT = path.join(REPO, "resources", "marketplace");
 
 // ---------------------------------------------------------------- 中文标题
@@ -859,7 +859,7 @@ async function collectTrae(): Promise<void> {
               if (field.toUpperCase() !== "ACCESS_TOKEN") {
                 throw new Error(`unhandled connector field ${connector}.${field}（请人工处理）`);
               }
-              const envVar = `MEOWCODE_${connector.toUpperCase()}_TOKEN`;
+              const envVar = `KLOCKCODE_${connector.toUpperCase()}_TOKEN`;
               requiresEnv.push(envVar);
               return `\${${envVar}}`;
             },
@@ -1217,13 +1217,13 @@ async function collectPlugins(): Promise<void> {
       name: "敏感文件保护",
       description: "阻止写入 .env、.git、node_modules 等敏感路径。",
       category: "开发工具",
-      usage: "安装后 `write_file` / `edit_file` / `multi_edit` 触碰以下路径片段会被拦截：`.env`、`.git/`、`node_modules/`、`.meowcode/`、`id_rsa`。\n\n`/protect` 查看规则，`/protect add <片段>` 追加，`/protect remove <片段>` 解除。",
+      usage: "安装后 `write_file` / `edit_file` / `multi_edit` 触碰以下路径片段会被拦截：`.env`、`.git/`、`node_modules/`、`.klockcode/`、`id_rsa`。\n\n`/protect` 查看规则，`/protect add <片段>` 追加，`/protect remove <片段>` 解除。",
     },
     "todo": {
       name: "Todo 清单",
       description: "todo 工具 + /todos 命令，任务清单持久化存储。",
       category: "效率提升",
-      usage: "注册 `todo` 工具（list / add / toggle / clear）供模型管理多步任务，状态持久化到 `~/.meowcode/plugin-data/todo.json`。\n\n`/todos` 随时查看当前清单。",
+      usage: "注册 `todo` 工具（list / add / toggle / clear）供模型管理多步任务，状态持久化到 `~/.klockcode/plugin-data/todo.json`。\n\n`/todos` 随时查看当前清单。",
     },
     "summarize": {
       name: "会话总结",
@@ -1241,7 +1241,7 @@ async function collectPlugins(): Promise<void> {
       name: "Git 检查点",
       description: "每回合结束用 git stash create 打检查点（不改工作树，默认关闭）。",
       category: "开发工具",
-      usage: "**默认关闭**。`/checkpoint on` 开启后，每回合结束用 `git stash create` + `stash store` 生成检查点提交——**不改动工作区文件**。\n\n`/checkpoint-now` 立即打点；回滚用 `git stash list` 找 `meowcode-checkpoint` 条目后 `git stash apply stash@{N}`。",
+      usage: "**默认关闭**。`/checkpoint on` 开启后，每回合结束用 `git stash create` + `stash store` 生成检查点提交——**不改动工作区文件**。\n\n`/checkpoint-now` 立即打点；回滚用 `git stash list` 找 `klockcode-checkpoint` 条目后 `git stash apply stash@{N}`。",
     },
     "anthropic-frontend-design": {
       name: "Anthropic 前端界面设计",
@@ -1318,9 +1318,9 @@ const MANUAL_MCPS: ManualMcp[] = [
     server: {
       command: "npx",
       args: ["-y", "@yangxt65535/gitcode-mcp@1.4.0"],
-      env: { GITCODE_TOKEN: "${MEOWCODE_GITCODE_TOKEN}" },
+      env: { GITCODE_TOKEN: "${KLOCKCODE_GITCODE_TOKEN}" },
     },
-    requiresEnv: ["MEOWCODE_GITCODE_TOKEN"],
+    requiresEnv: ["KLOCKCODE_GITCODE_TOKEN"],
   },
   {
     id: "js-reverse",
@@ -1372,9 +1372,9 @@ const MANUAL_MCPS: ManualMcp[] = [
     server: {
       url: "https://mcp.undermind.ai/mcp",
       timeoutMs: 600000,
-      headers: { Authorization: "Bearer ${MEOWCODE_UNDERMIND_TOKEN}" },
+      headers: { Authorization: "Bearer ${KLOCKCODE_UNDERMIND_TOKEN}" },
     },
-    requiresEnv: ["MEOWCODE_UNDERMIND_TOKEN"],
+    requiresEnv: ["KLOCKCODE_UNDERMIND_TOKEN"],
     brandIcon: { source: "resources/brand-icons/mcp-undermind.png", file: "mcp-undermind.png" },
   },
   {
@@ -1388,9 +1388,9 @@ const MANUAL_MCPS: ManualMcp[] = [
     server: {
       command: "npx",
       args: ["-y", "figma-context-mcp@1.5.0", "--stdio"],
-      env: { FIGMA_API_KEY: "${MEOWCODE_FIGMA_TOKEN}" },
+      env: { FIGMA_API_KEY: "${KLOCKCODE_FIGMA_TOKEN}" },
     },
-    requiresEnv: ["MEOWCODE_FIGMA_TOKEN"],
+    requiresEnv: ["KLOCKCODE_FIGMA_TOKEN"],
   },
   {
     id: "mobile-mcp",

@@ -3,7 +3,7 @@
   "server": {
     "url": "https://api.gitee.com/mcp",
     "headers": {
-      "Authorization": "Bearer ${MEOWCODE_GITEE_TOKEN}"
+      "Authorization": "Bearer ${KLOCKCODE_GITEE_TOKEN}"
     }
   }
 }

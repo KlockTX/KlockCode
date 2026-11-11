@@ -10,7 +10,7 @@
  * 日历、任务等写操作不在其中——有需要时经「手动添加」配置自建应用的 lark-mcp
  * （npx -y @larksuiteoapi/lark-mcp，APP_ID/APP_SECRET 环境变量传凭据）即可获得全量能力。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 
 /** 全部技能共用的前置说明与排错指引 */
 const FEISHU_COMMON = `## 前置条件与能力边界
@@ -18,7 +18,7 @@ const FEISHU_COMMON = `## 前置条件与能力边界
 - 需要已安装市场里的「飞书」MCP（官方托管，OAuth 登录）：装上后在 MCP 行点「授权」，浏览器登录飞书账号即可。
 - 工具前缀 \`mcp__feishu__*\`，覆盖：云文档搜索/创建/更新/评论/列表、取文件、搜索用户、搜索群、读群成员与群消息、已读状态。
 - **暂不覆盖**：发送消息、群管理写操作、多维表格、日历日程、任务待办（这些需要自建应用 + lark-mcp，可用「手动添加 MCP」自行配置）。
-- MeowCode 工具量大时部分工具会延迟加载（deferred）：动手前先 tool_search 关键词（"doc"、"search"、"im"、"message"）唤起工具；工具名以 tool_search 实际返回为准（官方端点在演进）。
+- KlockCode 工具量大时部分工具会延迟加载（deferred）：动手前先 tool_search 关键词（"doc"、"search"、"im"、"message"）唤起工具；工具名以 tool_search 实际返回为准（官方端点在演进）。
 - 工具缺失或用户需求超出上述能力时，如实说明当前 MCP 不支持该操作，不要编造工具。
 
 ## 常见问题

@@ -3,7 +3,7 @@
  *
  * /summarize 命令：生成一条结构化总结 prompt，让模型对当前会话做阶段小结。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 
 const factory: PluginFactory = (api) => {
   api.registerCommand({

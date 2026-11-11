@@ -1,15 +1,15 @@
 /**
  * 前缀缓存实测探针（手动跑，不进 CI）。
  *
- * 用途：新网关进入 MEASURED 白名单前先实测；验证 MeowCode 的保活 ping 在真实
+ * 用途：新网关进入 MEASURED 白名单前先实测；验证 KlockCode 的保活 ping 在真实
  * 端点真的读回（read=0 说明保活在白写）。分类口径照 hermes 的
  * cache_concurrency_probe.py（ideal / stuck / collapse），用来抓代理静默重排前缀。
  *
  * 用法（任一协议都走真实的 streamChatCompletion 序列化）：
- *   MEOWCODE_PROBE_BASE_URL=https://api.example.com/v1 \
- *   MEOWCODE_PROBE_API_KEY=sk-... \
- *   MEOWCODE_PROBE_MODEL=claude-sonnet-4-5 \
- *   MEOWCODE_PROBE_PROTOCOL=anthropic-messages \
+ *   KLOCKCODE_PROBE_BASE_URL=https://api.example.com/v1 \
+ *   KLOCKCODE_PROBE_API_KEY=sk-... \
+ *   KLOCKCODE_PROBE_MODEL=claude-sonnet-4-5 \
+ *   KLOCKCODE_PROBE_PROTOCOL=anthropic-messages \
  *   pnpm exec tsx scripts/cache-probe.ts
  *
  * 流程：稳定前缀（≥2048 token）连发两次 → 追加一轮工具调用再发 → 原样再发
@@ -19,20 +19,20 @@
 import type { ChatMessage, ProviderConfig, TokenUsage, ToolDefinition } from "../src/agent/types.js";
 import { streamChatCompletion } from "../src/agent/provider.js";
 
-const baseUrl = process.env.MEOWCODE_PROBE_BASE_URL;
-const apiKey = process.env.MEOWCODE_PROBE_API_KEY;
-const model = process.env.MEOWCODE_PROBE_MODEL;
-const protocol = (process.env.MEOWCODE_PROBE_PROTOCOL ?? "openai-chat-completions") as
+const baseUrl = process.env.KLOCKCODE_PROBE_BASE_URL;
+const apiKey = process.env.KLOCKCODE_PROBE_API_KEY;
+const model = process.env.KLOCKCODE_PROBE_MODEL;
+const protocol = (process.env.KLOCKCODE_PROBE_PROTOCOL ?? "openai-chat-completions") as
   | "openai-chat-completions"
   | "openai-responses"
   | "anthropic-messages";
 
 if (!apiKey) {
-  console.log("[probe] MEOWCODE_PROBE_API_KEY is not set; skipping (exit 0).");
+  console.log("[probe] KLOCKCODE_PROBE_API_KEY is not set; skipping (exit 0).");
   process.exit(0);
 }
 if (!baseUrl || !model) {
-  console.error("[probe] MEOWCODE_PROBE_BASE_URL and MEOWCODE_PROBE_MODEL are required.");
+  console.error("[probe] KLOCKCODE_PROBE_BASE_URL and KLOCKCODE_PROBE_MODEL are required.");
   process.exit(1);
 }
 
@@ -65,7 +65,7 @@ const provider: ProviderConfig = {
   baseUrl,
   model,
   apiKey,
-  promptCacheKey: "meowcode-probe:main",
+  promptCacheKey: "klockcode-probe:main",
 };
 
 type Sample = { label: string; usage?: TokenUsage };

@@ -30,14 +30,14 @@ const child = spawn(process.execPath, [path.join(REPO, "dist", "server", "server
   env: {
     ...process.env,
     USERPROFILE: fakeHome,
-    MEOWCODE_SERVER_PORT: String(PORT),
-    MEOWCODE_SESSIONS_DIR: sessionsDir,
-    MEOWCODE_WORKSPACE: REPO,
-    MEOWCODE_MARKETPLACE_DIR: path.join(REPO, "resources", "marketplace"),
-    MEOWCODE_PROVIDERS: JSON.stringify([
+    KLOCKCODE_SERVER_PORT: String(PORT),
+    KLOCKCODE_SESSIONS_DIR: sessionsDir,
+    KLOCKCODE_WORKSPACE: REPO,
+    KLOCKCODE_MARKETPLACE_DIR: path.join(REPO, "resources", "marketplace"),
+    KLOCKCODE_PROVIDERS: JSON.stringify([
       { id: "p1", name: "P", baseUrl: "http://127.0.0.1:9", model: "m", apiKey: "k" },
     ]),
-    MEOWCODE_SERVER_TOKEN: TOKEN,
+    KLOCKCODE_SERVER_TOKEN: TOKEN,
   },
   stdio: ["ignore", "ignore", "pipe"],
 });

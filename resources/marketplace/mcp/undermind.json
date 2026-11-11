@@ -4,7 +4,7 @@
     "url": "https://mcp.undermind.ai/mcp",
     "timeoutMs": 600000,
     "headers": {
-      "Authorization": "Bearer ${MEOWCODE_UNDERMIND_TOKEN}"
+      "Authorization": "Bearer ${KLOCKCODE_UNDERMIND_TOKEN}"
     }
   }
 }

@@ -1,11 +1,11 @@
 ---
 name: 技能与插件创作
-description: 当用户要求为 MeowCode 新建或修改技能（Skill）/插件，把一套流程、知识或工具沉淀成可复用能力时使用。
+description: 当用户要求为 KlockCode 新建或修改技能（Skill）/插件，把一套流程、知识或工具沉淀成可复用能力时使用。
 ---
 
 # 技能与插件创作
 
-把用户想要的能力做成 MeowCode 的技能或插件。创建后即为**已安装状态、可直接使用**；不要手写文件路径，也不要让用户自己复制文件。
+把用户想要的能力做成 KlockCode 的技能或插件。创建后即为**已安装状态、可直接使用**；不要手写文件路径，也不要让用户自己复制文件。
 
 ## 先确认
 
@@ -25,11 +25,11 @@ description: 当用户要求为 MeowCode 新建或修改技能（Skill）/插件
 - `body`：SKILL.md 正文（Markdown，不含 frontmatter）。
 - `always`：默认 false；true 会每轮全文内联，费 token，非必要不开。
 
-调用成功后写入 `~/.meowcode/skills/<id>/SKILL.md`，出现在输入框 `/` 面板与「我的」，下一轮对话起进入技能索引。
+调用成功后写入 `~/.klockcode/skills/<id>/SKILL.md`，出现在输入框 `/` 面板与「我的」，下一轮对话起进入技能索引。
 
 ## 创建插件：`create_plugin`
 
-插件包写入 `~/.meowcode/plugins/<id>/`：`plugin.json` + `index.ts`，可选 `ui/client.js`。**插件是任意代码，调用前会弹审批**，向用户说明用途后再调用。
+插件包写入 `~/.klockcode/plugins/<id>/`：`plugin.json` + `index.ts`，可选 `ui/client.js`。**插件是任意代码，调用前会弹审批**，向用户说明用途后再调用。
 
 写之前先调用 `plugin_authoring_guide`（可选 section：backend / client / pages / examples）取完整 API。**不要阅读仓库源码推断插件接口**，缺什么就查这份速查。
 

@@ -6,7 +6,7 @@
  * `git stash apply stash@{N}` 找回某个时点。
  * /checkpoint-now 立即打一个检查点；默认关闭，/checkpoint on 开启。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 import { execFile } from "node:child_process";
 
 function git(cwd: string, args: string[]): Promise<{ ok: boolean; output: string }> {
@@ -30,7 +30,7 @@ const factory: PluginFactory = (api) => {
     const create = await git(api.workspace, [
       "stash",
       "create",
-      `meowcode-checkpoint ${label}`,
+      `klockcode-checkpoint ${label}`,
     ]);
     if (!create.ok || create.output.length === 0) {
       return create.output.includes("You do not have the initial commit")
@@ -38,7 +38,7 @@ const factory: PluginFactory = (api) => {
         : `创建检查点失败：${create.output}`;
     }
     const sha = create.output;
-    const store = await git(api.workspace, ["stash", "store", "-m", `meowcode-checkpoint ${label}`, sha]);
+    const store = await git(api.workspace, ["stash", "store", "-m", `klockcode-checkpoint ${label}`, sha]);
     return store.ok ? `检查点已保存：${sha.slice(0, 10)}（${label}）` : `存储检查点失败：${store.output}`;
   }
 

@@ -1,6 +1,6 @@
 import { SessionStore } from "../src/agent/session-store.ts";
 
-const file = process.argv[2] ?? String.raw`C:\Users\MuLiu\AppData\Roaming\MeowCode\agent\sessions\2026-11-01T02-15-25-387Z_D-MeowCode.jsonl`;
+const file = process.argv[2] ?? String.raw`C:\Users\MuLiu\AppData\Roaming\KlockCode\agent\sessions\2026-11-01T02-15-25-387Z_D-KlockCode.jsonl`;
 const store = await SessionStore.load(file);
 console.log("id:", store.id);
 console.log("entries:", store.entries.length);

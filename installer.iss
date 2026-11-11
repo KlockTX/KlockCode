@@ -1,22 +1,22 @@
 ﻿; ============================================================================
-; MeowCode - Inno Setup 安装脚本（纯中文界面）
+; KlockCode - Inno Setup 安装脚本（纯中文界面）
 ;
 ; 输入：desktop\release\win-unpacked（electron-builder --dir 产物）
 ;   生成目录版：
 ;     pnpm build
-;     pnpm --filter @meowcode/desktop exec electron-builder --win --x64 --dir
+;     pnpm --filter @klockcode/desktop exec electron-builder --win --x64 --dir
 ; 编译：
 ;     & "C:\Program Files\Inno Setup 7\ISCC.exe" installer.iss
-; 产物：installer-output\MeowCode-<版本>-setup.exe
+; 产物：installer-output\KlockCode-<版本>-setup.exe
 ;
-; 版本号读取打包后的 MeowCode.exe，不用在脚本里重复维护。
+; 版本号读取打包后的 KlockCode.exe，不用在脚本里重复维护。
 ; ============================================================================
 
-#define MyAppName "MeowCode"
-#define MyAppVersion GetFileVersionString("desktop\release\win-unpacked\MeowCode.exe")
+#define MyAppName "KlockCode"
+#define MyAppVersion GetFileVersionString("desktop\release\win-unpacked\KlockCode.exe")
 #define MyAppPublisher "MuLiuSaMa"
 #define MyAppURL "https://github.com/MuLiuSaMa/MeowCode"
-#define MyAppExeName "MeowCode.exe"
+#define MyAppExeName "KlockCode.exe"
 #define MyBuildDir "desktop\release\win-unpacked"
 
 [Setup]
@@ -89,14 +89,14 @@ Name: "{group}\卸载 {#MyAppName}"; Filename: "{uninstallexe}"
 [Run]
 ; 安装完成页默认勾选“立即运行”。
 ; 应用清单是 asInvoker，而安装器以管理员运行：用 runasoriginaluser 以普通权限启动，
-; 避免把 MeowCode 连同终端、agent 一起提权。
+; 避免把 KlockCode 连同终端、agent 一起提权。
 Filename: "{app}\{#MyAppExeName}"; Description: "立即运行 {#MyAppName}"; Flags: postinstall nowait skipifsilent runasoriginaluser
 
 [UninstallDelete]
-; 应用数据默认保留（%APPDATA%\MeowCode 与 MeowCode-location.json），方便重装恢复。
+; 应用数据默认保留（%APPDATA%\KlockCode 与 KlockCode-location.json），方便重装恢复。
 ; 如需彻底清除，取消下面两行注释：
-; Type: filesandordirs; Name: "{userappdata}\MeowCode"
-; Type: files; Name: "{userappdata}\MeowCode-location.json"
+; Type: filesandordirs; Name: "{userappdata}\KlockCode"
+; Type: files; Name: "{userappdata}\KlockCode-location.json"
 
 [Code]
 // 卸载前检查主程序是否在运行：被占用时 Inno 会静默跳过文件删除。
@@ -109,7 +109,7 @@ var
   I: Integer;
 begin
   Result := False;
-  TempFile := ExpandConstant('{tmp}\meowcode-tasklist.txt');
+  TempFile := ExpandConstant('{tmp}\klockcode-tasklist.txt');
   if Exec(ExpandConstant('{cmd}'), '/C tasklist /FI "IMAGENAME eq {#MyAppExeName}" /NH > "' + TempFile + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
   begin
     if LoadStringsFromFile(TempFile, Lines) then
@@ -127,7 +127,7 @@ function InitializeUninstall(): Boolean;
 begin
   if IsAppRunning() then
   begin
-    MsgBox('MeowCode 正在运行，请先退出程序后再卸载。' + #13#10#13#10 +
+    MsgBox('KlockCode 正在运行，请先退出程序后再卸载。' + #13#10#13#10 +
       '否则安装目录下的文件会被占用，卸载无法完成清理。', mbError, MB_OK);
     Result := False;
     Exit;

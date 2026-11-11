@@ -8,7 +8,7 @@
       "--stdio"
     ],
     "env": {
-      "FIGMA_API_KEY": "${MEOWCODE_FIGMA_TOKEN}"
+      "FIGMA_API_KEY": "${KLOCKCODE_FIGMA_TOKEN}"
     }
   }
 }

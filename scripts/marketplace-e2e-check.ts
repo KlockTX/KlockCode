@@ -1,6 +1,6 @@
 /**
  * 插件市场端到端验证：起真 server（隔离 USERPROFILE 到临时目录）→
- * GET /marketplace → install skill/plugin/mcp → 验证 ~/.meowcode 落盘与生效 → uninstall → 关停。
+ * GET /marketplace → install skill/plugin/mcp → 验证 ~/.klockcode 落盘与生效 → uninstall → 关停。
  * 用法：pnpm build 后 npx tsx scripts/marketplace-e2e-check.ts
  */
 import { spawn } from "node:child_process";
@@ -27,7 +27,7 @@ async function api(pathname: string, init?: RequestInit): Promise<{ status: numb
 }
 
 function meow(...parts: string[]): string {
-  return path.join(fakeHome, ".meowcode", ...parts);
+  return path.join(fakeHome, ".klockcode", ...parts);
 }
 
 const child = spawn(process.execPath, [path.join(REPO, "dist", "server", "server.js")], {
@@ -35,14 +35,14 @@ const child = spawn(process.execPath, [path.join(REPO, "dist", "server", "server
   env: {
     ...process.env,
     USERPROFILE: fakeHome,
-    MEOWCODE_SERVER_PORT: String(PORT),
-    MEOWCODE_SESSIONS_DIR: sessionsDir,
-    MEOWCODE_WORKSPACE: REPO,
-    MEOWCODE_MARKETPLACE_DIR: path.join(REPO, "resources", "marketplace"),
-    MEOWCODE_PROVIDERS: JSON.stringify([
+    KLOCKCODE_SERVER_PORT: String(PORT),
+    KLOCKCODE_SESSIONS_DIR: sessionsDir,
+    KLOCKCODE_WORKSPACE: REPO,
+    KLOCKCODE_MARKETPLACE_DIR: path.join(REPO, "resources", "marketplace"),
+    KLOCKCODE_PROVIDERS: JSON.stringify([
       { id: "p1", name: "P", baseUrl: "http://127.0.0.1:1", model: "m", apiKey: "k" },
     ]),
-    MEOWCODE_SERVER_TOKEN: TOKEN,
+    KLOCKCODE_SERVER_TOKEN: TOKEN,
   },
   stdio: ["ignore", "ignore", "pipe"],
 });
@@ -102,7 +102,7 @@ if (ready) {
   });
   check("install skill git-commit", installSkill.status === 200);
   const skillLanded = existsSync(meow("skills", "git-commit", "SKILL.md"));
-  check("技能目录已复制到 ~/.meowcode/skills", skillLanded);
+  check("技能目录已复制到 ~/.klockcode/skills", skillLanded);
   const listAfterSkill = await api("/marketplace");
   const skillEntry = (listAfterSkill.body?.items ?? []).find((entry: { id: string }) => entry.id === "git-commit");
   check("list 中 git-commit installed=true", skillEntry?.installed === true);
@@ -115,7 +115,7 @@ if (ready) {
   });
   check("install plugin todo", installPlugin.status === 200);
   const pluginLanded = existsSync(meow("plugins", "todo.ts"));
-  check("插件文件已复制到 ~/.meowcode/plugins", pluginLanded);
+  check("插件文件已复制到 ~/.klockcode/plugins", pluginLanded);
   const plugins = await api("/plugins");
   const todoDescriptor = (plugins.body?.plugins ?? []).find(
     (entry: { id: string }) => entry.id === "todo",
@@ -131,8 +131,8 @@ if (ready) {
   check("install mcp github", installMcp.status === 200);
   const mcpConfig = JSON.parse(await readFile(meow("mcp.json"), "utf8"));
   check(
-    "mcp.json 已合并 github 条目（${MEOWCODE_GITHUB_TOKEN} 占位）",
-    mcpConfig.mcpServers?.github?.headers?.Authorization === "Bearer ${MEOWCODE_GITHUB_TOKEN}",
+    "mcp.json 已合并 github 条目（${KLOCKCODE_GITHUB_TOKEN} 占位）",
+    mcpConfig.mcpServers?.github?.headers?.Authorization === "Bearer ${KLOCKCODE_GITHUB_TOKEN}",
   );
 
   // 5) 卸载：skill 目录删除、mcp 键移除、plugin 摘除

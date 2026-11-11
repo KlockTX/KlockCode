@@ -13,7 +13,7 @@ https://meowcode.cn/.well-known/oauth-client
 ## 为什么要固定端口
 
 `redirect_uris` 写死 `http://127.0.0.1:53683/callback`。
-MeowCode 的 MCP OAuth 回环监听默认绑 `53683`，被占用时退回随机端口——那时需要 AS 支持RFC 8252 可变端口，否则授权会 `redirect_uri mismatch`。
+KlockCode 的 MCP OAuth 回环监听默认绑 `53683`，被占用时退回随机端口——那时需要 AS 支持RFC 8252 可变端口，否则授权会 `redirect_uri mismatch`。
 
 ## 新增远程 MCP（Undermind 类）清单
 

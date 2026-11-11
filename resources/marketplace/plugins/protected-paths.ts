@@ -4,10 +4,10 @@
  * 阻止 write_file / edit_file / multi_edit 触碰敏感路径（.env、.git、node_modules 等）。
  * 可用 /protect 查看清单，/protect add <片段> 追加。
  */
-import type { PluginFactory } from "meowcode";
+import type { PluginFactory } from "klockcode";
 
 const WRITE_TOOLS = new Set(["write_file", "edit_file", "multi_edit"]);
-const DEFAULT_PROTECTED = [".env", ".git/", "node_modules/", ".meowcode/", "id_rsa"];
+const DEFAULT_PROTECTED = [".env", ".git/", "node_modules/", ".klockcode/", "id_rsa"];
 
 const factory: PluginFactory = (api) => {
   const protectedPaths: string[] = [...DEFAULT_PROTECTED];

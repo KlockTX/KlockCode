@@ -1,5 +1,5 @@
 {
-  "client_name": "MeowCode",
+  "client_name": "KlockCode",
   "client_uri": "https://meowcode.cn",
   "redirect_uris": ["http://127.0.0.1/callback", "http://localhost/callback"],
   "grant_types": ["authorization_code", "refresh_token"],

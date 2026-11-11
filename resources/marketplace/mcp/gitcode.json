@@ -7,7 +7,7 @@
       "@yangxt65535/gitcode-mcp@1.4.0"
     ],
     "env": {
-      "GITCODE_TOKEN": "${MEOWCODE_GITCODE_TOKEN}"
+      "GITCODE_TOKEN": "${KLOCKCODE_GITCODE_TOKEN}"
     }
   }
 }

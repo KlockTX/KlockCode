@@ -2584,7 +2584,7 @@
       "entry": "plugins/git-checkpoint.ts",
       "entryKind": "file",
       "icon": "icons/git-checkpoint.svg",
-      "usage": "**默认关闭**。`/checkpoint on` 开启后，每回合结束用 `git stash create` + `stash store` 生成检查点提交——**不改动工作区文件**。\n\n`/checkpoint-now` 立即打点；回滚用 `git stash list` 找 `meowcode-checkpoint` 条目后 `git stash apply stash@{N}`。"
+      "usage": "**默认关闭**。`/checkpoint on` 开启后，每回合结束用 `git stash create` + `stash store` 生成检查点提交——**不改动工作区文件**。\n\n`/checkpoint-now` 立即打点；回滚用 `git stash list` 找 `klockcode-checkpoint` 条目后 `git stash apply stash@{N}`。"
     },
     {
       "id": "permission-gate",
@@ -2616,7 +2616,7 @@
       "entry": "plugins/protected-paths.ts",
       "entryKind": "file",
       "icon": "icons/protected-paths.svg",
-      "usage": "安装后 `write_file` / `edit_file` / `multi_edit` 触碰以下路径片段会被拦截：`.env`、`.git/`、`node_modules/`、`.meowcode/`、`id_rsa`。\n\n`/protect` 查看规则，`/protect add <片段>` 追加，`/protect remove <片段>` 解除。"
+      "usage": "安装后 `write_file` / `edit_file` / `multi_edit` 触碰以下路径片段会被拦截：`.env`、`.git/`、`node_modules/`、`.klockcode/`、`id_rsa`。\n\n`/protect` 查看规则，`/protect add <片段>` 追加，`/protect remove <片段>` 解除。"
     },
     {
       "id": "feishu",
@@ -2664,7 +2664,7 @@
       "entry": "plugins/todo.ts",
       "entryKind": "file",
       "icon": "icons/todo.svg",
-      "usage": "注册 `todo` 工具（list / add / toggle / clear）供模型管理多步任务，状态持久化到 `~/.meowcode/plugin-data/todo.json`。\n\n`/todos` 随时查看当前清单。"
+      "usage": "注册 `todo` 工具（list / add / toggle / clear）供模型管理多步任务，状态持久化到 `~/.klockcode/plugin-data/todo.json`。\n\n`/todos` 随时查看当前清单。"
     },
     {
       "id": "figma-context",
@@ -2684,7 +2684,7 @@
       "entryKind": "file",
       "icon": "icons/mcp-figma-context.svg",
       "requiresEnv": [
-        "MEOWCODE_FIGMA_TOKEN"
+        "KLOCKCODE_FIGMA_TOKEN"
       ]
     },
     {
@@ -2725,7 +2725,7 @@
       "entryKind": "file",
       "icon": "icons/mcp-gitcode.svg",
       "requiresEnv": [
-        "MEOWCODE_GITCODE_TOKEN"
+        "KLOCKCODE_GITCODE_TOKEN"
       ]
     },
     {
@@ -2746,7 +2746,7 @@
       "entryKind": "file",
       "icon": "icons/mcp-gitee.svg",
       "requiresEnv": [
-        "MEOWCODE_GITEE_TOKEN"
+        "KLOCKCODE_GITEE_TOKEN"
       ]
     },
     {
@@ -2767,7 +2767,7 @@
       "entryKind": "file",
       "icon": "icons/mcp-github.svg",
       "requiresEnv": [
-        "MEOWCODE_GITHUB_TOKEN"
+        "KLOCKCODE_GITHUB_TOKEN"
       ]
     },
     {
@@ -2828,7 +2828,7 @@
       "entryKind": "file",
       "icon": "icons/mcp-undermind.png",
       "requiresEnv": [
-        "MEOWCODE_UNDERMIND_TOKEN"
+        "KLOCKCODE_UNDERMIND_TOKEN"
       ]
     },
     {

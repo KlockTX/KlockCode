@@ -1,5 +1,5 @@
 ﻿<#
-MeowCode MSIX 本地测试签名 / 侧载安装。
+KlockCode MSIX 本地测试签名 / 侧载安装。
 
 商店提交不需要这一步（Partner Center 入库时会重签）。这里只解决本地安装：
  1. 自签名证书的 Subject 必须与包清单的 Publisher 完全一致；
@@ -78,8 +78,8 @@ if ($Uninstall) {
 # ---------- 证书（Subject 与 Publisher 逐字节一致） ----------
 $outDir = Join-Path $root "desktop\release\msix-test-sign"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-$cerPath = Join-Path $outDir "MeowCode-test.cer"
-$pfxPath = Join-Path $outDir "MeowCode-test.pfx"
+$cerPath = Join-Path $outDir "KlockCode-test.cer"
+$pfxPath = Join-Path $outDir "KlockCode-test.pfx"
 
 $cert = Get-ChildItem Cert:\CurrentUser\My | Where-Object {
   $_.Subject -eq $publisher -and $_.HasPrivateKey -and $_.NotAfter -gt (Get-Date)
@@ -95,7 +95,7 @@ if (-not $cert) {
     -KeyExportPolicy Exportable `
     -NotAfter (Get-Date).AddYears(3) `
     -CertStoreLocation "Cert:\CurrentUser\My" `
-    -FriendlyName "MeowCode MSIX test signing"
+    -FriendlyName "KlockCode MSIX test signing"
   $created = $true
 } else {
   Write-Host "[msix-test] 复用已存在的同发布者证书: $($cert.FriendlyName)"
