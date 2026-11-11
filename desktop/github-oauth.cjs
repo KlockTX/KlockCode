@@ -35,7 +35,7 @@ async function postForm(url, params, fetchImpl = fetch) {
     headers: {
       accept: "application/json",
       "content-type": "application/x-www-form-urlencoded",
-      "user-agent": "MeowCode",
+      "user-agent": "KlockCode",
     },
     body: new URLSearchParams(params).toString(),
   });

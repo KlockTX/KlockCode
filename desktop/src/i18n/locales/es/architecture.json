@@ -73,6 +73,10 @@
     "connectPickNode": "Selecciona primero un nodo y luego haz clic en «Conectar»",
     "dirty": "Hay cambios sin guardar"
   },
+  "findings": {
+    "title": "Avisos semánticos ({{n}})",
+    "dismiss": "Descartar"
+  },
   "toolbar": {
     "addTier": "Nivel",
     "addGate": "Control",

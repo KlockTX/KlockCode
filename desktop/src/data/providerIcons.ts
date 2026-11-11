@@ -101,7 +101,7 @@ import venice from "../assets/provider-icons/model-provider-venice.svg";
  *    —— 按主题直接选对应文件。
  *
  * 没有图片资源的服务商用 Simple Icons / Tabler 的单色字形（currentColor，两个主题都自适应）。
- * 认不出品牌的**模型**统一退回 `meow`（MeowCode 自己的应用图标）。
+ * 认不出品牌的**模型**统一退回 `meow`（KlockCode 自己的应用图标）。
  */
 export type ProviderIcon =
   | { kind: "img"; src: string; invert: boolean }
@@ -192,9 +192,9 @@ const ICONS: Record<string, IconSpec> = {
   snowflake: { kind: "single", src: snowflake },
   microsoft: { kind: "single", src: microsoft },
   aya: { kind: "single", src: aya },
-  // 自定义服务商入口：用 MeowCode 应用 Logo
+  // 自定义服务商入口：用 KlockCode 应用 Logo
   custom: { kind: "single", src: appIcon },
-  /** 认不出的模型统一退回 MeowCode 自己的 Logo */
+  /** 认不出的模型统一退回 KlockCode 自己的 Logo */
   meow: { kind: "single", src: appIcon },
 };
 
@@ -290,7 +290,7 @@ function modelTokens(model: string): string[] {
  * 匹配顺序：
  *  1. 模型名（或其中某个被分隔开的词）以品牌词开头 —— 最准，保留原有行为；
  *  2. 品牌词出现在模型名任意位置 —— 只对足够独特的词生效（见 MODEL_ICON_RULES 的 anywhere）。
- * 返回 undefined 表示认不出品牌，调用方用 `"meow"`（MeowCode 自己的 Logo）兜底。
+ * 返回 undefined 表示认不出品牌，调用方用 `"meow"`（KlockCode 自己的 Logo）兜底。
  */
 export function modelIconKey(model: string): string | undefined {
   const trimmed = model.trim().toLowerCase();

@@ -15,15 +15,15 @@ import { Spinner } from "../ui/Spinner";
 import { Toggle } from "../ui/Toggle";
 import "./SandboxSection.css";
 
-type SandboxMode = "full-access" | "workspace-write";
+type SandboxMode = "full-access" | "workspace-write" | "read-only";
 
 /**
- * 沙箱分区：只保留「沙箱模式」与「文件删除确认」两行。
+ * 沙箱分区：「沙箱模式」与「文件删除确认」两行。
  *
- * 模式映射：完全访问 = 后端 enabled:false；工作区写入 = enabled:true + 受限令牌。
- * 文件删除确认只在工作区写入模式下生效；完全访问模式显示为关闭且不可操作。
- * 额外可写根 / 私有 temp / 授权超时仍存在 settings.json 与 server 策略里，
- * 由工作区写入模式自动使用（本轮不暴露 UI）。
+ * 模式映射：完全访问 = enabled:false；工作区写入 / 只读 = enabled:true + 对应 mode。
+ * 只读模式不写任何 ACL（连工作区都不授权），所以不需要风险确认弹窗；
+ * 工作区写入会改动工作区 ACL，必须先看风险说明。
+ * 文件删除确认只在工作区写入模式下有意义；其余两种显示为关闭且不可操作。
  */
 export function SandboxSection({ onToast }: { onToast: (text: string) => void }) {
   const { t } = useTranslation("settings");
@@ -79,7 +79,11 @@ export function SandboxSection({ onToast }: { onToast: (text: string) => void })
       setStatus(next);
       await persist(next);
       if (next.probeDurationMs !== undefined) {
-        onToast(t("sandbox.enabled", { ms: next.probeDurationMs }));
+        onToast(
+          t(next.mode === "read-only" ? "sandbox.enabledReadOnly" : "sandbox.enabled", {
+            ms: next.probeDurationMs,
+          }),
+        );
       }
     } catch (error) {
       setStatus(previous);
@@ -99,7 +103,7 @@ export function SandboxSection({ onToast }: { onToast: (text: string) => void })
     );
   }
 
-  const mode: SandboxMode = status.enabled ? "workspace-write" : "full-access";
+  const mode: SandboxMode = status.enabled ? status.mode : "full-access";
   const modeOptions: Array<CustomSelectOption<SandboxMode>> = [
     {
       value: "full-access",
@@ -111,13 +115,24 @@ export function SandboxSection({ onToast }: { onToast: (text: string) => void })
       label: t("sandbox.modeWorkspace"),
       description: t("sandbox.modeWorkspaceDesc"),
     },
+    {
+      value: "read-only",
+      label: t("sandbox.modeReadOnly"),
+      description: t("sandbox.modeReadOnlyDesc"),
+    },
   ];
 
   const changeMode = (next: SandboxMode) => {
     if (next === mode) return;
     if (next === "workspace-write") {
+      // 会改写工作区 ACL：先看风险说明再开
       setPendingMode(next);
       setConfirmEnable(true);
+      return;
+    }
+    if (next === "read-only") {
+      // 不写 ACL、不发 temp，只是把命令降成只读——不需要风险确认
+      void apply({ enabled: true, mode: "read-only" });
       return;
     }
     void apply({ enabled: false });
@@ -126,7 +141,7 @@ export function SandboxSection({ onToast }: { onToast: (text: string) => void })
   const confirmSwitch = () => {
     setConfirmEnable(false);
     if (pendingMode === "workspace-write") {
-      void apply({ enabled: true });
+      void apply({ enabled: true, mode: "workspace-write" });
     }
     setPendingMode(null);
   };
@@ -145,7 +160,7 @@ export function SandboxSection({ onToast }: { onToast: (text: string) => void })
             options={modeOptions}
             onChange={changeMode}
             ariaLabel={t("sandbox.modeField")}
-            icon={mode === "workspace-write" ? <LuShieldCheck size={14} /> : <LuShield size={14} />}
+            icon={mode === "full-access" ? <LuShield size={14} /> : <LuShieldCheck size={14} />}
             className="mc-sandbox__mode"
             disabled={busy || !status.supported}
           />
@@ -153,9 +168,9 @@ export function SandboxSection({ onToast }: { onToast: (text: string) => void })
 
         <FieldRow label={t("sandbox.deleteField")} hint={t("sandbox.deleteDesc")}>
           <Toggle
-            checked={status.enabled ? status.confirmDelete : false}
+            checked={status.enabled && status.mode === "workspace-write" && status.confirmDelete}
             onChange={(value) => void apply({ confirmDelete: value })}
-            disabled={busy || !status.enabled}
+            disabled={busy || !status.enabled || status.mode !== "workspace-write"}
             label={t("sandbox.deleteField")}
           />
         </FieldRow>

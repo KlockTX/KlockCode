@@ -14,7 +14,7 @@
     "title": "選擇語言",
     "label": "語言",
     "previewLabel": "語言預覽",
-    "previewText": "你好，歡迎使用 MeowCode。",
+    "previewText": "你好，歡迎使用 KlockCode。",
     "systemMeta": "跟隨系統 · 目前為 {{language}}",
     "selectedMeta": "介面語言 · {{language}}"
   },
@@ -51,7 +51,7 @@
   },
   "finish": {
     "title": "準備就緒",
-    "desc": "設定已完成，現在可以開始使用 MeowCode 了。",
+    "desc": "設定已完成，現在可以開始使用 KlockCode 了。",
     "noProvider": "尚未設定模型，可以稍後在設定 → 模型中新增。"
   }
 }

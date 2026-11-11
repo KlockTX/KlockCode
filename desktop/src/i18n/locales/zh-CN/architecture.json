@@ -73,6 +73,10 @@
     "connectPickNode": "先选中一个节点，再点「连线」",
     "dirty": "有未保存修改"
   },
+  "findings": {
+    "title": "语义提示（{{n}} 条）",
+    "dismiss": "知道了"
+  },
   "toolbar": {
     "addTier": "层级",
     "addGate": "门禁",

@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "Navigation des Plugin-Marktplatzes",
     "heading": "Plugin-Marktplatz",
-    "subtitle": "Plugins, Skills und MCP entdecken und installieren und MeowCode erweitern.",
+    "subtitle": "Plugins, Skills und MCP entdecken und installieren und KlockCode erweitern.",
     "back": "Zurück zum Chat"
   },
   "entryType": {
@@ -131,7 +131,7 @@
     "disconnect": {
       "desc": "Das auf diesem Rechner gespeicherte {{platform}}-Token wird gelöscht und die {{platform}}-MCP-Verbindung sofort getrennt.",
       "envHint": "Um das Token endgültig ungültig zu machen, löschen Sie es in den Zugriffstoken-Einstellungen der jeweiligen Plattform.",
-      "platformHint": "Der Autorisierungseintrag auf der Plattform wird nicht automatisch widerrufen; zum vollständigen Widerruf entfernen Sie MeowCode in den {{platform}}-Einstellungen → Autorisierte Apps.",
+      "platformHint": "Der Autorisierungseintrag auf der Plattform wird nicht automatisch widerrufen; zum vollständigen Widerruf entfernen Sie KlockCode in den {{platform}}-Einstellungen → Autorisierte Apps.",
       "title": "{{platform}}-Autorisierung trennen"
     },
     "empty": {
@@ -147,7 +147,7 @@
     "pluginConfirm": {
       "accept": "Risiko verstanden — installieren",
       "checkSource": "Prüfen Sie die Quelle, bevor Sie installieren.",
-      "desc": "Community-Plugins sind TypeScript-Quellcode. Nach der Installation laufen sie direkt im MeowCode-Agent-Prozess mit denselben Rechten wie offizielle Plugins (Dateien lesen und schreiben, Befehle ausführen usw.). MeowCode isoliert Community-Plugins nicht in einer Sandbox.",
+      "desc": "Community-Plugins sind TypeScript-Quellcode. Nach der Installation laufen sie direkt im KlockCode-Agent-Prozess mit denselben Rechten wie offizielle Plugins (Dateien lesen und schreiben, Befehle ausführen usw.). KlockCode isoliert Community-Plugins nicht in einer Sandbox.",
       "homepage": "Projektseite",
       "title": "Community-Plugin „{{name}}“ installieren?"
     },
@@ -173,9 +173,9 @@
     "connectTitle": "Über GitHub-OAuth verbinden",
     "connected": "GitHub ist verbunden, GitHub-MCP-Tools werden geladen.",
     "copyCodeAria": "Gerätecode kopieren",
-    "desc": "MeowCode über den GitHub-OAuth-Gerätefluss autorisieren. Das Token wird verschlüsselt auf diesem Rechner gespeichert und nur für GitHub-MCP verwendet.",
+    "desc": "KlockCode über den GitHub-OAuth-Gerätefluss autorisieren. Das Token wird verschlüsselt auf diesem Rechner gespeichert und nur für GitHub-MCP verwendet.",
     "deviceFlowStep": "Aktivieren Sie Enable device flow in den <0>GitHub App-Einstellungen</0>",
-    "moduleMissing": "Das GitHub-Anmeldemodul ist noch nicht geladen. Starten Sie MeowCode vollständig neu und versuchen Sie es erneut.",
+    "moduleMissing": "Das GitHub-Anmeldemodul ist noch nicht geladen. Starten Sie KlockCode vollständig neu und versuchen Sie es erneut.",
     "openInBrowser": "Im Browser öffnen",
     "permissions": "Vergeben Sie bei Bedarf Repository-Rechte wie Contents, Issues, Pull requests und Actions",
     "prereq": "Prüfen Sie vor der Autorisierung, ob die GitHub App:",
@@ -192,7 +192,7 @@
     "awaitingBrowser": "Warte auf die Autorisierung im Browser…",
     "awaitingUser": "Warten, bis Sie die Autorisierung im Browser abschließen…",
     "cancelAuth": "Autorisierung abbrechen",
-    "clientIdHint": "Voreingestellt ist die Client-ID des in MeowCode eingebetteten App. Wenn Sie eine eigene App nutzen, ändern Sie dieses Feld und das Secret unten gemeinsam auf die Werte von der App-Seite — ein unpassendes Paar schlägt den Token-Austausch fehl (401).",
+    "clientIdHint": "Voreingestellt ist die Client-ID des in KlockCode eingebetteten App. Wenn Sie eine eigene App nutzen, ändern Sie dieses Feld und das Secret unten gemeinsam auf die Werte von der App-Seite — ein unpassendes Paar schlägt den Token-Austausch fehl (401).",
     "clientIdLabel": "Client-ID (muss zur derselben App wie das Client Secret unten gehören)",
     "clientIdPlaceholder": "Client-ID der OAuth-App",
     "connectHint": "„Direkt verbinden“ öffnet die {{platform}}-Autorisierungsseite im Systembrowser und kehrt nach der Autorisierung automatisch hierher zurück — Token einfügen entfällt.",
@@ -201,9 +201,9 @@
     "connected": "{{platform}} ist verbunden, MCP-Tools werden geladen.",
     "copyClientIdAria": "Client-ID kopieren",
     "copyRedirectAria": "Rückruf-Adresse kopieren",
-    "desc": "Direkt über {{platform}}-OAuth autorisieren: Ein Klick öffnet die Autorisierungsseite im Systembrowser und kehrt nach Abschluss zu MeowCode zurück. Zugangsdaten bleiben nur auf diesem Rechner und dienen dem Verbinden von {{platform}}-MCP.",
+    "desc": "Direkt über {{platform}}-OAuth autorisieren: Ein Klick öffnet die Autorisierungsseite im Systembrowser und kehrt nach Abschluss zu KlockCode zurück. Zugangsdaten bleiben nur auf diesem Rechner und dienen dem Verbinden von {{platform}}-MCP.",
     "directTitle": "Direkt verbinden: {{platform}} im Browser autorisieren, ohne Token einfügen",
-    "moduleMissing": "Das OAuth-Modul ist noch nicht geladen. Starten Sie MeowCode vollständig neu.",
+    "moduleMissing": "Das OAuth-Modul ist noch nicht geladen. Starten Sie KlockCode vollständig neu.",
     "opening": "Wird geöffnet…",
     "openingBrowser": "Browser wird geöffnet…",
     "pasteToken": "Token einfügen",
@@ -216,7 +216,7 @@
     "requireToken": "Bitte mindestens ein Token eingeben.",
     "restoreClientId": "Eingebettete Client-ID wiederherstellen",
     "saveAndConnect": "Speichern und verbinden",
-    "secretFilePath": "Das Secret kann auch in %APPDATA%\\MeowCode\\oauth-apps.json stehen (nicht im Repository)",
+    "secretFilePath": "Das Secret kann auch in %APPDATA%\\KlockCode\\oauth-apps.json stehen (nicht im Repository)",
     "secretLabel": "Client Secret ({{platform}} verlangt es für den Token-Austausch; nur einmal ausfüllen)",
     "secretPlaceholder": "Client Secret der OAuth-App",
     "setupHint": "Dieses Formular erscheint nur einmal: {{platform}} verlangt für den Token-Austausch ein Client Secret (die Plattform unterstützt PKCE ohne Secret nicht), es wird also einmal eingetragen und hier verschlüsselt gespeichert. „Speichern und verbinden“ öffnet sofort den Browser; danach startet jedes „{{platform}} verbinden“ direkt den Browser, ohne dieses Formular.",
@@ -305,11 +305,11 @@
     "empty": "还没有手动添加的条目。用上方按钮把本地技能目录、插件文件或 MCP 配置加进来。",
     "import": {
       "skillTitle": "添加本地技能",
-      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.meowcode/skills/ 并即刻生效。",
+      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.klockcode/skills/ 并即刻生效。",
       "pickSkill": "SKILL.md 文件",
       "pickSkillBtn": "选择 SKILL.md",
       "pluginTitle": "添加本地插件",
-      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.meowcode/plugins/ 并在本机执行。",
+      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.klockcode/plugins/ 并在本机执行。",
       "pickPlugin": "插件源码文件或目录",
       "pickFileBtn": "选择文件",
       "pickDirBtn": "选择目录",
@@ -321,7 +321,7 @@
     },
     "mcp": {
       "title": "添加 MCP 服务",
-      "desc": "手动添加一个 MCP server：配置写入 ~/.meowcode/mcp.json，保存后自动连接。",
+      "desc": "手动添加一个 MCP server：配置写入 ~/.klockcode/mcp.json，保存后自动连接。",
       "idLabel": "名称（id）*",
       "navLabel": "Verbindungsart",
       "navStdio": "Lokaler Befehl",
@@ -332,7 +332,7 @@
       "urlLabel": "服务地址 *",
       "headersLabel": "请求头（JSON，可选）",
       "envLabel": "环境变量（JSON，可选）",
-      "envHint": "支持 ${VAR} 形式引用 MeowCode 进程环境变量。",
+      "envHint": "支持 ${VAR} 形式引用 KlockCode 进程环境变量。",
       "jsonLabel": "MCP 配置（JSON）",
       "jsonHint": "接受 {\"mcpServers\": {…}} 包裹（可一次添加多个）或单个 server 对象。",
       "jsonInvalid": "不是合法的 JSON。",
@@ -347,11 +347,11 @@
       "toggleAria": "启停 MCP {{id}}",
       "authGroup": "Authentifizierung",
       "oauthToggle": "OAuth-Browser-Anmeldung (remote MCP)",
-      "oauthHint": "Beim ersten Verbinden öffnet sich ein Browser zur Anmeldung. Das Token liegt lokal unter ~/.meowcode/mcp-oauth/.",
+      "oauthHint": "Beim ersten Verbinden öffnet sich ein Browser zur Anmeldung. Das Token liegt lokal unter ~/.klockcode/mcp-oauth/.",
       "oauthScopesLabel": "OAuth-Scopes (optional, Leerzeichen/Komma)",
       "oauthClientIdLabel": "OAuth-Client-ID (optional, vorregistriert)",
       "oauthCimdLabel": "OAuth-Client-Metadaten-URL (optional)",
-      "oauthCimdHint": "Leer lassen für das offizielle MeowCode-CIMD-Dokument. Leerer String deaktiviert den CIMD-Fallback."
+      "oauthCimdHint": "Leer lassen für das offizielle KlockCode-CIMD-Dokument. Leerer String deaktiviert den CIMD-Fallback."
     }
   },
   "sources": {

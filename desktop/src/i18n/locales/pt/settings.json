@@ -2,7 +2,7 @@
   "language": {
     "section": "Idioma",
     "title": "Idioma da interface",
-    "description": "Escolha o idioma da interface do MeowCode. A alteração é aplicada imediatamente, sem reiniciar.",
+    "description": "Escolha o idioma da interface do KlockCode. A alteração é aplicada imediatamente, sem reiniciar.",
     "system": "Idioma do sistema"
   },
   "speech": {
@@ -109,9 +109,9 @@
       "user": "Memória pessoal",
       "project": "Memória do projeto"
     },
-    "descUser": "Memória de longo prazo mantida entre espaços de trabalho: suas preferências, fluxos recorrentes e experiências. Ela fica em ~/.meowcode/memory/; o índice é injetado no início de cada chat novo e a IA lê e escreve o que precisa com as ferramentas de memória.",
-    "descProject": "Memória exclusiva do espaço de trabalho atual, salva em .meowcode/memory/ do projeto (fora do git).",
-    "descProjectNamed": "Memória exclusiva do espaço de trabalho atual ({{workspace}}), salva em .meowcode/memory/ do projeto (fora do git).",
+    "descUser": "Memória de longo prazo mantida entre espaços de trabalho: suas preferências, fluxos recorrentes e experiências. Ela fica em ~/.klockcode/memory/; o índice é injetado no início de cada chat novo e a IA lê e escreve o que precisa com as ferramentas de memória.",
+    "descProject": "Memória exclusiva do espaço de trabalho atual, salva em .klockcode/memory/ do projeto (fora do git).",
+    "descProjectNamed": "Memória exclusiva do espaço de trabalho atual ({{workspace}}), salva em .klockcode/memory/ do projeto (fora do git).",
     "count_one": "{{count}} memória salva",
     "count_other": "{{count}} memórias salvas",
     "count_few": "{{count}} memórias salvas",
@@ -167,7 +167,7 @@
     "repo": "Repositório",
     "openInBrowser": "Abrir no navegador",
     "sponsor": "Apoiar",
-    "sponsorHint": "Se o MeowCode é útil para você, apoie o autor lendo o QR code.",
+    "sponsorHint": "Se o KlockCode é útil para você, apoie o autor lendo o QR code.",
     "qrAlt": "QR code de pagamento do {{name}}",
     "sponsors": {
       "wechat": "WeChat Pay",
@@ -175,7 +175,7 @@
     },
     "upToDate": "Você já está na versão mais recente",
     "checkFailed": "Falha ao verificar a versão: {{error}}",
-    "sponsorList": "Apoiadores (MeowCode, NexBox, OpenMD, LingTab)"
+    "sponsorList": "Apoiadores (KlockCode, NexBox, OpenMD, LingTab)"
   },
   "actions": {
     "add": "Adicionar",
@@ -452,7 +452,7 @@
     "empty": "Ainda não há regras",
     "emptyHint": "Clique em Criar para adicionar sua primeira regra",
     "noWorkspace": "Selecione um workspace primeiro",
-    "noWorkspaceHint": "As regras são armazenadas no diretório .meowcode/rules do projeto.",
+    "noWorkspaceHint": "As regras são armazenadas no diretório .klockcode/rules do projeto.",
     "clickToEdit": "Clique para editar esta regra",
     "deleteAria": "Excluir a regra \"{{name}}\"",
     "confirmDeleteAria": "Clique novamente para confirmar a exclusão da regra \"{{name}}\"",
@@ -606,6 +606,8 @@
     "modeFullDesc": "O Agent pode ler e gravar arquivos fora do workspace.",
     "modeWorkspace": "Gravação no workspace",
     "modeWorkspaceDesc": "Os comandos só podem gravar no workspace e nas raízes graváveis extras.",
+    "modeReadOnly": "Somente leitura",
+    "modeReadOnlyDesc": "Os comandos não podem gravar nenhum arquivo, nem no workspace — apenas leitura e execução.",
     "deleteField": "Confirmação de exclusão",
     "deleteDesc": "Aplica-se apenas no modo de gravação no workspace; o acesso total ignora a confirmação de exclusão por padrão.",
     "unsupported": "A sandbox de comandos só está disponível no Windows.",
@@ -616,6 +618,7 @@
     "confirmEnable": "Mudar",
     "cancel": "Cancelar",
     "enabled": "Mudado para gravação no workspace (primeira autorização {{ms}} ms)",
+    "enabledReadOnly": "Alterado para sandbox somente leitura (primeira sondagem {{ms}} ms)",
     "saveFailed": "Falha ao salvar as configurações da sandbox",
     "loadFailed": "Falha ao carregar as configurações da sandbox"
   },

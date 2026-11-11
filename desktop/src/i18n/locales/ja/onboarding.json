@@ -14,7 +14,7 @@
     "title": "言語を選択",
     "label": "言語",
     "previewLabel": "言語プレビュー",
-    "previewText": "こんにちは、MeowCode へようこそ。",
+    "previewText": "こんにちは、KlockCode へようこそ。",
     "systemMeta": "システムに従う · 現在は{{language}}",
     "selectedMeta": "表示言語 · {{language}}"
   },
@@ -51,7 +51,7 @@
   },
   "finish": {
     "title": "準備完了",
-    "desc": "セットアップが完了しました。MeowCode を使い始められます。",
+    "desc": "セットアップが完了しました。KlockCode を使い始められます。",
     "noProvider": "モデルが未設定です。後から設定 → モデルで追加できます。"
   }
 }

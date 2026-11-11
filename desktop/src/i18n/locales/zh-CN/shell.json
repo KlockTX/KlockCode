@@ -25,7 +25,7 @@
   "approval": {
     "title": "需要授权",
     "requestSubagent": "子 Agent「{{name}}」想使用 {{tool}}。",
-    "requestApp": "MeowCode 想使用 {{tool}}。",
+    "requestApp": "KlockCode 想使用 {{tool}}。",
     "stale": "文件在审批期间被改动，下面的预览已重新生成，请重新确认。",
     "risk": "高风险命令",
     "diff": "改动预览",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}} 分 {{seconds}} 秒"
   },
   "closeDialog": {
-    "title": "关闭窗口时，希望 MeowCode 如何表现？",
-    "desc": "MeowCode 会继续在后台运行，你可以从系统托盘重新打开。",
+    "title": "关闭窗口时，希望 KlockCode 如何表现？",
+    "desc": "KlockCode 会继续在后台运行，你可以从系统托盘重新打开。",
     "remember": "记住我的选择（可在 设置 → 通用 中修改）",
     "cancel": "取消",
     "tray": "缩小到托盘",
@@ -218,7 +218,7 @@
     "aria": "上下文占用"
   },
   "bootSplash": {
-    "aria": "正在启动 MeowCode"
+    "aria": "正在启动 KlockCode"
   },
   "island": {
     "connecting": "连接中…",
@@ -238,7 +238,7 @@
     "dropHint": "松开，添加到消息"
   },
   "star": {
-    "title": "给 MeowCode 点一个 Star",
+    "title": "给 KlockCode 点一个 Star",
     "body": "球球惹，给我点个小星星叭~",
     "dismiss": "补药",
     "accept": "好哒"

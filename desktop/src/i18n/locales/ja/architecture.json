@@ -73,6 +73,10 @@
     "connectPickNode": "ノードを選択してから「接続」をクリックしてください",
     "dirty": "保存していない変更があります"
   },
+  "findings": {
+    "title": "セマンティックな注意（{{n}} 件）",
+    "dismiss": "閉じる"
+  },
   "toolbar": {
     "addTier": "階層",
     "addGate": "ゲート",

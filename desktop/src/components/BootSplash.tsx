@@ -11,7 +11,7 @@ export function BootSplash() {
   return (
     <div className="mc-splash" role="status" aria-label={t("bootSplash.aria")}>
       <span className="mc-splash__glow" aria-hidden />
-      <img className="mc-splash__logo" src={iconUrl} alt="MeowCode" draggable={false} />
+      <img className="mc-splash__logo" src={iconUrl} alt="KlockCode" draggable={false} />
     </div>
   );
 }

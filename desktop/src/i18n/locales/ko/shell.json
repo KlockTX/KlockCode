@@ -25,7 +25,7 @@
   "approval": {
     "title": "권한이 필요합니다",
     "requestSubagent": "하위 Agent \"{{name}}\"이(가) {{tool}}을(를) 사용하려 합니다.",
-    "requestApp": "MeowCode가 {{tool}}을(를) 사용하려 합니다.",
+    "requestApp": "KlockCode가 {{tool}}을(를) 사용하려 합니다.",
     "stale": "승인 중에 파일이 변경되어 아래 미리보기를 다시 생성했습니다. 다시 확인해 주세요.",
     "risk": "위험한 명령",
     "diff": "변경 미리보기",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}}분 {{seconds}}초"
   },
   "closeDialog": {
-    "title": "창을 닫을 때 MeowCode가 어떻게 동작할까요?",
-    "desc": "MeowCode는 백그라운드에서 계속 실행됩니다. 시스템 트레이에서 다시 열 수 있습니다.",
+    "title": "창을 닫을 때 KlockCode가 어떻게 동작할까요?",
+    "desc": "KlockCode는 백그라운드에서 계속 실행됩니다. 시스템 트레이에서 다시 열 수 있습니다.",
     "remember": "내 선택 기억하기 (설정 → 일반에서 변경 가능)",
     "cancel": "취소",
     "tray": "트레이로 최소화",
@@ -218,7 +218,7 @@
     "aria": "컨텍스트 사용량"
   },
   "bootSplash": {
-    "aria": "MeowCode 시작 중"
+    "aria": "KlockCode 시작 중"
   },
   "island": {
     "connecting": "연결 중…",
@@ -238,7 +238,7 @@
     "dropHint": "드롭하여 첨부"
   },
   "star": {
-    "title": "MeowCode에 스타를 눌러 주세요",
+    "title": "KlockCode에 스타를 눌러 주세요",
     "body": "부탁이야, 작은 별 하나만 눌러 줘~",
     "dismiss": "안 할래",
     "accept": "좋아"

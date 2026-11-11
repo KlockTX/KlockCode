@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "플러그인 마켓 내비게이션",
     "heading": "플러그인 마켓",
-    "subtitle": "플러그인, 스킬, MCP를 찾고 설치해 MeowCode의 역량을 확장하세요.",
+    "subtitle": "플러그인, 스킬, MCP를 찾고 설치해 KlockCode의 역량을 확장하세요.",
     "back": "채팅으로 돌아가기"
   },
   "entryType": {
@@ -131,7 +131,7 @@
     "disconnect": {
       "desc": "이 기기에 저장된 {{platform}} 토큰을 삭제하고 곧바로 {{platform}} MCP 연결을 끊습니다.",
       "envHint": "토큰을 완전히 폐기하려면 해당 플랫폼의 액세스 토큰 설정에서 삭제하세요.",
-      "platformHint": "플랫폼 쪽의 승인 기록은 자동으로 취소되지 않습니다. 완전히 취소하려면 {{platform}} 설정 → 승인된 애플리케이션에서 MeowCode를 제거하세요.",
+      "platformHint": "플랫폼 쪽의 승인 기록은 자동으로 취소되지 않습니다. 완전히 취소하려면 {{platform}} 설정 → 승인된 애플리케이션에서 KlockCode를 제거하세요.",
       "title": "{{platform}} 연결 해제"
     },
     "empty": {
@@ -147,7 +147,7 @@
     "pluginConfirm": {
       "accept": "위험을 이해했습니다 — 설치",
       "checkSource": "출처를 확인한 뒤에 설치하세요.",
-      "desc": "커뮤니티 플러그인은 TypeScript 소스이며, 설치하면 공식 플러그인과 같은 권한(파일 읽기·쓰기, 명령 실행 등)을 갖고 MeowCode agent 프로세스에서 바로 실행됩니다. MeowCode는 커뮤니티 플러그인을 격리하지 않습니다.",
+      "desc": "커뮤니티 플러그인은 TypeScript 소스이며, 설치하면 공식 플러그인과 같은 권한(파일 읽기·쓰기, 명령 실행 등)을 갖고 KlockCode agent 프로세스에서 바로 실행됩니다. KlockCode는 커뮤니티 플러그인을 격리하지 않습니다.",
       "homepage": "프로젝트 페이지",
       "title": "커뮤니티 플러그인 “{{name}}”을(를) 설치할까요?"
     },
@@ -173,9 +173,9 @@
     "connectTitle": "GitHub OAuth로 연결",
     "connected": "GitHub에 연결했습니다. GitHub MCP 도구를 불러오는 중입니다.",
     "copyCodeAria": "기기 코드 복사",
-    "desc": "GitHub OAuth 기기 흐름으로 MeowCode를 승인합니다. 토큰은 이 기기에서 암호화 저장되며 GitHub MCP에만 사용됩니다.",
+    "desc": "GitHub OAuth 기기 흐름으로 KlockCode를 승인합니다. 토큰은 이 기기에서 암호화 저장되며 GitHub MCP에만 사용됩니다.",
     "deviceFlowStep": "<0>GitHub 앱 설정</0>에서 Enable device flow를 선택하세요",
-    "moduleMissing": "GitHub 로그인 모듈이 아직 로드되지 않았습니다. MeowCode를 완전히 종료한 뒤 다시 시작하고 시도하세요.",
+    "moduleMissing": "GitHub 로그인 모듈이 아직 로드되지 않았습니다. KlockCode를 완전히 종료한 뒤 다시 시작하고 시도하세요.",
     "openInBrowser": "브라우저에서 열기",
     "permissions": "필요에 따라 Contents, Issues, Pull requests, Actions 등 저장소 권한을 부여하세요",
     "prereq": "승인 전에 GitHub 앱에서 다음이 끝났는지 확인하세요:",
@@ -192,7 +192,7 @@
     "awaitingBrowser": "브라우저에서 승인을 기다리는 중…",
     "awaitingUser": "브라우저에서 승인을 완료해 주세요…",
     "cancelAuth": "승인 취소",
-    "clientIdHint": "기본값은 MeowCode에 내장된 앱의 ID입니다. 직접 만든 앱을 쓰려면 여기와 아래의 Secret을 모두 앱 페이지의 값으로 바꾸세요. 짝이 맞지 않으면 토큰 교환이 실패합니다(401).",
+    "clientIdHint": "기본값은 KlockCode에 내장된 앱의 ID입니다. 직접 만든 앱을 쓰려면 여기와 아래의 Secret을 모두 앱 페이지의 값으로 바꾸세요. 짝이 맞지 않으면 토큰 교환이 실패합니다(401).",
     "clientIdLabel": "Client ID(아래 Client Secret과 같은 앱에 속해야 합니다)",
     "clientIdPlaceholder": "OAuth 앱의 Client ID",
     "connectHint": "“바로 연결”을 누르면 시스템 브라우저에서 {{platform}} 승인 페이지를 열고, 승인 후 이 기기로 자동 복귀합니다. 토큰을 붙일 필요가 없습니다.",
@@ -201,9 +201,9 @@
     "connected": "{{platform}}에 연결했습니다. MCP 도구를 불러오는 중입니다.",
     "copyClientIdAria": "Client ID 복사",
     "copyRedirectAria": "콜백 주소 복사",
-    "desc": "{{platform}} OAuth로 바로 승인합니다: 누르면 시스템 브라우저에서 승인 페이지를 열고, 완료 후 MeowCode로 돌아옵니다. 자격 증명은 이 기기에만 저장되며 {{platform}} MCP 연결에 사용됩니다.",
+    "desc": "{{platform}} OAuth로 바로 승인합니다: 누르면 시스템 브라우저에서 승인 페이지를 열고, 완료 후 KlockCode로 돌아옵니다. 자격 증명은 이 기기에만 저장되며 {{platform}} MCP 연결에 사용됩니다.",
     "directTitle": "바로 연결: 브라우저에서 {{platform}} 승인, 토큰 붙여 넣기 불필요",
-    "moduleMissing": "OAuth 모듈이 아직 로드되지 않았습니다. MeowCode를 완전히 다시 시작하세요.",
+    "moduleMissing": "OAuth 모듈이 아직 로드되지 않았습니다. KlockCode를 완전히 다시 시작하세요.",
     "opening": "여는 중…",
     "openingBrowser": "브라우저를 여는 중…",
     "pasteToken": "토큰 붙여 넣기",
@@ -216,7 +216,7 @@
     "requireToken": "토큰을 하나 이상 입력하세요.",
     "restoreClientId": "내장 Client ID 복원",
     "saveAndConnect": "저장 후 연결",
-    "secretFilePath": "Secret을 %APPDATA%\\MeowCode\\oauth-apps.json에 넣어도 됩니다(저장소에 커밋되지 않음)",
+    "secretFilePath": "Secret을 %APPDATA%\\KlockCode\\oauth-apps.json에 넣어도 됩니다(저장소에 커밋되지 않음)",
     "secretLabel": "Client Secret({{platform}}은 토큰 교환 시 필수 — 한 번만 입력하면 됩니다)",
     "secretPlaceholder": "OAuth 앱의 Client Secret",
     "setupHint": "이 양식은 한 번만 나타납니다: {{platform}}은 토큰 교환 시 Client Secret을 요구하며(비밀번호 없는 PKCE 미지원) 처음 한 번 입력하면 이 기기에 암호화 저장됩니다. “저장 후 연결”을 누르면 즉시 브라우저가 열리고, 이후 “{{platform}} 연결”을 누를 때마다 양식 없이 바로 브라우저가 열립니다.",
@@ -305,11 +305,11 @@
     "empty": "还没有手动添加的条目。用上方按钮把本地技能目录、插件文件或 MCP 配置加进来。",
     "import": {
       "skillTitle": "添加本地技能",
-      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.meowcode/skills/ 并即刻生效。",
+      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.klockcode/skills/ 并即刻生效。",
       "pickSkill": "SKILL.md 文件",
       "pickSkillBtn": "选择 SKILL.md",
       "pluginTitle": "添加本地插件",
-      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.meowcode/plugins/ 并在本机执行。",
+      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.klockcode/plugins/ 并在本机执行。",
       "pickPlugin": "插件源码文件或目录",
       "pickFileBtn": "选择文件",
       "pickDirBtn": "选择目录",
@@ -321,7 +321,7 @@
     },
     "mcp": {
       "title": "添加 MCP 服务",
-      "desc": "手动添加一个 MCP server：配置写入 ~/.meowcode/mcp.json，保存后自动连接。",
+      "desc": "手动添加一个 MCP server：配置写入 ~/.klockcode/mcp.json，保存后自动连接。",
       "idLabel": "名称（id）*",
       "navLabel": "연결 방식",
       "navStdio": "로컬 명령",
@@ -332,7 +332,7 @@
       "urlLabel": "服务地址 *",
       "headersLabel": "请求头（JSON，可选）",
       "envLabel": "环境变量（JSON，可选）",
-      "envHint": "支持 ${VAR} 形式引用 MeowCode 进程环境变量。",
+      "envHint": "支持 ${VAR} 形式引用 KlockCode 进程环境变量。",
       "jsonLabel": "MCP 配置（JSON）",
       "jsonHint": "接受 {\"mcpServers\": {…}} 包裹（可一次添加多个）或单个 server 对象。",
       "jsonInvalid": "不是合法的 JSON。",
@@ -347,11 +347,11 @@
       "toggleAria": "启停 MCP {{id}}",
       "authGroup": "인증",
       "oauthToggle": "OAuth 브라우저 인증(원격 MCP)",
-      "oauthHint": "첫 연결 시 브라우저가 열려 로그인·승인합니다. 토큰은 로컬 ~/.meowcode/mcp-oauth/ 에 저장됩니다.",
+      "oauthHint": "첫 연결 시 브라우저가 열려 로그인·승인합니다. 토큰은 로컬 ~/.klockcode/mcp-oauth/ 에 저장됩니다.",
       "oauthScopesLabel": "OAuth 스코프(선택, 공백/쉼표 구분)",
       "oauthClientIdLabel": "OAuth 클라이언트 ID(선택, 사전 등록)",
       "oauthCimdLabel": "OAuth 클라이언트 메타데이터 URL(선택)",
-      "oauthCimdHint": "비워 두면 MeowCode 공식 CIMD 문서를 사용합니다. 빈 문자열로 CIMD 폴백을 끌 수 있습니다."
+      "oauthCimdHint": "비워 두면 KlockCode 공식 CIMD 문서를 사용합니다. 빈 문자열로 CIMD 폴백을 끌 수 있습니다."
     }
   },
   "sources": {

@@ -25,7 +25,7 @@
   "approval": {
     "title": "承認が必要です",
     "requestSubagent": "サブエージェント「{{name}}」が {{tool}} を使おうとしています。",
-    "requestApp": "MeowCode が {{tool}} を使おうとしています。",
+    "requestApp": "KlockCode が {{tool}} を使おうとしています。",
     "stale": "承認中にファイルが変更されました。下のプレビューは再生成済みです。もう一度確認してください。",
     "risk": "危険なコマンド",
     "diff": "変更プレビュー",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}} 分 {{seconds}} 秒"
   },
   "closeDialog": {
-    "title": "ウィンドウを閉じるとき、MeowCode をどうしますか？",
-    "desc": "MeowCode はバックグラウンドで動作を続けます。システムトレイから再度開けます。",
+    "title": "ウィンドウを閉じるとき、KlockCode をどうしますか？",
+    "desc": "KlockCode はバックグラウンドで動作を続けます。システムトレイから再度開けます。",
     "remember": "選択を記憶する（設定 → 一般 で変更できます）",
     "cancel": "キャンセル",
     "tray": "トレイに最小化",
@@ -218,7 +218,7 @@
     "aria": "コンテキスト使用量"
   },
   "bootSplash": {
-    "aria": "MeowCode を起動中"
+    "aria": "KlockCode を起動中"
   },
   "island": {
     "connecting": "接続中…",
@@ -238,7 +238,7 @@
     "dropHint": "ドロップで添付"
   },
   "star": {
-    "title": "MeowCode にスターをください",
+    "title": "KlockCode にスターをください",
     "body": "お願いっ、小さな星をちょっとだけ〜",
     "dismiss": "やめとく",
     "accept": "いいよ"

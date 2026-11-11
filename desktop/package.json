@@ -1,5 +1,5 @@
 {
-  "name": "@meowcode/desktop",
+  "name": "@klockcode/desktop",
   "version": "1.2.1",
   "private": true,
   "author": {
@@ -66,8 +66,8 @@
     "wait-on": "^9.0.3"
   },
   "build": {
-    "appId": "app.meowcode.desktop",
-    "productName": "MeowCode",
+    "appId": "app.klockcode.desktop",
+    "productName": "KlockCode",
     "beforePack": "./brand-packaged.cjs",
     "afterPack": "./brand-packaged.cjs",
     "copyright": "Copyright © 2026 MuLiuSaMa",
@@ -156,8 +156,8 @@
         "to": "marketplace"
       },
       {
-        "from": "../MeowCode.ico",
-        "to": "icons/MeowCode.ico"
+        "from": "../KlockCode.ico",
+        "to": "icons/KlockCode.ico"
       }
     ],
     "win": {

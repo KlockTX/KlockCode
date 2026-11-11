@@ -10,7 +10,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const OWNER = "MuLiuSaMa";
-const REPO = "MeowCode-Plugins";
+const REPO = "KlockCode-Plugins";
 const API_BASE = "https://api.gitcode.com/api/v5";
 /** contents API 直传的单文件上限（base64 前的原始字节数） */
 const MAX_FILE_BYTES = 1024 * 1024;
@@ -50,7 +50,7 @@ async function apiRequest(method, apiPath, { token, query, form, timeoutMs = 60_
         method,
         headers: {
           authorization: token ? `Bearer ${token}` : undefined,
-          "user-agent": "MeowCode-Community",
+          "user-agent": "KlockCode-Community",
           ...(form ? { "content-type": "application/x-www-form-urlencoded" } : {}),
         },
         body: form ? new URLSearchParams(form).toString() : undefined,

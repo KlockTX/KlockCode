@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "Navigation du marketplace de plugins",
     "heading": "Marketplace de plugins",
-    "subtitle": "Découvrez et installez des plugins, des skills et des MCP pour étendre les capacités de MeowCode.",
+    "subtitle": "Découvrez et installez des plugins, des skills et des MCP pour étendre les capacités de KlockCode.",
     "back": "Retour à la conversation"
   },
   "entryType": {
@@ -131,7 +131,7 @@
     "disconnect": {
       "desc": "Le jeton {{platform}} enregistré sur cette machine sera supprimé et la connexion MCP {{platform}} coupée immédiatement.",
       "envHint": "Pour rendre le jeton définitivement invalide, supprimez-le dans les paramètres de jetons d'accès de la plateforme concernée.",
-      "platformHint": "L'autorisation côté plateforme n'est pas révoquée automatiquement ; pour la révoquer, retirez MeowCode dans les paramètres {{platform}} → applications autorisées.",
+      "platformHint": "L'autorisation côté plateforme n'est pas révoquée automatiquement ; pour la révoquer, retirez KlockCode dans les paramètres {{platform}} → applications autorisées.",
       "title": "Retirer l'autorisation {{platform}}"
     },
     "empty": {
@@ -147,7 +147,7 @@
     "pluginConfirm": {
       "accept": "Je comprends le risque — installer",
       "checkSource": "Assurez-vous que la source est fiable avant d'installer.",
-      "desc": "Les plugins communautaires sont du code source TypeScript. Une fois installés, ils s'exécutent directement dans le processus agent de MeowCode, avec les mêmes droits que les plugins officiels (lecture et écriture de fichiers, exécution de commandes, etc.). MeowCode ne sandbox pas les plugins communautaires.",
+      "desc": "Les plugins communautaires sont du code source TypeScript. Une fois installés, ils s'exécutent directement dans le processus agent de KlockCode, avec les mêmes droits que les plugins officiels (lecture et écriture de fichiers, exécution de commandes, etc.). KlockCode ne sandbox pas les plugins communautaires.",
       "homepage": "Page du projet",
       "title": "Installer le plugin communautaire « {{name}} » ?"
     },
@@ -173,9 +173,9 @@
     "connectTitle": "Connecter via OAuth GitHub",
     "connected": "GitHub est connecté, chargement des outils GitHub MCP.",
     "copyCodeAria": "Copier le code d'appareil",
-    "desc": "Autoriser MeowCode avec le flux d'appareil OAuth de GitHub. Le jeton est chiffré sur cette machine et sert uniquement à GitHub MCP.",
+    "desc": "Autoriser KlockCode avec le flux d'appareil OAuth de GitHub. Le jeton est chiffré sur cette machine et sert uniquement à GitHub MCP.",
     "deviceFlowStep": "Cochez Enable device flow dans les <0>paramètres de votre GitHub App</0>",
-    "moduleMissing": "Le module de connexion GitHub n'est pas encore chargé. Redémarrez complètement MeowCode puis réessayez.",
+    "moduleMissing": "Le module de connexion GitHub n'est pas encore chargé. Redémarrez complètement KlockCode puis réessayez.",
     "openInBrowser": "Ouvrir dans le navigateur",
     "permissions": "Accordez selon vos besoins les droits de dépôt Contents, Issues, Pull requests, Actions, etc.",
     "prereq": "Avant d'autoriser, vérifiez que la GitHub App a :",
@@ -192,7 +192,7 @@
     "awaitingBrowser": "En attente de l'autorisation dans le navigateur…",
     "awaitingUser": "Attente de la fin de votre autorisation dans le navigateur…",
     "cancelAuth": "Annuler l'autorisation",
-    "clientIdHint": "Par défaut il s'agit de l'ID de l'application intégrée à MeowCode. Si vous utilisez votre propre application, remplacez ce champ et le Secret ci-dessous par les valeurs de la page de l'application — un couple non concordant fait échouer l'échange de jeton (401).",
+    "clientIdHint": "Par défaut il s'agit de l'ID de l'application intégrée à KlockCode. Si vous utilisez votre propre application, remplacez ce champ et le Secret ci-dessous par les valeurs de la page de l'application — un couple non concordant fait échouer l'échange de jeton (401).",
     "clientIdLabel": "Client ID (doit appartenir à la même application que le Client Secret ci-dessous)",
     "clientIdPlaceholder": "Client ID de l'application OAuth",
     "connectHint": "« Connecter directement » ouvre la page d'autorisation {{platform}} dans le navigateur système, puis revient sur cette machine une fois autorisé — pas besoin de coller de jeton.",
@@ -201,9 +201,9 @@
     "connected": "{{platform}} est connecté, chargement des outils MCP.",
     "copyClientIdAria": "Copier le Client ID",
     "copyRedirectAria": "Copier l'URL de rappel",
-    "desc": "Autorisation directe via OAuth {{platform}} : un clic ouvre la page d'autorisation dans le navigateur système et ramène à MeowCode une fois terminé. Les identifiants restent sur cette machine et servent uniquement à connecter {{platform}} MCP.",
+    "desc": "Autorisation directe via OAuth {{platform}} : un clic ouvre la page d'autorisation dans le navigateur système et ramène à KlockCode une fois terminé. Les identifiants restent sur cette machine et servent uniquement à connecter {{platform}} MCP.",
     "directTitle": "Connexion directe : autorisez {{platform}} dans le navigateur, sans coller de jeton",
-    "moduleMissing": "Le module OAuth n'est pas encore chargé. Redémarrez complètement MeowCode.",
+    "moduleMissing": "Le module OAuth n'est pas encore chargé. Redémarrez complètement KlockCode.",
     "opening": "Ouverture…",
     "openingBrowser": "Ouverture du navigateur…",
     "pasteToken": "Coller le jeton",
@@ -216,7 +216,7 @@
     "requireToken": "Renseignez au moins un jeton.",
     "restoreClientId": "Restaurer le Client ID intégré",
     "saveAndConnect": "Enregistrer et connecter",
-    "secretFilePath": "Vous pouvez aussi placer le Secret dans %APPDATA%\\MeowCode\\oauth-apps.json (jamais versionné)",
+    "secretFilePath": "Vous pouvez aussi placer le Secret dans %APPDATA%\\KlockCode\\oauth-apps.json (jamais versionné)",
     "secretLabel": "Client Secret ({{platform}} l'exige pour l'échange de jeton ; à renseigner une seule fois)",
     "secretPlaceholder": "Client Secret de l'application OAuth",
     "setupHint": "Ce formulaire n'apparaît qu'une fois : {{platform}} exige un Client Secret pour l'échange de jeton (la plateforme ne prend pas en charge PKCE sans secret), il est donc saisi une fois puis chiffré sur cette machine. « Enregistrer et connecter » ouvre aussitôt le navigateur ; ensuite chaque « Connecter {{platform}} » va directement au navigateur, sans ce formulaire.",
@@ -305,11 +305,11 @@
     "empty": "还没有手动添加的条目。用上方按钮把本地技能目录、插件文件或 MCP 配置加进来。",
     "import": {
       "skillTitle": "添加本地技能",
-      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.meowcode/skills/ 并即刻生效。",
+      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.klockcode/skills/ 并即刻生效。",
       "pickSkill": "SKILL.md 文件",
       "pickSkillBtn": "选择 SKILL.md",
       "pluginTitle": "添加本地插件",
-      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.meowcode/plugins/ 并在本机执行。",
+      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.klockcode/plugins/ 并在本机执行。",
       "pickPlugin": "插件源码文件或目录",
       "pickFileBtn": "选择文件",
       "pickDirBtn": "选择目录",
@@ -321,7 +321,7 @@
     },
     "mcp": {
       "title": "添加 MCP 服务",
-      "desc": "手动添加一个 MCP server：配置写入 ~/.meowcode/mcp.json，保存后自动连接。",
+      "desc": "手动添加一个 MCP server：配置写入 ~/.klockcode/mcp.json，保存后自动连接。",
       "idLabel": "名称（id）*",
       "navLabel": "Mode de connexion",
       "navStdio": "Commande locale",
@@ -332,7 +332,7 @@
       "urlLabel": "服务地址 *",
       "headersLabel": "请求头（JSON，可选）",
       "envLabel": "环境变量（JSON，可选）",
-      "envHint": "支持 ${VAR} 形式引用 MeowCode 进程环境变量。",
+      "envHint": "支持 ${VAR} 形式引用 KlockCode 进程环境变量。",
       "jsonLabel": "MCP 配置（JSON）",
       "jsonHint": "接受 {\"mcpServers\": {…}} 包裹（可一次添加多个）或单个 server 对象。",
       "jsonInvalid": "不是合法的 JSON。",
@@ -347,11 +347,11 @@
       "toggleAria": "启停 MCP {{id}}",
       "authGroup": "Authentification",
       "oauthToggle": "Autorisation OAuth via le navigateur (MCP distant)",
-      "oauthHint": "La première connexion ouvre un navigateur pour se connecter ; le token est stocké dans ~/.meowcode/mcp-oauth/.",
+      "oauthHint": "La première connexion ouvre un navigateur pour se connecter ; le token est stocké dans ~/.klockcode/mcp-oauth/.",
       "oauthScopesLabel": "Scopes OAuth (facultatif, espace/virgule)",
       "oauthClientIdLabel": "Client ID OAuth (facultatif, préenregistré)",
       "oauthCimdLabel": "URL des métadonnées client OAuth (facultatif)",
-      "oauthCimdHint": "Vide utilise le document CIMD officiel MeowCode. Une chaîne vide désactive le repli CIMD."
+      "oauthCimdHint": "Vide utilise le document CIMD officiel KlockCode. Une chaîne vide désactive le repli CIMD."
     }
   },
   "sources": {

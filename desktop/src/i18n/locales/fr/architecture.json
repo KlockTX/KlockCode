@@ -73,6 +73,10 @@
     "connectPickNode": "Sélectionnez d’abord un nœud, puis cliquez sur « Connecter »",
     "dirty": "Modifications non enregistrées"
   },
+  "findings": {
+    "title": "Remarques sémantiques ({{n}})",
+    "dismiss": "Masquer"
+  },
   "toolbar": {
     "addTier": "Niveau",
     "addGate": "Contrôle",

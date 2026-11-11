@@ -2,7 +2,7 @@
   "language": {
     "section": "語言",
     "title": "介面語言",
-    "description": "選擇 MeowCode 介面的顯示語言，切換後立即生效，無需重新啟動。",
+    "description": "選擇 KlockCode 介面的顯示語言，切換後立即生效，無需重新啟動。",
     "system": "跟隨系統"
   },
   "speech": {
@@ -109,9 +109,9 @@
       "user": "個人記憶",
       "project": "專案記憶"
     },
-    "descUser": "跨工作區保留的長期記憶：你的偏好、常用工作流、經驗。存放在 ~/.meowcode/memory/，新對話開始時自動注入索引，AI 用記憶工具按需讀寫。",
-    "descProject": "目前工作區專屬的記憶，存放在專案的 .meowcode/memory/（不進 git）。",
-    "descProjectNamed": "目前工作區（{{workspace}}）專屬的記憶，存放在專案的 .meowcode/memory/（不進 git）。",
+    "descUser": "跨工作區保留的長期記憶：你的偏好、常用工作流、經驗。存放在 ~/.klockcode/memory/，新對話開始時自動注入索引，AI 用記憶工具按需讀寫。",
+    "descProject": "目前工作區專屬的記憶，存放在專案的 .klockcode/memory/（不進 git）。",
+    "descProjectNamed": "目前工作區（{{workspace}}）專屬的記憶，存放在專案的 .klockcode/memory/（不進 git）。",
     "count_one": "已存 {{count}} 條",
     "count_other": "已存 {{count}} 條",
     "count_few": "已存 {{count}} 條",
@@ -167,7 +167,7 @@
     "repo": "開源存放庫",
     "openInBrowser": "用瀏覽器開啟",
     "sponsor": "贊助",
-    "sponsorHint": "如果 MeowCode 對你有幫助，歡迎掃碼支持作者",
+    "sponsorHint": "如果 KlockCode 對你有幫助，歡迎掃碼支持作者",
     "qrAlt": "{{name}}贊助 QR Code",
     "sponsors": {
       "wechat": "微信支付",
@@ -175,7 +175,7 @@
     },
     "upToDate": "已是最新版本",
     "checkFailed": "版本檢查失敗：{{error}}",
-    "sponsorList": "贊助者名單（MeowCode、新境盒、OpenMD、LingTab）"
+    "sponsorList": "贊助者名單（KlockCode、新境盒、OpenMD、LingTab）"
   },
   "actions": {
     "add": "新增",
@@ -452,7 +452,7 @@
     "empty": "尚無規則",
     "emptyHint": "按一下「建立」新增第一條規則",
     "noWorkspace": "請先選擇工作區",
-    "noWorkspaceHint": "規則儲存在專案的 .meowcode/rules 目錄。",
+    "noWorkspaceHint": "規則儲存在專案的 .klockcode/rules 目錄。",
     "clickToEdit": "按一下編輯此規則",
     "deleteAria": "刪除規則「{{name}}」",
     "confirmDeleteAria": "再按一次以確認刪除規則「{{name}}」",
@@ -606,6 +606,8 @@
     "modeFullDesc": "Agent 可以讀寫工作區外的檔案。",
     "modeWorkspace": "工作區寫入",
     "modeWorkspaceDesc": "命令只能寫工作區與額外可寫根。",
+    "modeReadOnly": "唯讀",
+    "modeReadOnlyDesc": "命令不能寫入任何檔案（含工作區），僅能讀取與執行。",
     "deleteField": "檔案刪除確認",
     "deleteDesc": "僅在工作區寫入模式下生效，完全存取模式下預設跳過刪除確認。",
     "unsupported": "目前系統不是 Windows，命令沙箱不可用。",
@@ -616,6 +618,7 @@
     "confirmEnable": "切換",
     "cancel": "取消",
     "enabled": "已切換到工作區寫入（首次授權 {{ms}} ms）",
+    "enabledReadOnly": "已切換到唯讀沙箱（首次探測 {{ms}} ms）",
     "saveFailed": "儲存沙箱設定失敗",
     "loadFailed": "讀取沙箱設定失敗"
   },

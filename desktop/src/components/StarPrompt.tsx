@@ -4,7 +4,7 @@ import { Button } from "./ui/Button";
 import "./StarPrompt.css";
 
 /** 点「补药」后 7 天内不再提示；点「好哒」永久不再提示 */
-const STAR_PROMPT_STORAGE_KEY = "meowcode:starPrompt";
+const STAR_PROMPT_STORAGE_KEY = "klockcode:starPrompt";
 const STAR_PROMPT_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function shouldShowStarPrompt(): boolean {

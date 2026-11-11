@@ -13,7 +13,7 @@ import {
 const roots: string[] = [];
 
 function makeRoot(): string {
-  const root = mkdtempSync(path.join(os.tmpdir(), "meowcode-data-loc-"));
+  const root = mkdtempSync(path.join(os.tmpdir(), "klockcode-data-loc-"));
   roots.push(root);
   return root;
 }

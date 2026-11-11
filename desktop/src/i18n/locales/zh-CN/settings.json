@@ -2,7 +2,7 @@
   "language": {
     "section": "语言",
     "title": "界面语言",
-    "description": "选择 MeowCode 界面的显示语言，切换后立即生效，无需重启。",
+    "description": "选择 KlockCode 界面的显示语言，切换后立即生效，无需重启。",
     "system": "跟随系统"
   },
   "speech": {
@@ -99,7 +99,7 @@
     "empty": "暂无规则",
     "emptyHint": "点击新建以添加你的第一个规则",
     "noWorkspace": "请先选择工作区",
-    "noWorkspaceHint": "规则保存在当前项目的 .meowcode/rules 目录中。",
+    "noWorkspaceHint": "规则保存在当前项目的 .klockcode/rules 目录中。",
     "clickToEdit": "点击编辑规则",
     "deleteAria": "删除规则「{{name}}」",
     "confirmDeleteAria": "再次点击确认删除规则「{{name}}」",
@@ -170,9 +170,9 @@
       "user": "个人记忆",
       "project": "项目记忆"
     },
-    "descUser": "跨工作区保留的长期记忆：你的偏好、常用工作流、经验。存在 ~/.meowcode/memory/，新会话开始时索引自动注入，AI 用记忆工具按需读写。",
-    "descProject": "当前工作区专属的记忆，存在项目的 .meowcode/memory/（不进 git）。",
-    "descProjectNamed": "当前工作区（{{workspace}}）专属的记忆，存在项目的 .meowcode/memory/（不进 git）。",
+    "descUser": "跨工作区保留的长期记忆：你的偏好、常用工作流、经验。存在 ~/.klockcode/memory/，新会话开始时索引自动注入，AI 用记忆工具按需读写。",
+    "descProject": "当前工作区专属的记忆，存在项目的 .klockcode/memory/（不进 git）。",
+    "descProjectNamed": "当前工作区（{{workspace}}）专属的记忆，存在项目的 .klockcode/memory/（不进 git）。",
     "count_one": "已存 {{count}} 条",
     "count_other": "已存 {{count}} 条",
     "count_few": "已存 {{count}} 条",
@@ -224,7 +224,7 @@
     "repo": "开源仓库",
     "openInBrowser": "用浏览器打开",
     "sponsor": "赞助",
-    "sponsorHint": "如果 MeowCode 对你有帮助，欢迎扫码支持作者",
+    "sponsorHint": "如果 KlockCode 对你有帮助，欢迎扫码支持作者",
     "qrAlt": "{{name}}赞助二维码",
     "sponsors": {
       "wechat": "微信支付",
@@ -232,7 +232,7 @@
     },
     "upToDate": "已是最新版本",
     "checkFailed": "版本检查失败：{{error}}",
-    "sponsorList": "赞助者名单（MeowCode、新境盒、OpenMD、LingTab）"
+    "sponsorList": "赞助者名单（KlockCode、新境盒、OpenMD、LingTab）"
   },
   "actions": {
     "add": "添加",
@@ -606,6 +606,8 @@
     "modeFullDesc": "Agent 可以读写工作区外的文件。",
     "modeWorkspace": "工作区写入",
     "modeWorkspaceDesc": "命令只能写工作区与额外可写根。",
+    "modeReadOnly": "只读",
+    "modeReadOnlyDesc": "命令不能写任何文件（含工作区），只有读取与执行。",
     "deleteField": "文件删除确认",
     "deleteDesc": "仅在工作区写入模式下生效，完全访问模式下默认跳过删除确认。",
     "unsupported": "当前系统不是 Windows，命令沙箱不可用。",
@@ -616,6 +618,7 @@
     "confirmEnable": "切换",
     "cancel": "取消",
     "enabled": "已切换到工作区写入（首次授权 {{ms}} ms）",
+    "enabledReadOnly": "已切换到只读沙箱（首次探测 {{ms}} ms）",
     "saveFailed": "保存沙箱设置失败",
     "loadFailed": "读取沙箱设置失败"
   },

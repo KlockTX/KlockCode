@@ -28,12 +28,12 @@ function applyVersionInfo(file, info) {
     versionInfo.setStringValues(
       { lang: VERSION_LANG, codepage: 1200 },
       {
-        FileDescription: "MeowCode",
-        ProductName: "MeowCode",
+        FileDescription: "KlockCode",
+        ProductName: "KlockCode",
         CompanyName: info.author,
         Author: info.author,
-        InternalName: "MeowCode",
-        OriginalFilename: "MeowCode.exe",
+        InternalName: "KlockCode",
+        OriginalFilename: "KlockCode.exe",
         LegalCopyright: info.copyright,
         // 固定版本号只能是四段，字符串版本保留 package.json 里的三段写法
         FileVersion: String(info.version),
@@ -52,7 +52,7 @@ exports.beforePack = async function beforePack() {
   const target = path.join(root, ".tmp", "agent-release");
   fs.rmSync(target, { recursive: true, force: true });
   const args = [
-    "--filter", "meowcode",
+    "--filter", "klockcode",
     "--fail-if-no-match",
     "deploy", "--prod",
     "--config.inject-workspace-packages=true",
@@ -69,7 +69,7 @@ exports.beforePack = async function beforePack() {
 exports.afterPack = async function afterPack(context) {
   if (process.platform !== "win32") return;
   const appInfo = context.packager?.appInfo;
-  const productName = appInfo?.productName || "MeowCode";
+  const productName = appInfo?.productName || "KlockCode";
   const exePath = path.join(context.appOutDir, `${productName}.exe`);
   if (!fs.existsSync(exePath)) return;
   const author = appInfo?.companyName || "MuLiuSaMa";

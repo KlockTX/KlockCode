@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "プラグインマーケットのナビゲーション",
     "heading": "プラグインマーケット",
-    "subtitle": "プラグイン、スキル、MCPを見つけてインストールし、MeowCode をさらに拡張します。",
+    "subtitle": "プラグイン、スキル、MCPを見つけてインストールし、KlockCode をさらに拡張します。",
     "back": "チャットに戻る"
   },
   "entryType": {
@@ -131,7 +131,7 @@
     "disconnect": {
       "desc": "この端末に保存されている {{platform}} のトークンを削除し、ただちに {{platform}} MCP の接続を切断します。",
       "envHint": "トークンを完全に無効化するには、対象プラットフォームのアクセストークン設定で削除してください。",
-      "platformHint": "プラットフォーム側の認証記録は自動では取り消されません。完全に取消する場合は {{platform}} の設定 → 認証済みアプリから MeowCode を削除してください。",
+      "platformHint": "プラットフォーム側の認証記録は自動では取り消されません。完全に取消する場合は {{platform}} の設定 → 認証済みアプリから KlockCode を削除してください。",
       "title": "{{platform}} の連携を解除"
     },
     "empty": {
@@ -147,7 +147,7 @@
     "pluginConfirm": {
       "accept": "リスクを理解した上でインストール",
       "checkSource": "出所を確かめてからインストールしてください。",
-      "desc": "コミュニティプラグインは TypeScript のソースコードで、インストール後 MeowCode の agent プロセス内で直接実行され、公式プラグインと同じ権限（ファイルの読み書き、コマンド実行など）を持ちます。MeowCode はコミュニティプラグインをサンドボックス化しません。",
+      "desc": "コミュニティプラグインは TypeScript のソースコードで、インストール後 KlockCode の agent プロセス内で直接実行され、公式プラグインと同じ権限（ファイルの読み書き、コマンド実行など）を持ちます。KlockCode はコミュニティプラグインをサンドボックス化しません。",
       "homepage": "プロジェクトページ",
       "title": "コミュニティプラグイン「{{name}}」をインストールしますか？"
     },
@@ -173,9 +173,9 @@
     "connectTitle": "GitHub OAuth で接続",
     "connected": "GitHub に接続しました。GitHub MCP ツールを読み込み中。",
     "copyCodeAria": "デバイスコードをコピー",
-    "desc": "GitHub OAuth のデバイスフローで MeowCode を認証します。トークンはこの端末で暗号化保存され、GitHub MCP にのみ使われます。",
+    "desc": "GitHub OAuth のデバイスフローで KlockCode を認証します。トークンはこの端末で暗号化保存され、GitHub MCP にのみ使われます。",
     "deviceFlowStep": "<0>GitHub App の設定</0>で Enable device flow を有効にしてください",
-    "moduleMissing": "GitHub ログインモジュールがまだ読み込まれていません。MeowCode を完全に再起動して再試行してください。",
+    "moduleMissing": "GitHub ログインモジュールがまだ読み込まれていません。KlockCode を完全に再起動して再試行してください。",
     "openInBrowser": "ブラウザーで開く",
     "permissions": "Contents、Issues、Pull requests、Actions など必要なリポジトリ権限を付与してください",
     "prereq": "認証の前に、GitHub App で次に該当する設定が済みか確認してください：",
@@ -192,7 +192,7 @@
     "awaitingBrowser": "ブラウザーでの認証を待っています…",
     "awaitingUser": "ブラウザーで認証を完了してください…",
     "cancelAuth": "認証をキャンセル",
-    "clientIdHint": "既定では MeowCode 内蔵アプリの ID が入っています。自分のアプリを使う場合は、ここ以下の Secret も含めてアプリページの値に合わせてください。組み合わせが一致しないとトークン交換に失敗します（401）。",
+    "clientIdHint": "既定では KlockCode 内蔵アプリの ID が入っています。自分のアプリを使う場合は、ここ以下の Secret も含めてアプリページの値に合わせてください。組み合わせが一致しないとトークン交換に失敗します（401）。",
     "clientIdLabel": "Client ID（下の Client Secret と同じアプリに属している必要があります）",
     "clientIdPlaceholder": "OAuth アプリの Client ID",
     "connectHint": "「直接接続」を押すとシステムブラウザーで {{platform}} の認証ページを開き、認証後は自動的にこの端末へ戻ります。トークンの貼り付けは不要です。",
@@ -201,9 +201,9 @@
     "connected": "{{platform}} に接続しました。MCP ツールを読み込み中。",
     "copyClientIdAria": "Client ID をコピー",
     "copyRedirectAria": "リダイレクト URL をコピー",
-    "desc": "{{platform}} の OAuth で直接認証します：押すとシステムブラウザーで認証ページを開き、完了すると MeowCode に戻ります。認証情報はこの端末にのみ保存され、{{platform}} MCP の接続にだけ使われます。",
+    "desc": "{{platform}} の OAuth で直接認証します：押すとシステムブラウザーで認証ページを開き、完了すると KlockCode に戻ります。認証情報はこの端末にのみ保存され、{{platform}} MCP の接続にだけ使われます。",
     "directTitle": "直接接続：ブラウザーで {{platform}} を認証するだけ、トークンの貼り付け不要",
-    "moduleMissing": "OAuth モジュールがまだ読み込まれていません。MeowCode を完全に再起動してください。",
+    "moduleMissing": "OAuth モジュールがまだ読み込まれていません。KlockCode を完全に再起動してください。",
     "opening": "開いています…",
     "openingBrowser": "ブラウザーを開いています…",
     "pasteToken": "トークンを貼り付け",
@@ -216,7 +216,7 @@
     "requireToken": "少なくとも 1 つのトークンを入力してください。",
     "restoreClientId": "内蔵の Client ID を復元",
     "saveAndConnect": "保存して接続",
-    "secretFilePath": "Secret を %APPDATA%\\MeowCode\\oauth-apps.json に保存することもできます（リポジトリには入りません）",
+    "secretFilePath": "Secret を %APPDATA%\\KlockCode\\oauth-apps.json に保存することもできます（リポジトリには入りません）",
     "secretLabel": "Client Secret（{{platform}} はトークン交換時に必須。入力は 1 回だけ）",
     "secretPlaceholder": "OAuth アプリの Client Secret",
     "setupHint": "このフォームが出るのは 1 回だけです：{{platform}} はトークン交換時に Client Secret が必要で（ノーパスワードの PKCE 非対応）、初回に入力するとこの端末で暗号化保存されます。「保存して接続」ですぐブラウザーが開き、その後は「{{platform}} に接続」を押すたびに直接ブラウザーが開くので、このフォームは二度と出ません。",
@@ -305,11 +305,11 @@
     "empty": "还没有手动添加的条目。用上方按钮把本地技能目录、插件文件或 MCP 配置加进来。",
     "import": {
       "skillTitle": "添加本地技能",
-      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.meowcode/skills/ 并即刻生效。",
+      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.klockcode/skills/ 并即刻生效。",
       "pickSkill": "SKILL.md 文件",
       "pickSkillBtn": "选择 SKILL.md",
       "pluginTitle": "添加本地插件",
-      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.meowcode/plugins/ 并在本机执行。",
+      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.klockcode/plugins/ 并在本机执行。",
       "pickPlugin": "插件源码文件或目录",
       "pickFileBtn": "选择文件",
       "pickDirBtn": "选择目录",
@@ -321,7 +321,7 @@
     },
     "mcp": {
       "title": "添加 MCP 服务",
-      "desc": "手动添加一个 MCP server：配置写入 ~/.meowcode/mcp.json，保存后自动连接。",
+      "desc": "手动添加一个 MCP server：配置写入 ~/.klockcode/mcp.json，保存后自动连接。",
       "idLabel": "名称（id）*",
       "navLabel": "接続方式",
       "navStdio": "ローカルコマンド",
@@ -332,7 +332,7 @@
       "urlLabel": "服务地址 *",
       "headersLabel": "请求头（JSON，可选）",
       "envLabel": "环境变量（JSON，可选）",
-      "envHint": "支持 ${VAR} 形式引用 MeowCode 进程环境变量。",
+      "envHint": "支持 ${VAR} 形式引用 KlockCode 进程环境变量。",
       "jsonLabel": "MCP 配置（JSON）",
       "jsonHint": "接受 {\"mcpServers\": {…}} 包裹（可一次添加多个）或单个 server 对象。",
       "jsonInvalid": "不是合法的 JSON。",
@@ -347,11 +347,11 @@
       "toggleAria": "启停 MCP {{id}}",
       "authGroup": "認証",
       "oauthToggle": "OAuth ブラウザ認証（リモート MCP）",
-      "oauthHint": "初回接続時にブラウザが開き、ログインと認証を行います。トークンはローカルの ~/.meowcode/mcp-oauth/ に保存されます。",
+      "oauthHint": "初回接続時にブラウザが開き、ログインと認証を行います。トークンはローカルの ~/.klockcode/mcp-oauth/ に保存されます。",
       "oauthScopesLabel": "OAuth スコープ（任意・空白/カンマ区切り）",
       "oauthClientIdLabel": "OAuth クライアント ID（任意・事前登録）",
       "oauthCimdLabel": "OAuth クライアントメタデータ URL（任意）",
-      "oauthCimdHint": "空欄で MeowCode 公式 CIMD ドキュメントを使用。空文字列で CIMD フォールバックを無効化。"
+      "oauthCimdHint": "空欄で KlockCode 公式 CIMD ドキュメントを使用。空文字列で CIMD フォールバックを無効化。"
     }
   },
   "sources": {

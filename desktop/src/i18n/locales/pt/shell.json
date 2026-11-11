@@ -25,7 +25,7 @@
   "approval": {
     "title": "Autorização necessária",
     "requestSubagent": "O subagente \"{{name}}\" quer usar {{tool}}.",
-    "requestApp": "O MeowCode quer usar {{tool}}.",
+    "requestApp": "O KlockCode quer usar {{tool}}.",
     "stale": "O arquivo mudou durante a aprovação. A prévia abaixo foi gerada novamente, confirme outra vez.",
     "risk": "Comando de risco",
     "diff": "Prévia das alterações",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}} min {{seconds}} s"
   },
   "closeDialog": {
-    "title": "O que o MeowCode deve fazer ao fechar a janela?",
-    "desc": "O MeowCode continuará em execução em segundo plano. Você pode reabri-lo pela bandeja do sistema.",
+    "title": "O que o KlockCode deve fazer ao fechar a janela?",
+    "desc": "O KlockCode continuará em execução em segundo plano. Você pode reabri-lo pela bandeja do sistema.",
     "remember": "Lembrar minha escolha (pode ser alterada em Configurações → Geral)",
     "cancel": "Cancelar",
     "tray": "Minimizar para a bandeja",
@@ -218,7 +218,7 @@
     "aria": "Uso do contexto"
   },
   "bootSplash": {
-    "aria": "Iniciando o MeowCode"
+    "aria": "Iniciando o KlockCode"
   },
   "island": {
     "connecting": "Conectando…",
@@ -238,7 +238,7 @@
     "dropHint": "Solte para anexar"
   },
   "star": {
-    "title": "Dê uma estrela ao MeowCode",
+    "title": "Dê uma estrela ao KlockCode",
     "body": "Por favorzinho, me dá uma estrelinha~",
     "dismiss": "Não, obrigado",
     "accept": "Claro!"

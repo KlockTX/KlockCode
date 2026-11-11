@@ -2,7 +2,7 @@
   "language": {
     "section": "Langue",
     "title": "Langue de l’interface",
-    "description": "Choisissez la langue de l’interface de MeowCode. Le changement s’applique immédiatement, sans redémarrage.",
+    "description": "Choisissez la langue de l’interface de KlockCode. Le changement s’applique immédiatement, sans redémarrage.",
     "system": "Langue du système"
   },
   "speech": {
@@ -109,9 +109,9 @@
       "user": "Mémoire personnelle",
       "project": "Mémoire du projet"
     },
-    "descUser": "Mémoire de long terme conservée d’un espace de travail à l’autre : vos préférences, vos habitudes, votre expérience. Elle est stockée dans ~/.meowcode/memory/ ; l’index est injecté au début de chaque nouvelle discussion, et l’IA y accède avec les outils de mémoire.",
-    "descProject": "Mémoire réservée à l’espace de travail actuel, stockée dans .meowcode/memory/ du projet (hors git).",
-    "descProjectNamed": "Mémoire réservée à l’espace de travail actuel ({{workspace}}), stockée dans .meowcode/memory/ du projet (hors git).",
+    "descUser": "Mémoire de long terme conservée d’un espace de travail à l’autre : vos préférences, vos habitudes, votre expérience. Elle est stockée dans ~/.klockcode/memory/ ; l’index est injecté au début de chaque nouvelle discussion, et l’IA y accède avec les outils de mémoire.",
+    "descProject": "Mémoire réservée à l’espace de travail actuel, stockée dans .klockcode/memory/ du projet (hors git).",
+    "descProjectNamed": "Mémoire réservée à l’espace de travail actuel ({{workspace}}), stockée dans .klockcode/memory/ du projet (hors git).",
     "count_one": "{{count}} entrée enregistrée",
     "count_other": "{{count}} entrées enregistrées",
     "count_few": "{{count}} entrées enregistrées",
@@ -167,7 +167,7 @@
     "repo": "Dépôt",
     "openInBrowser": "Ouvrir dans le navigateur",
     "sponsor": "Soutenir",
-    "sponsorHint": "Si MeowCode vous est utile, vous pouvez soutenir l’auteur en scannant un QR code.",
+    "sponsorHint": "Si KlockCode vous est utile, vous pouvez soutenir l’auteur en scannant un QR code.",
     "qrAlt": "QR code de paiement {{name}}",
     "sponsors": {
       "wechat": "WeChat Pay",
@@ -175,7 +175,7 @@
     },
     "upToDate": "Vous avez déjà la dernière version",
     "checkFailed": "Échec de la vérification : {{error}}",
-    "sponsorList": "Soutiens (MeowCode, NexBox, OpenMD, LingTab)"
+    "sponsorList": "Soutiens (KlockCode, NexBox, OpenMD, LingTab)"
   },
   "actions": {
     "add": "Ajouter",
@@ -452,7 +452,7 @@
     "empty": "Aucune règle pour l’instant",
     "emptyHint": "Cliquez sur Créer pour ajouter votre première règle",
     "noWorkspace": "Sélectionnez d’abord un espace de travail",
-    "noWorkspaceHint": "Les règles sont stockées dans le répertoire .meowcode/rules du projet.",
+    "noWorkspaceHint": "Les règles sont stockées dans le répertoire .klockcode/rules du projet.",
     "clickToEdit": "Cliquez pour modifier cette règle",
     "deleteAria": "Supprimer la règle « {{name}} »",
     "confirmDeleteAria": "Cliquez à nouveau pour confirmer la suppression de la règle « {{name}} »",
@@ -606,6 +606,8 @@
     "modeFullDesc": "L’Agent peut lire et écrire des fichiers en dehors de l’espace de travail.",
     "modeWorkspace": "Écriture dans l’espace de travail",
     "modeWorkspaceDesc": "Les commandes ne peuvent écrire que dans l’espace de travail et les racines inscriptibles supplémentaires.",
+    "modeReadOnly": "Lecture seule",
+    "modeReadOnlyDesc": "Les commandes ne peuvent écrire aucun fichier, même dans l’espace de travail — lecture et exécution seulement.",
     "deleteField": "Confirmation de suppression",
     "deleteDesc": "S’applique uniquement en mode écriture dans l’espace de travail ; l’accès complet ignore la confirmation de suppression par défaut.",
     "unsupported": "La sandbox de commandes n’est disponible que sous Windows.",
@@ -616,6 +618,7 @@
     "confirmEnable": "Changer",
     "cancel": "Annuler",
     "enabled": "Passage en écriture dans l’espace de travail (première autorisation {{ms}} ms)",
+    "enabledReadOnly": "Passage au bac à sable en lecture seule (première sonde {{ms}} ms)",
     "saveFailed": "Échec de l’enregistrement des paramètres de sandbox",
     "loadFailed": "Échec du chargement des paramètres de sandbox"
   },

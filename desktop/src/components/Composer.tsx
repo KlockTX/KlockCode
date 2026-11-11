@@ -936,7 +936,7 @@ export function Composer({
     [allSkillChoices],
   );
 
-  /** markdown 斜杠命令（.meowcode/commands/*.md） */
+  /** markdown 斜杠命令（.klockcode/commands/*.md） */
   const markdownCommandItems = useMemo<SlashMarkdownItem[]>(
     () =>
       (pluginsOverview?.commands ?? [])

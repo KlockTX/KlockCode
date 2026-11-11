@@ -16,7 +16,7 @@ const { readJsonWithBackup, writeJsonAtomic } = require("./persist.cjs") as {
 
 describe("desktop persist helpers", () => {
   it("writes atomically and keeps the previous valid file as .bak", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-persist-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-persist-"));
     const filePath = path.join(dir, "settings.json");
     writeJsonAtomic(filePath, { version: 1, value: "first" });
     writeJsonAtomic(filePath, { version: 1, value: "second" });
@@ -29,7 +29,7 @@ describe("desktop persist helpers", () => {
   });
 
   it("moves a corrupt file aside and falls back to .bak", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-persist-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-persist-"));
     const filePath = path.join(dir, "settings.json");
     await writeFile(`${filePath}.bak`, JSON.stringify({ value: "backup" }), "utf8");
     await writeFile(filePath, "{broken", "utf8");

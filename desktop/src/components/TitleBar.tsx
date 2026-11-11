@@ -42,7 +42,7 @@ export function TitleBar({ forceDark = false, announcements = false }: { forceDa
   return (
     <header className="mc-titlebar">
       <div className="mc-titlebar__brand">
-        <img className="mc-titlebar__wordmark" src={wordmark} alt="MeowCode" draggable={false} />
+        <img className="mc-titlebar__wordmark" src={wordmark} alt="KlockCode" draggable={false} />
       </div>
 
       {/* 公告：紧跟 Logo 右侧，小字号、一行截断；点击弹窗看全文，× 关闭（设置 → 通用可关） */}

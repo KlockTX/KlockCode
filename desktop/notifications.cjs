@@ -86,7 +86,7 @@ function shouldNotify({ enabled, supported }) {
 /** 通知标题：会话标题 → 「未命名会话」兜底。 */
 function notificationTitle(title, untitled) {
   const raw = summarize(title, 60);
-  return raw || untitled || "MeowCode";
+  return raw || untitled || "KlockCode";
 }
 
 /**

@@ -52,7 +52,7 @@ describe("modelIconKey", () => {
     expect(modelIconKey("chat-stepstone-v2")).toBeUndefined();
   });
 
-  it("认不出的模型返回 undefined，由调用方退回 MeowCode 的 Logo", () => {
+  it("认不出的模型返回 undefined，由调用方退回 KlockCode 的 Logo", () => {
     expect(modelIconKey("some-unknown-model")).toBeUndefined();
     expect(modelIconKey("")).toBeUndefined();
   });

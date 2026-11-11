@@ -73,6 +73,10 @@
     "connectPickNode": "Erst einen Knoten auswählen, dann „Verbinden“ anklicken",
     "dirty": "Es gibt ungespeicherte Änderungen"
   },
+  "findings": {
+    "title": "Semantische Hinweise ({{n}})",
+    "dismiss": "Ausblenden"
+  },
   "toolbar": {
     "addTier": "Ebene",
     "addGate": "Gate",

@@ -448,7 +448,7 @@ export function ProviderFormBody({ controller }: { controller: ProviderFormContr
                 label={t("models.form.extraHeaders")}
                 value={headersText}
                 onChange={(event) => setHeadersText(event.target.value)}
-                placeholder={"HTTP-Referer: https://example.com\nX-Title: MeowCode"}
+                placeholder={"HTTP-Referer: https://example.com\nX-Title: KlockCode"}
                 hint={t("models.form.extraHeadersHint")}
               />
               <TextField

@@ -2,7 +2,7 @@
   "language": {
     "section": "Sprache",
     "title": "Oberflächensprache",
-    "description": "Wählen Sie die Sprache der MeowCode-Oberfläche. Die Änderung gilt sofort, ohne Neustart.",
+    "description": "Wählen Sie die Sprache der KlockCode-Oberfläche. Die Änderung gilt sofort, ohne Neustart.",
     "system": "Systemsprache"
   },
   "speech": {
@@ -109,9 +109,9 @@
       "user": "Persönlicher Speicher",
       "project": "Projektspeicher"
     },
-    "descUser": "Der Speicher bleibt arbeitsbereichsübergreifend erhalten: Ihre Vorlieben, gängigen Abläufe und Erfahrungen. Die Einträge liegen unter ~/.meowcode/memory/, der Index wird zu Beginn jedes neuen Chats eingefügt, und die AI liest und schreibt sie bei Bedarf über die Memory-Werkzeuge.",
-    "descProject": "Speicher nur für den aktuellen Arbeitsbereich; er liegt im Projekt unter .meowcode/memory/ (nicht in git).",
-    "descProjectNamed": "Speicher nur für den aktuellen Arbeitsbereich ({{workspace}}); er liegt im Projekt unter .meowcode/memory/ (nicht in git).",
+    "descUser": "Der Speicher bleibt arbeitsbereichsübergreifend erhalten: Ihre Vorlieben, gängigen Abläufe und Erfahrungen. Die Einträge liegen unter ~/.klockcode/memory/, der Index wird zu Beginn jedes neuen Chats eingefügt, und die AI liest und schreibt sie bei Bedarf über die Memory-Werkzeuge.",
+    "descProject": "Speicher nur für den aktuellen Arbeitsbereich; er liegt im Projekt unter .klockcode/memory/ (nicht in git).",
+    "descProjectNamed": "Speicher nur für den aktuellen Arbeitsbereich ({{workspace}}); er liegt im Projekt unter .klockcode/memory/ (nicht in git).",
     "count_one": "{{count}} Eintrag gespeichert",
     "count_other": "{{count}} Einträge gespeichert",
     "count_few": "{{count}} Einträge gespeichert",
@@ -167,7 +167,7 @@
     "repo": "Repository",
     "openInBrowser": "Im Browser öffnen",
     "sponsor": "Unterstützen",
-    "sponsorHint": "Wenn MeowCode Ihnen hilft, können Sie den Autor mit einem QR-Code unterstützen.",
+    "sponsorHint": "Wenn KlockCode Ihnen hilft, können Sie den Autor mit einem QR-Code unterstützen.",
     "qrAlt": "Zahlungs-QR-Code für {{name}}",
     "sponsors": {
       "wechat": "WeChat Pay",
@@ -175,7 +175,7 @@
     },
     "upToDate": "Sie haben bereits die neueste Version",
     "checkFailed": "Versionsprüfung fehlgeschlagen: {{error}}",
-    "sponsorList": "Unterstützer (MeowCode, NexBox, OpenMD, LingTab)"
+    "sponsorList": "Unterstützer (KlockCode, NexBox, OpenMD, LingTab)"
   },
   "actions": {
     "add": "Hinzufügen",
@@ -452,7 +452,7 @@
     "empty": "Noch keine Regeln",
     "emptyHint": "Klicke auf Erstellen, um deine erste Regel hinzuzufügen",
     "noWorkspace": "Wähle zuerst einen Arbeitsbereich",
-    "noWorkspaceHint": "Regeln werden im Verzeichnis .meowcode/rules des Projekts gespeichert.",
+    "noWorkspaceHint": "Regeln werden im Verzeichnis .klockcode/rules des Projekts gespeichert.",
     "clickToEdit": "Klicken, um diese Regel zu bearbeiten",
     "deleteAria": "Regel „{{name}}“ löschen",
     "confirmDeleteAria": "Erneut klicken, um das Löschen der Regel „{{name}}“ zu bestätigen",
@@ -606,6 +606,8 @@
     "modeFullDesc": "Der Agent kann Dateien außerhalb des Workspace lesen und schreiben.",
     "modeWorkspace": "Workspace-Schreibzugriff",
     "modeWorkspaceDesc": "Befehle können nur in den Workspace und zusätzliche beschreibbare Stammverzeichnisse schreiben.",
+    "modeReadOnly": "Nur lesen",
+    "modeReadOnlyDesc": "Befehle dürfen keine Datei schreiben, auch nicht im Arbeitsbereich — nur lesen und ausführen.",
     "deleteField": "Löschbestätigung",
     "deleteDesc": "Gilt nur im Workspace-Schreibmodus; bei vollem Zugriff wird die Löschbestätigung standardmäßig übersprungen.",
     "unsupported": "Die Befehlssandbox ist nur unter Windows verfügbar.",
@@ -616,6 +618,7 @@
     "confirmEnable": "Umschalten",
     "cancel": "Abbrechen",
     "enabled": "Auf Workspace-Schreibzugriff umgeschaltet (erste Freigabe {{ms}} ms)",
+    "enabledReadOnly": "Auf schreibgeschützte Sandbox umgestellt (erste Prüfung {{ms}} ms)",
     "saveFailed": "Sandbox-Einstellungen konnten nicht gespeichert werden",
     "loadFailed": "Sandbox-Einstellungen konnten nicht geladen werden"
   },

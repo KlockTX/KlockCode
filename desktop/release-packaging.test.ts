@@ -47,7 +47,7 @@ describe("release packaging", () => {
     expect(hooks.rmSync).toHaveBeenCalledWith(path.join(root, ".tmp", "agent-release"), { recursive: true, force: true });
     expect(hooks.execFileSync).toHaveBeenCalledWith("cmd.exe", [
       "/d", "/s", "/c",
-      "pnpm --filter meowcode --fail-if-no-match deploy --prod --config.inject-workspace-packages=true --config.node-linker=hoisted .tmp/agent-release",
+      "pnpm --filter klockcode --fail-if-no-match deploy --prod --config.inject-workspace-packages=true --config.node-linker=hoisted .tmp/agent-release",
     ], { cwd: root, stdio: "inherit" });
   });
 
@@ -60,7 +60,7 @@ describe("release packaging", () => {
   it("runs the isolated smoke check on the actual packaged directory", async () => {
     const hooks = loadHooks();
     const appOutDir = path.join(desktop, "release", "win-unpacked");
-    await hooks.afterPack({ appOutDir, packager: { appInfo: { productName: "MeowCode", version: "1.0.0" } } });
+    await hooks.afterPack({ appOutDir, packager: { appInfo: { productName: "KlockCode", version: "1.0.0" } } });
     expect(hooks.execFileSync).toHaveBeenCalledWith("node.exe", [path.join(root, "scripts", "release-smoke.mjs"), appOutDir], { stdio: "inherit" });
   });
 
@@ -104,13 +104,13 @@ describe("release packaging", () => {
     expect(msix.appx.artifactName).toBe("${productName}-${version}-${arch}.msix");
     // 商店身份：缺省值与 Partner Center 产品标识一致，仍可被环境变量覆盖
     expect(msix.appx.identityName).toBe(
-      process.env.MEOWCODE_MSIX_IDENTITY_NAME || "MuLiuSaMa.MeowCode",
+      process.env.KLOCKCODE_MSIX_IDENTITY_NAME || "MuLiuSaMa.KlockCode",
     );
     expect(msix.appx.publisher).toBe(
-      process.env.MEOWCODE_MSIX_PUBLISHER || "CN=30F199CB-855A-42F4-96A9-F43088B508BF",
+      process.env.KLOCKCODE_MSIX_PUBLISHER || "CN=30F199CB-855A-42F4-96A9-F43088B508BF",
     );
     expect(msix.appx.publisherDisplayName).toBe(
-      process.env.MEOWCODE_MSIX_PUBLISHER_DISPLAY_NAME || "MuLiu_SaMa",
+      process.env.KLOCKCODE_MSIX_PUBLISHER_DISPLAY_NAME || "MuLiu_SaMa",
     );
 
     // 资源图尺寸必须与 AppxManifest 的引用匹配（electron-builder 只按文件名映射）

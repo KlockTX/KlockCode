@@ -115,7 +115,7 @@ export function WorkspaceTab({
   /** 文件列表子栏宽度：可拖拽调节，localStorage 记忆 */
   const [treeWidth, setTreeWidth] = useState(() => {
     try {
-      const saved = Number(window.localStorage.getItem("meowcode:fileTreeWidth"));
+      const saved = Number(window.localStorage.getItem("klockcode:fileTreeWidth"));
       if (Number.isFinite(saved) && saved > 0) return clampTreeWidth(saved);
     } catch {
       // 存储不可用
@@ -160,7 +160,7 @@ export function WorkspaceTab({
     }
     setTreeWidth((current) => {
       try {
-        window.localStorage.setItem("meowcode:fileTreeWidth", String(Math.round(current)));
+        window.localStorage.setItem("klockcode:fileTreeWidth", String(Math.round(current)));
       } catch {
         // 存储失败忽略
       }

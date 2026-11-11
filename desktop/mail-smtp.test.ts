@@ -19,7 +19,7 @@ const account = {
   smtp: { host: "smtp.example.com", port: 465, secure: true },
 };
 
-const tempDir = mkdtempSync(path.join(tmpdir(), "meowcode-smtp-"));
+const tempDir = mkdtempSync(path.join(tmpdir(), "klockcode-smtp-"));
 afterAll(() => rmSync(tempDir, { recursive: true, force: true }));
 
 describe("SMTP raw 邮件生成", () => {

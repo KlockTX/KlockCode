@@ -24,6 +24,7 @@ import {
   type AgentDefinitionInfo,
   type HarnessDocument,
   type HarnessEdge,
+  type HarnessFinding,
   type HarnessNode,
   type HarnessNodeType,
 } from "../../api";
@@ -578,6 +579,8 @@ export function HarnessEditor({
   /** 状态条里存词条 key，不存文本：切语言后不会残留旧语言的提示。 */
   const [statusKey, setStatusKey] = useState<string>("");
   const [error, setError] = useState<string>("");
+  /** 服务端语义提示：结构合法但"跑起来不会按你画的跑"，不阻断保存 */
+  const [findings, setFindings] = useState<HarnessFinding[]>([]);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
@@ -654,9 +657,11 @@ export function HarnessEditor({
     setError("");
     setStatusKey("status.loading");
     void fetchHarnessDetail(workspace, profile)
-      .then(({ document, agentPrompt }) => {
+      .then(({ document, agentPrompt, findings: loadedFindings }) => {
         setDoc(document);
         setDefaultAgentPrompt(agentPrompt);
+        // 打开编辑器就把这张图的问题摆出来，而不是等保存后才说
+        setFindings(loadedFindings);
         // 切换架构时保留仍然存在的选中（主 Agent 通常是 main），避免右侧面板闪一下
         setSelection((current) => {
           if (!current) return null;
@@ -1015,8 +1020,11 @@ export function HarnessEditor({
     setError("");
     setStatusKey("status.saving");
     void saveHarness(workspace, profile, doc)
-      .then(() => {
+      .then(({ findings: savedFindings }) => {
         setDirty(false);
+        setFindings(savedFindings);
+        // status.saved 的文案本来就写明「治理 run 会在下次 admit 前装载新图」，
+        // 所以治理 run 活跃时延后生效这件事不需要第二个词条。
         setStatusKey("status.saved");
       })
       .catch((cause: unknown) => {
@@ -1031,9 +1039,10 @@ export function HarnessEditor({
     setError("");
     // 内置种子由服务端提供（与运行时的图同源），避免编辑器里再维护一份副本
     void fetchHarnessDetail(workspace, profile, { seed: true })
-      .then(({ document: seed, agentPrompt }) => {
+      .then(({ document: seed, agentPrompt, findings: seedFindings }) => {
         setDoc(seed);
         setDefaultAgentPrompt(agentPrompt);
+        setFindings(seedFindings);
         setSelection(null);
         onRoleSelect?.(null);
         setConnectFrom(null);
@@ -1451,6 +1460,41 @@ export function HarnessEditor({
         ) : null}
       </div>
       {error ? <p className="mc-harness__error">{error}</p> : null}
+      {findings.length > 0 ? (
+        <div className="mc-harness__findings" role="status">
+          <div className="mc-harness__findings-head">
+            <span>{t("findings.title", { n: findings.length })}</span>
+            <button
+              type="button"
+              className="mc-harness__findings-dismiss"
+              onClick={() => setFindings([])}
+            >
+              {t("findings.dismiss")}
+            </button>
+          </div>
+          <ul>
+            {findings.slice(0, 4).map((finding, index) => {
+              const nodeId = finding.nodeId;
+              return (
+                <li key={`${finding.code}-${nodeId ?? index}`} data-severity={finding.severity}>
+                  <button
+                    type="button"
+                    // 有 nodeId 的提示可以直接跳到那个节点：说的就是它
+                    onClick={() => nodeId && setSelection({ kind: "node", id: nodeId })}
+                    disabled={nodeId === undefined}
+                    title={finding.code}
+                  >
+                    {finding.message}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {findings.length > 4 ? (
+            <p className="mc-harness__findings-more">+{findings.length - 4}</p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="mc-harness__main">
         <div
           className="mc-harness__canvas"

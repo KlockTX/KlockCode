@@ -25,7 +25,7 @@
   "approval": {
     "title": "需要授權",
     "requestSubagent": "子 Agent「{{name}}」想使用 {{tool}}。",
-    "requestApp": "MeowCode 想使用 {{tool}}。",
+    "requestApp": "KlockCode 想使用 {{tool}}。",
     "stale": "檔案在審批期間被變更，下方的預覽已重新產生，請重新確認。",
     "risk": "高風險命令",
     "diff": "變更預覽",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}} 分 {{seconds}} 秒"
   },
   "closeDialog": {
-    "title": "關閉視窗時，希望 MeowCode 如何處理？",
-    "desc": "MeowCode 會繼續在背景執行，你可以從系統匣重新開啟。",
+    "title": "關閉視窗時，希望 KlockCode 如何處理？",
+    "desc": "KlockCode 會繼續在背景執行，你可以從系統匣重新開啟。",
     "remember": "記住我的選擇（可在 設定 → 一般 中修改）",
     "cancel": "取消",
     "tray": "縮小到系統匣",
@@ -218,7 +218,7 @@
     "aria": "上下文使用量"
   },
   "bootSplash": {
-    "aria": "正在啟動 MeowCode"
+    "aria": "正在啟動 KlockCode"
   },
   "island": {
     "connecting": "連線中…",
@@ -238,7 +238,7 @@
     "dropHint": "鬆開以附加"
   },
   "star": {
-    "title": "給 MeowCode 點一個 Star",
+    "title": "給 KlockCode 點一個 Star",
     "body": "球球惹，給我點個小星星叭～",
     "dismiss": "補藥",
     "accept": "好噠"

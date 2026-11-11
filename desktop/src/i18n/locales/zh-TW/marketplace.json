@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "插件市集導覽",
     "heading": "插件市集",
-    "subtitle": "發現並安裝插件、技能和 MCP，拓展 MeowCode 的能力。",
+    "subtitle": "發現並安裝插件、技能和 MCP，拓展 KlockCode 的能力。",
     "back": "返回對話"
   },
   "entryType": {
@@ -131,7 +131,7 @@
     "disconnect": {
       "desc": "會刪除本機儲存的 {{platform}} 權杖，並立即斷開 {{platform}} MCP。",
       "envHint": "如需權杖徹底失效，請到對應平台的存取權杖設定裡刪除。",
-      "platformHint": "平台上的授權紀錄不會自動復原；如需徹底復原，請到 {{platform}} 設定 → 授權應用程式裡移除 MeowCode。",
+      "platformHint": "平台上的授權紀錄不會自動復原；如需徹底復原，請到 {{platform}} 設定 → 授權應用程式裡移除 KlockCode。",
       "title": "解除 {{platform}} 授權"
     },
     "empty": {
@@ -147,7 +147,7 @@
     "pluginConfirm": {
       "accept": "我已了解風險，安裝",
       "checkSource": "請確認來源可信後再安裝。",
-      "desc": "社群插件是 TypeScript 原始碼，安裝後會直接在你的 MeowCode agent 程序內執行，擁有與官方插件相同的權限（讀寫檔案、執行命令等）。MeowCode 對社群插件不做沙盒隔離。",
+      "desc": "社群插件是 TypeScript 原始碼，安裝後會直接在你的 KlockCode agent 程序內執行，擁有與官方插件相同的權限（讀寫檔案、執行命令等）。KlockCode 對社群插件不做沙盒隔離。",
       "homepage": "專案主頁",
       "title": "安裝社群插件「{{name}}」？"
     },
@@ -173,9 +173,9 @@
     "connectTitle": "使用 GitHub OAuth 連接",
     "connected": "GitHub 已連接，正在載入 GitHub MCP 工具。",
     "copyCodeAria": "複製裝置程式碼",
-    "desc": "使用 GitHub OAuth 裝置流程授權 MeowCode。Token 會加密儲存在本機，僅用於 GitHub MCP。",
+    "desc": "使用 GitHub OAuth 裝置流程授權 KlockCode。Token 會加密儲存在本機，僅用於 GitHub MCP。",
     "deviceFlowStep": "在 <0>GitHub App 設定</0> 中勾選 Enable device flow",
-    "moduleMissing": "GitHub 登入模塊尚未載入，請完全重啟 MeowCode 後重試。",
+    "moduleMissing": "GitHub 登入模塊尚未載入，請完全重啟 KlockCode 後重試。",
     "openInBrowser": "在瀏覽器中開啟",
     "permissions": "按需授予 Contents、Issues、Pull requests、Actions 等倉庫權限",
     "prereq": "授權前請確認 GitHub App 已完成：",
@@ -192,7 +192,7 @@
     "awaitingBrowser": "等待瀏覽器授權…",
     "awaitingUser": "等待你在瀏覽器中完成授權…",
     "cancelAuth": "取消授權",
-    "clientIdHint": "預設填的是 MeowCode 內建應用程式 ID。若你用自己的應用程式，請把這裡和下面的 Secret 一起改成應用程式頁面上的值——兩者不配套會換 token 失敗（401）。",
+    "clientIdHint": "預設填的是 KlockCode 內建應用程式 ID。若你用自己的應用程式，請把這裡和下面的 Secret 一起改成應用程式頁面上的值——兩者不配套會換 token 失敗（401）。",
     "clientIdLabel": "Client ID（與下面的 Client Secret 必須屬於同一個應用程式）",
     "clientIdPlaceholder": "OAuth 應用程式的 Client ID",
     "connectHint": "點擊「直接連接」會用系統瀏覽器開啟 {{platform}} 授權頁，授權後自動回跳本機，無需貼上 Token。",
@@ -201,9 +201,9 @@
     "connected": "{{platform}} 已連接，正在載入 MCP 工具。",
     "copyClientIdAria": "複製 Client ID",
     "copyRedirectAria": "複製回呼網址",
-    "desc": "使用 {{platform}} OAuth 直接授權：點擊後會用系統瀏覽器開啟授權頁，授權完自動回到 MeowCode。憑據只儲存在本機，用於連接 {{platform}} MCP。",
+    "desc": "使用 {{platform}} OAuth 直接授權：點擊後會用系統瀏覽器開啟授權頁，授權完自動回到 KlockCode。憑據只儲存在本機，用於連接 {{platform}} MCP。",
     "directTitle": "直接連接：用瀏覽器授權 {{platform}}，無需貼上 Token",
-    "moduleMissing": "OAuth 模塊尚未載入，請完全重啟 MeowCode 後重試。",
+    "moduleMissing": "OAuth 模塊尚未載入，請完全重啟 KlockCode 後重試。",
     "opening": "正在開啟…",
     "openingBrowser": "正在開啟瀏覽器…",
     "pasteToken": "貼上 Token",
@@ -216,7 +216,7 @@
     "requireToken": "請至少填寫一個 Token。",
     "restoreClientId": "還原內建 Client ID",
     "saveAndConnect": "儲存並連接",
-    "secretFilePath": "也可以把 Secret 放進 %APPDATA%\\MeowCode\\oauth-apps.json（不進倉庫）",
+    "secretFilePath": "也可以把 Secret 放進 %APPDATA%\\KlockCode\\oauth-apps.json（不進倉庫）",
     "secretLabel": "Client Secret（{{platform}} 換 token 強制驗證，只需填一次）",
     "secretPlaceholder": "OAuth 應用程式的 Client Secret",
     "setupHint": "這個表單只出現一次：{{platform}} 換 token 時必須帶 Client Secret（平台不支援免密 PKCE），首次填一次後加密存在本機。點「儲存並連接」會立刻彈出瀏覽器；之後每次點「連接 {{platform}}」都直接開瀏覽器，不再出現這個表單。",
@@ -305,11 +305,11 @@
     "empty": "还没有手动添加的条目。用上方按钮把本地技能目录、插件文件或 MCP 配置加进来。",
     "import": {
       "skillTitle": "添加本地技能",
-      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.meowcode/skills/ 并即刻生效。",
+      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.klockcode/skills/ 并即刻生效。",
       "pickSkill": "SKILL.md 文件",
       "pickSkillBtn": "选择 SKILL.md",
       "pluginTitle": "添加本地插件",
-      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.meowcode/plugins/ 并在本机执行。",
+      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.klockcode/plugins/ 并在本机执行。",
       "pickPlugin": "插件源码文件或目录",
       "pickFileBtn": "选择文件",
       "pickDirBtn": "选择目录",
@@ -321,7 +321,7 @@
     },
     "mcp": {
       "title": "添加 MCP 服务",
-      "desc": "手动添加一个 MCP server：配置写入 ~/.meowcode/mcp.json，保存后自动连接。",
+      "desc": "手动添加一个 MCP server：配置写入 ~/.klockcode/mcp.json，保存后自动连接。",
       "idLabel": "名称（id）*",
       "navLabel": "接入方式",
       "navStdio": "本地命令",
@@ -332,7 +332,7 @@
       "urlLabel": "服务地址 *",
       "headersLabel": "请求头（JSON，可选）",
       "envLabel": "环境变量（JSON，可选）",
-      "envHint": "支持 ${VAR} 形式引用 MeowCode 进程环境变量。",
+      "envHint": "支持 ${VAR} 形式引用 KlockCode 进程环境变量。",
       "jsonLabel": "MCP 配置（JSON）",
       "jsonHint": "接受 {\"mcpServers\": {…}} 包裹（可一次添加多个）或单个 server 对象。",
       "jsonInvalid": "不是合法的 JSON。",
@@ -347,11 +347,11 @@
       "toggleAria": "启停 MCP {{id}}",
       "authGroup": "驗證",
       "oauthToggle": "OAuth 瀏覽器授權（遠端 MCP）",
-      "oauthHint": "儲存後首次連線會開啟瀏覽器登入並授權；token 存在本機 ~/.meowcode/mcp-oauth/，不進聊天記錄。",
+      "oauthHint": "儲存後首次連線會開啟瀏覽器登入並授權；token 存在本機 ~/.klockcode/mcp-oauth/，不進聊天記錄。",
       "oauthScopesLabel": "OAuth Scopes（可選，空格/逗號分隔）",
       "oauthClientIdLabel": "OAuth Client ID（可選，預註冊）",
       "oauthCimdLabel": "OAuth Client Metadata URL（可選）",
-      "oauthCimdHint": "留空使用 MeowCode 官方 CIMD 文件（meowcode.cn/.well-known/oauth-client）；填空字串可關閉 CIMD 回退。"
+      "oauthCimdHint": "留空使用 KlockCode 官方 CIMD 文件（klockcode.cn/.well-known/oauth-client）；填空字串可關閉 CIMD 回退。"
     }
   },
   "sources": {

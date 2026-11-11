@@ -46,8 +46,8 @@ function memoryDate(item: MemoryListItem): string {
 }
 
 /**
- * 记忆分区：管理跨会话长期记忆（user = ~/.meowcode/memory，project = 工作区
- * .meowcode/memory）。记忆由对话中的 AI 自动写入（memory_* 工具），这里手动
+ * 记忆分区：管理跨会话长期记忆（user = ~/.klockcode/memory，project = 工作区
+ * .klockcode/memory）。记忆由对话中的 AI 自动写入（memory_* 工具），这里手动
  * 查看/编辑/新建/删除；编辑的是 Markdown 原文，frontmatter 的 description
  * 会进 MEMORY.md 索引并由服务端保持同步。
  */

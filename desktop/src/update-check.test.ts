@@ -82,7 +82,7 @@ describe("checkForUpdate", () => {
       status: 200,
       json: async () => ({
         tag_name: "v0.2.0",
-        name: "MeowCode 0.2.0",
+        name: "KlockCode 0.2.0",
         published_at: "2026-11-01T10:00:00Z",
         body: "- 新增 Git 管理",
       }),
@@ -97,7 +97,7 @@ describe("checkForUpdate", () => {
       expect(result.hasUpdate).toBe(true);
       expect(result.latest.version).toBe("v0.2.0");
       expect(result.latest.url).toBe(
-        "https://gitcode.com/MuLiuSaMa/MeowCode/releases/tag/v0.2.0",
+        "https://gitcode.com/MuLiuSaMa/KlockCode/releases/tag/v0.2.0",
       );
       expect(result.latest.notes).toContain("Git 管理");
     } finally {
@@ -110,7 +110,7 @@ describe("checkForUpdate", () => {
     globalThis.fetch = (async () => ({
       ok: true,
       status: 200,
-      json: async () => ({ tag_name: "v0.1.0", name: "MeowCode 0.1.0" }),
+      json: async () => ({ tag_name: "v0.1.0", name: "KlockCode 0.1.0" }),
     })) as unknown as typeof fetch;
     try {
       const result = (await checkForUpdate("0.1.0")) as { ok: boolean; hasUpdate: boolean };
@@ -130,14 +130,14 @@ describe("release 带安装包", () => {
       status: 200,
       json: async () => ({
         tag_name: "v0.2.0",
-        name: "MeowCode 0.2.0",
+        name: "KlockCode 0.2.0",
         assets: [
           {
-            name: "MeowCode-0.2.0.exe",
+            name: "KlockCode-0.2.0.exe",
             browser_download_url: "https://test.gitcode.net/dl/MeowCode-0.2.0.exe",
             size: 88_000_000,
           },
-          { name: "MeowCode-0.2.0.dmg", browser_download_url: "https://gitcode.com/x.dmg", size: 90_000_000 },
+          { name: "KlockCode-0.2.0.dmg", browser_download_url: "https://gitcode.com/x.dmg", size: 90_000_000 },
         ],
       }),
     })) as unknown as typeof fetch;
@@ -153,7 +153,7 @@ describe("release 带安装包", () => {
       // 不可达的 test.gitcode.net 已被换成主站
       expect(result.latest.assets[0].url).toBe("https://gitcode.com/dl/MeowCode-0.2.0.exe");
       // 当前平台（测试机是 win32）挑 exe
-      expect(result.latest.asset?.name).toBe("MeowCode-0.2.0.exe");
+      expect(result.latest.asset?.name).toBe("KlockCode-0.2.0.exe");
     } finally {
       globalThis.fetch = original;
     }

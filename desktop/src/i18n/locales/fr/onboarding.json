@@ -14,7 +14,7 @@
     "title": "Choisir la langue",
     "label": "Langue",
     "previewLabel": "Aperçu de la langue",
-    "previewText": "Bonjour et bienvenue dans MeowCode.",
+    "previewText": "Bonjour et bienvenue dans KlockCode.",
     "systemMeta": "Langue du système · actuellement {{language}}",
     "selectedMeta": "Langue de l’interface · {{language}}"
   },
@@ -51,7 +51,7 @@
   },
   "finish": {
     "title": "Tout est prêt",
-    "desc": "La configuration est terminée. Vous pouvez maintenant utiliser MeowCode.",
+    "desc": "La configuration est terminée. Vous pouvez maintenant utiliser KlockCode.",
     "noProvider": "Aucun modèle configuré — vous pourrez en ajouter plus tard dans Paramètres → Modèles."
   }
 }

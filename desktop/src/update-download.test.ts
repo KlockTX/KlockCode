@@ -39,20 +39,20 @@ afterEach(async () => {
 
 describe("安装包挑选", () => {
   const assets = [
-    { name: "MeowCode-1.0.0.dmg" },
-    { name: "MeowCode-1.0.0.exe" },
-    { name: "MeowCode-1.0.0.msi" },
-    { name: "MeowCode-1.0.0.AppImage" },
+    { name: "KlockCode-1.0.0.dmg" },
+    { name: "KlockCode-1.0.0.exe" },
+    { name: "KlockCode-1.0.0.msi" },
+    { name: "KlockCode-1.0.0.AppImage" },
   ];
 
   it("Windows 优先 exe，其次 msi", () => {
-    expect(pickInstallerAsset(assets, "win32")?.name).toBe("MeowCode-1.0.0.exe");
+    expect(pickInstallerAsset(assets, "win32")?.name).toBe("KlockCode-1.0.0.exe");
     expect(pickInstallerAsset([{ name: "a.msi" }], "win32")?.name).toBe("a.msi");
   });
 
   it("macOS 优先 dmg，Linux 优先 AppImage", () => {
-    expect(pickInstallerAsset(assets, "darwin")?.name).toBe("MeowCode-1.0.0.dmg");
-    expect(pickInstallerAsset(assets, "linux")?.name).toBe("MeowCode-1.0.0.AppImage");
+    expect(pickInstallerAsset(assets, "darwin")?.name).toBe("KlockCode-1.0.0.dmg");
+    expect(pickInstallerAsset(assets, "linux")?.name).toBe("KlockCode-1.0.0.AppImage");
   });
 
   it("没有匹配就返回 null", () => {
@@ -87,15 +87,15 @@ describe("文件名清洗", () => {
   it("去掉路径与非法字符", () => {
     expect(safeAssetFileName("../../evil.exe")).toBe("evil.exe");
     expect(safeAssetFileName("a:b*c?.exe")).toBe("a_b_c_.exe");
-    expect(safeAssetFileName("")).toBe("MeowCode-Setup.exe");
+    expect(safeAssetFileName("")).toBe("KlockCode-Setup.exe");
   });
 });
 
 describe("downloadToFile", () => {
   it("写盘并回报进度", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-dl-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-dl-"));
     tempDirs.push(dir);
-    const target = path.join(dir, "MeowCode-Setup.exe");
+    const target = path.join(dir, "KlockCode-Setup.exe");
     const payload = new TextEncoder().encode("hello installer");
 
     const fetchImpl = (async () => ({
@@ -125,7 +125,7 @@ describe("downloadToFile", () => {
   });
 
   it("HTTP 失败时抛错", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-dl-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-dl-"));
     tempDirs.push(dir);
     const fetchImpl = (async () => ({
       ok: false,

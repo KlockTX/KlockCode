@@ -82,15 +82,15 @@ app.commandLine.appendSwitch("disable-features", "CalculateNativeWinOcclusion");
 const serverToken = crypto.randomBytes(32).toString("base64url");
 
 /** GitHub OAuth access token 注入到这个环境变量；mcp.json 只保留 ${...} 占位模板。 */
-const GITHUB_TOKEN_ENV = "MEOWCODE_GITHUB_TOKEN";
+const GITHUB_TOKEN_ENV = "KLOCKCODE_GITHUB_TOKEN";
 /** 手工令牌（Gitee/GitCode PAT、Figma/瑞幸访问令牌、飞书 App ID/Secret）：加密存 settings.mcpCredentials，启动/更新时注入进程 env。 */
 const MANUAL_MCP_TOKEN_ENVS = [
-  "MEOWCODE_GITEE_TOKEN",
-  "MEOWCODE_GITCODE_TOKEN",
-  "MEOWCODE_FIGMA_TOKEN",
+  "KLOCKCODE_GITEE_TOKEN",
+  "KLOCKCODE_GITCODE_TOKEN",
+  "KLOCKCODE_FIGMA_TOKEN",
   "LUCKIN_MCP_TOKEN",
-  "MEOWCODE_LARK_APP_ID",
-  "MEOWCODE_LARK_APP_SECRET",
+  "KLOCKCODE_LARK_APP_ID",
+  "KLOCKCODE_LARK_APP_SECRET",
 ];
 /** 提前 5 分钟刷新，避开 MCP 请求中途过期。 */
 const GITHUB_REFRESH_MARGIN_MS = 5 * 60 * 1000;
@@ -108,8 +108,8 @@ const platformOauthRefreshTimers = new Map(); // platform -> timer
 const platformOauthRefreshInFlight = new Map(); // platform -> Promise
 
 /**
- * OAuth 应用凭据解析顺序：设置页密文 → 环境变量 MEOWCODE_<PLATFORM>_CLIENT_SECRET
- * → 本机 %APPDATA%/MeowCode/oauth-apps.json → oauth-platforms.cjs 内置官方应用凭据。
+ * OAuth 应用凭据解析顺序：设置页密文 → 环境变量 KLOCKCODE_<PLATFORM>_CLIENT_SECRET
+ * → 本机 %APPDATA%/KlockCode/oauth-apps.json → oauth-platforms.cjs 内置官方应用凭据。
  * 用户自建应用可通过前三种来源完全覆盖内置凭据。
  * 本机文件格式：{ "gitee": { "clientSecret": "..." }, "gitcode": { "clientSecret": "..." } }
  */
@@ -136,7 +136,7 @@ function readLocalOauthApps() {
 
 /** 本机凭据（环境变量 > oauth-apps.json），secret 为空表示没配。 */
 function localOauthCredential(platform) {
-  const envName = `MEOWCODE_${platform.toUpperCase()}_CLIENT_SECRET`;
+  const envName = `KLOCKCODE_${platform.toUpperCase()}_CLIENT_SECRET`;
   const fromEnv = typeof process.env[envName] === "string" ? process.env[envName].trim() : "";
   if (fromEnv) return { clientId: "", clientSecret: fromEnv, source: "env" };
   const entry = readLocalOauthApps()[platform];
@@ -200,16 +200,16 @@ function resolveOauthApp(settings, platform) {
   };
 }
 
-app.setName("MeowCode");
+app.setName("KlockCode");
 const APP_DATA_DIR = app.getPath("appData");
 const DEFAULT_DATA_DIR = defaultDataDir(APP_DATA_DIR);
-// 默认 %APPDATA%/MeowCode；用户改过数据位置时读取外部指针，启动前切换 userData。
+// 默认 %APPDATA%/KlockCode；用户改过数据位置时读取外部指针，启动前切换 userData。
 app.setPath("userData", readDataLocation(APP_DATA_DIR));
 if (process.platform === "win32") {
-  // 打包后与 electron-builder 的 appId 一致，任务栏/通知按 MeowCode 归组。
-  // dev 下 exe 是改名后的 MeowCode.exe，没有对应开始菜单快捷方式，用 appId 会因为没有
+  // 打包后与 electron-builder 的 appId 一致，任务栏/通知按 KlockCode 归组。
+  // dev 下 exe 是改名后的 KlockCode.exe，没有对应开始菜单快捷方式，用 appId 会因为没有
   // 归属而静默不弹 toast —— 退回 exe 自身路径，通知才显示得出来。
-  app.setAppUserModelId(devRepoRoot() ? process.execPath : "app.meowcode.desktop");
+  app.setAppUserModelId(devRepoRoot() ? process.execPath : "app.klockcode.desktop");
 }
 
 /** 关闭窗口时的行为：每次询问 / 缩小到托盘 / 直接关闭 */
@@ -296,7 +296,7 @@ const ISLAND_WINDOW_HEIGHT = 680;
 const browserHost = createBrowserHostController({ getMainWindow: () => mainWindow });
 /** 电脑控制桥（computer_* 工具）：截图走 desktopCapturer，输入走常驻 PowerShell 助手 */
 const computerHost = createComputerHostController();
-/** 公告控制器：拉取 NexBox 数据仓的 notice_meowcode.json（见 notice.cjs） */
+/** 公告控制器：拉取 NexBox 数据仓的 notice_klockcode.json（见 notice.cjs） */
 let noticeController = null;
 let tray = null;
 /** 真退出（托盘菜单 / before-quit）时为 true，此时 close 事件直接放行 */
@@ -326,9 +326,9 @@ function ensureDirs() {
   fs.mkdirSync(sessionsDir, { recursive: true });
 }
 
-/** 默认工作区：用户文档目录下的 MeowCode（可见、可被用户删除）。 */
+/** 默认工作区：用户文档目录下的 KlockCode（可见、可被用户删除）。 */
 function defaultWorkspacePath() {
-  return path.join(app.getPath("documents"), "MeowCode");
+  return path.join(app.getPath("documents"), "KlockCode");
 }
 
 /**
@@ -348,7 +348,7 @@ function reportStartupStatistics() {
           ? "macos"
           : process.platform;
     const payload = JSON.stringify({
-      version: `meowcode-${app.getVersion()}`,
+      version: `klockcode-${app.getVersion()}`,
       os: osName,
     });
 
@@ -360,7 +360,7 @@ function reportStartupStatistics() {
         fs.mkdirSync(path.dirname(flagPath), { recursive: true });
         fs.writeFileSync(flagPath, "1");
       } catch (error) {
-        console.warn("[MeowCode] Failed to write statistics flag:", error);
+        console.warn("[KlockCode] Failed to write statistics flag:", error);
       }
     };
 
@@ -386,7 +386,7 @@ function reportStartupStatistics() {
     });
     request.end(payload);
   } catch (error) {
-    console.warn("[MeowCode] Failed to send startup statistics:", error);
+    console.warn("[KlockCode] Failed to send startup statistics:", error);
   }
 }
 
@@ -492,12 +492,12 @@ function fetchModelProfiles() {
           mainWindow.webContents.send("meow:model-profiles", next);
         }
       } catch (error) {
-        console.warn("[MeowCode] Failed to parse model profiles:", error);
+        console.warn("[KlockCode] Failed to parse model profiles:", error);
       }
     });
   });
   request.on("error", (error) => {
-    console.warn("[MeowCode] Failed to fetch model profiles:", error.message ?? error);
+    console.warn("[KlockCode] Failed to fetch model profiles:", error.message ?? error);
   });
   request.on("timeout", () => request.destroy());
 }
@@ -516,7 +516,7 @@ function ensureDefaultWorkspace() {
   } catch (error) {
     // 文档目录不可写等情况下保持未选择，由渲染层引导用户手动选择
     console.warn(
-      "[MeowCode] Failed to create default workspace:",
+      "[KlockCode] Failed to create default workspace:",
       error instanceof Error ? error.message : String(error),
     );
     return settings;
@@ -549,7 +549,8 @@ function normalizeSandbox(raw) {
       : 120_000;
   return {
     enabled: parsed.enabled === true,
-    mode: "workspace-write",
+    // 未知 mode 收敛到最严的一档（与服务端 normalizeSandboxSettings 同一判定）
+    mode: parsed.mode === "read-only" ? "read-only" : "workspace-write",
     writableRoots,
     allowTemp: parsed.allowTemp !== false,
     grantTimeoutMs,
@@ -726,7 +727,7 @@ function writeSettings(settings) {
 function encryptApiKey(value) {
   if (!value) return "";
   if (!safeStorage.isEncryptionAvailable()) {
-    console.warn("[MeowCode] safeStorage unavailable; storing API key without OS encryption.");
+    console.warn("[KlockCode] safeStorage unavailable; storing API key without OS encryption.");
     return Buffer.from(value, "utf8").toString("base64");
   }
   return safeStorage.encryptString(value).toString("base64");
@@ -922,7 +923,7 @@ function publicSettings(settings) {
 /**
  * 仓库根目录（仅 dev 布局下非空）。dev 时 main.cjs 在仓库 desktop/ 里；
  * 打包后它在 app.asar 内，不存在同级 desktop/main.cjs —— 以此区分两种布局。
- * 不能用 app.isPackaged：electron.exe 被改名 MeowCode.exe 后会被 Electron
+ * 不能用 app.isPackaged：electron.exe 被改名 KlockCode.exe 后会被 Electron
  * 当作 packaged 启动，isPackaged 在 dev 下也变成 true。
  */
 function devRepoRoot() {
@@ -1306,71 +1307,71 @@ function buildServerEnv(settings) {
     ...process.env,
     ...manualMcpEnv,
     ...(githubToken ? { [GITHUB_TOKEN_ENV]: githubToken } : {}),
-    MEOWCODE_SERVER_PORT: "0",
-    MEOWCODE_SESSIONS_DIR: sessionsDir,
-    MEOWCODE_WORKTREES_DIR: path.join(settingsDir, "worktrees"),
-    MEOWCODE_WORKSPACE: settings.workspace ?? "",
-    MEOWCODE_PROVIDER_ID: settings.providerId ?? "",
-    MEOWCODE_PROVIDERS: JSON.stringify(providers),
+    KLOCKCODE_SERVER_PORT: "0",
+    KLOCKCODE_SESSIONS_DIR: sessionsDir,
+    KLOCKCODE_WORKTREES_DIR: path.join(settingsDir, "worktrees"),
+    KLOCKCODE_WORKSPACE: settings.workspace ?? "",
+    KLOCKCODE_PROVIDER_ID: settings.providerId ?? "",
+    KLOCKCODE_PROVIDERS: JSON.stringify(providers),
     // 记忆总开关：server 只认 env，不读 settings 文件
-    MEOWCODE_MEMORY: settings.memoryEnabled === false ? "0" : "1",
+    KLOCKCODE_MEMORY: settings.memoryEnabled === false ? "0" : "1",
     // 自我学习开关：同上，运行中切换走 /config/learning（默认关）
-    MEOWCODE_SELF_LEARNING: settings.selfLearning === true ? "1" : "0",
+    KLOCKCODE_SELF_LEARNING: settings.selfLearning === true ? "1" : "0",
     // 供应商故障转移：server 只认 env，运行中切换走 /config/provider-fallback（默认关）
-    MEOWCODE_PROVIDER_FALLBACK: settings.providerFallback === true ? "1" : "0",
+    KLOCKCODE_PROVIDER_FALLBACK: settings.providerFallback === true ? "1" : "0",
     // 网络代理：system 模式在启动时把系统代理解析成具体地址传给 server
     // （agent 侧再退到 HTTPS_PROXY/HTTP_PROXY 兜底）；运行中切换走 /config/proxy
-    MEOWCODE_PROXY_MODE: PROXY_MODES.includes(settings.proxyMode) ? settings.proxyMode : "direct",
-    MEOWCODE_PROXY_URL:
+    KLOCKCODE_PROXY_MODE: PROXY_MODES.includes(settings.proxyMode) ? settings.proxyMode : "direct",
+    KLOCKCODE_PROXY_URL:
       settings.proxyMode === "manual"
         ? settings.proxyUrl || ""
         : settings.proxyMode === "system"
           ? resolveSystemProxy()
           : "",
     // AGENTS.md / CLAUDE.md 导入开关：server 启动时读 env，设置页切换走 /config/instructions
-    MEOWCODE_INCLUDE_AGENTS_MD: settings.includeAgentsMd === false ? "0" : "1",
-    MEOWCODE_INCLUDE_CLAUDE_MD: settings.includeClaudeMd === false ? "0" : "1",
+    KLOCKCODE_INCLUDE_AGENTS_MD: settings.includeAgentsMd === false ? "0" : "1",
+    KLOCKCODE_INCLUDE_CLAUDE_MD: settings.includeClaudeMd === false ? "0" : "1",
     // 会话回滚（文件快照）：server 启动时读 env，写盘后重启 agent server 生效
-    MEOWCODE_REWIND: settings.rewindSnapshots === false ? "0" : "1",
+    KLOCKCODE_REWIND: settings.rewindSnapshots === false ? "0" : "1",
     ...(typeof settings.rewindMaxTotalMb === "number" && settings.rewindMaxTotalMb > 0
-      ? { MEOWCODE_REWIND_MAX_MB: String(Math.round(settings.rewindMaxTotalMb)) }
+      ? { KLOCKCODE_REWIND_MAX_MB: String(Math.round(settings.rewindMaxTotalMb)) }
       : {}),
     ...(typeof settings.rewindKeepCheckpoints === "number" && settings.rewindKeepCheckpoints > 0
-      ? { MEOWCODE_REWIND_KEEP: String(Math.round(settings.rewindKeepCheckpoints)) }
+      ? { KLOCKCODE_REWIND_KEEP: String(Math.round(settings.rewindKeepCheckpoints)) }
       : {}),
     // 语色：server 只认 env，不读 settings 文件；运行中切换走 /config/speech-style
-    MEOWCODE_SPEECH_STYLE: SPEECH_STYLES.includes(settings.speechStyle)
+    KLOCKCODE_SPEECH_STYLE: SPEECH_STYLES.includes(settings.speechStyle)
       ? settings.speechStyle
       : "normal",
-    MEOWCODE_PLUGINS: JSON.stringify({ disabled: pluginDisabled }),
+    KLOCKCODE_PLUGINS: JSON.stringify({ disabled: pluginDisabled }),
     // 命令沙箱：server 只认 env；运行中切换走 PUT /config/sandbox
-    MEOWCODE_SANDBOX: JSON.stringify(normalizeSandbox(settings.sandbox)),
+    KLOCKCODE_SANDBOX: JSON.stringify(normalizeSandbox(settings.sandbox)),
     // Claude Code hooks：user 级始终参与；工作区 .claude 默认不执行（设置页子开关）
-    MEOWCODE_HOOKS_RUN_MODE: settings.hooks?.runMode === "ask" ? "ask" : "auto",
-    MEOWCODE_CC_HOOKS_SCOPE: JSON.stringify({
+    KLOCKCODE_HOOKS_RUN_MODE: settings.hooks?.runMode === "ask" ? "ask" : "auto",
+    KLOCKCODE_CC_HOOKS_SCOPE: JSON.stringify({
       user: true,
       workspace: settings.hooks?.includeWorkspace === true,
     }),
-    MEOWCODE_SERVER_TOKEN: serverToken,
+    KLOCKCODE_SERVER_TOKEN: serverToken,
     // 插件市场 bundles 根（未设置=市场功能为空）
-    MEOWCODE_MARKETPLACE_DIR: marketplaceDir(),
-    MEOWCODE_RIPGREP_PATH: ripgrepPath,
+    KLOCKCODE_MARKETPLACE_DIR: marketplaceDir(),
+    KLOCKCODE_RIPGREP_PATH: ripgrepPath,
     ...(browserHost.baseUrl
       ? {
-          MEOWCODE_BROWSER_HOST: browserHost.baseUrl,
-          MEOWCODE_BROWSER_HOST_TOKEN: browserHost.token,
+          KLOCKCODE_BROWSER_HOST: browserHost.baseUrl,
+          KLOCKCODE_BROWSER_HOST_TOKEN: browserHost.token,
         }
       : {}),
     ...(computerHost.baseUrl
       ? {
-          MEOWCODE_COMPUTER_HOST: computerHost.baseUrl,
-          MEOWCODE_COMPUTER_HOST_TOKEN: computerHost.token,
+          KLOCKCODE_COMPUTER_HOST: computerHost.baseUrl,
+          KLOCKCODE_COMPUTER_HOST_TOKEN: computerHost.token,
         }
       : {}),
     ...(jobHost.baseUrl
       ? {
-          MEOWCODE_JOB_HOST: jobHost.baseUrl,
-          MEOWCODE_JOB_HOST_TOKEN: jobHost.token,
+          KLOCKCODE_JOB_HOST: jobHost.baseUrl,
+          KLOCKCODE_JOB_HOST_TOKEN: jobHost.token,
         }
       : {}),
     ELECTRON_RUN_AS_NODE: "1",
@@ -1395,7 +1396,7 @@ function scheduleGithubRefresh(settings) {
     githubRefreshTimer = null;
     void refreshGithubToken().catch((error) => {
       console.warn(
-        "[MeowCode] GitHub token refresh failed:",
+        "[KlockCode] GitHub token refresh failed:",
         error instanceof Error ? error.message : String(error),
       );
     });
@@ -1432,13 +1433,13 @@ async function updateServerMcpCredentials(env) {
       body: JSON.stringify({ env }),
     });
     if (!response.ok) {
-      console.error(`[MeowCode] Failed to update MCP credentials (${response.status}).`);
+      console.error(`[KlockCode] Failed to update MCP credentials (${response.status}).`);
       return false;
     }
     return true;
   } catch (error) {
     console.error(
-      "[MeowCode] Failed to update MCP credentials:",
+      "[KlockCode] Failed to update MCP credentials:",
       error instanceof Error ? error.message : String(error),
     );
     return false;
@@ -1472,9 +1473,9 @@ function handleOauthCallback(platform, url, response) {
   const config = OAUTH_PLATFORMS[platform];
   response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
   response.end(
-    "<!doctype html><meta charset='utf-8'><title>MeowCode 授权</title>" +
+    "<!doctype html><meta charset='utf-8'><title>KlockCode 授权</title>" +
       '<body style="font-family:system-ui,sans-serif;background:#0d0d0d;color:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">' +
-      "<p>已收到授权，正在返回 MeowCode… 可以关闭此窗口。</p>",
+      "<p>已收到授权，正在返回 KlockCode… 可以关闭此窗口。</p>",
   );
   if (!flow || flow.status !== "pending") return;
   if (url.searchParams.get("state") !== flow.state) {
@@ -1594,7 +1595,7 @@ function scheduleOauthRefresh(settings, platform) {
     platformOauthRefreshTimers.delete(platform);
     void refreshOauthToken(platform).catch((error) => {
       console.warn(
-        `[MeowCode] ${platform} OAuth token refresh failed:`,
+        `[KlockCode] ${platform} OAuth token refresh failed:`,
         error instanceof Error ? error.message : String(error),
       );
     });
@@ -1621,7 +1622,7 @@ async function refreshOauthToken(platform) {
       refreshToken,
     });
     if (!result.ok) {
-      console.warn(`[MeowCode] ${platform} OAuth token refresh failed:`, result.message);
+      console.warn(`[KlockCode] ${platform} OAuth token refresh failed:`, result.message);
       const expiresAt = account.expiresAt ? Date.parse(account.expiresAt) : 0;
       if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
         const accounts = { ...(settings.oauthAccounts ?? {}) };
@@ -1701,7 +1702,7 @@ async function refreshGithubToken() {
     if (!refreshToken) return settings;
     const result = await refreshGithubAccessToken(GITHUB_OAUTH_CLIENT_ID, refreshToken);
     if (!result.ok) {
-      console.warn("[MeowCode] GitHub token refresh failed:", result.message);
+      console.warn("[KlockCode] GitHub token refresh failed:", result.message);
       const expiresAt = auth.expiresAt ? Date.parse(auth.expiresAt) : 0;
       if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
         const next = migrateSettings({ ...settings, githubAuth: {} });
@@ -1818,7 +1819,7 @@ async function bootServerOnce() {
     await refreshGithubTokenIfNeeded();
   } catch (error) {
     console.warn(
-      "[MeowCode] GitHub token refresh check failed:",
+      "[KlockCode] GitHub token refresh check failed:",
       error instanceof Error ? error.message : String(error),
     );
   }
@@ -1826,7 +1827,7 @@ async function bootServerOnce() {
     await refreshOauthTokensIfNeeded();
   } catch (error) {
     console.warn(
-      "[MeowCode] OAuth token refresh check failed:",
+      "[KlockCode] OAuth token refresh check failed:",
       error instanceof Error ? error.message : String(error),
     );
   }
@@ -1883,7 +1884,7 @@ async function bootServerOnce() {
     // 子进程「干净退出（0）且从未 ready」几乎只可能是被 shutdown 打断（重启/退出竞态），
     // 而不是崩溃。自动重试一次；真正的崩溃会带非 0 退出码，照常抛出。
     if (error instanceof Error && /exited before becoming ready \(0\)/.test(error.message)) {
-      console.warn("[MeowCode] Agent server exited cleanly before ready; retrying once.");
+      console.warn("[KlockCode] Agent server exited cleanly before ready; retrying once.");
       await stopServer();
       return await spawn();
     }
@@ -1947,7 +1948,7 @@ async function startEventStream() {
       });
       if (response.status === 401) {
         eventLoopActive = false;
-        console.error("[MeowCode] Agent server rejected the auth token; event stream stopped.");
+        console.error("[KlockCode] Agent server rejected the auth token; event stream stopped.");
         return;
       }
       if (!response.ok || !response.body) throw new Error(`Event stream failed: ${response.status}`);
@@ -1996,7 +1997,7 @@ async function startEventStream() {
       }
     } catch (error) {
       if (error.name !== "AbortError") {
-        console.error("[MeowCode] Event stream error:", error);
+        console.error("[KlockCode] Event stream error:", error);
       }
     }
     if (eventLoopActive) await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -2084,7 +2085,7 @@ function showNotification({ title, body, sessionId }) {
     });
     notification.on("failed", (_event, error) => {
       // dev 下没有开始菜单快捷方式时 AUMID 归属可能失败，这里至少留下线索
-      console.warn("[MeowCode] Notification failed:", error);
+      console.warn("[KlockCode] Notification failed:", error);
     });
     notification.on("click", () => {
       showMainWindow();
@@ -2092,7 +2093,7 @@ function showNotification({ title, body, sessionId }) {
     });
     notification.show();
   } catch (error) {
-    console.warn("[MeowCode] Notification error:", error);
+    console.warn("[KlockCode] Notification error:", error);
   }
 }
 
@@ -2312,7 +2313,7 @@ function trayImage() {
 function createTray() {
   if (tray) return;
   tray = new Tray(trayImage());
-  tray.setToolTip("MeowCode");
+  tray.setToolTip("KlockCode");
   tray.on("click", showMainWindow);
   tray.on("double-click", showMainWindow);
   updateTrayMenu();
@@ -2615,7 +2616,7 @@ function createWindow() {
     ...(restoreBounds ? { x: restoreBounds.x, y: restoreBounds.y } : {}),
     minWidth: 960,
     minHeight: 640,
-    title: "MeowCode",
+    title: "KlockCode",
     show: false,
     // ZCode 同款：禁用原生标题栏，窗口操作由渲染层自绘（见 preload 的 window* API）。
     frame: false,
@@ -2953,7 +2954,7 @@ ipcMain.handle("meow:save-hooks-settings", async (_event, payload) => {
 /** 打开 Claude Code hooks 配置文件：只接受已知 layer，路径由主进程解析，避免任意文件打开。 */
 ipcMain.handle("meow:open-hooks-file", async (_event, layer) => {
   const settings = readSettings();
-  const home = process.env.MEOWCODE_CC_HOOKS_HOME || os.homedir();
+  const home = process.env.KLOCKCODE_CC_HOOKS_HOME || os.homedir();
   const workspace = settings.workspace;
   let file = null;
   if (layer === "user") file = path.join(home, ".claude", "settings.json");
@@ -3174,7 +3175,7 @@ ipcMain.handle("meow:oauth-save-app", async (_event, payload) => {
   } catch (error) {
     // 网络不通等自检失败不阻塞保存：真正的交换阶段会再报一次
     console.warn(
-      `[MeowCode] OAuth credential probe failed for ${platform}:`,
+      `[KlockCode] OAuth credential probe failed for ${platform}:`,
       error instanceof Error ? error.message : String(error),
     );
   }
@@ -3943,7 +3944,7 @@ const jobHost = createJobHost({
   },
 });
 void jobHost.start().catch((error) => {
-  console.error(`[meowcode] job host failed: ${error?.message ?? error}`);
+  console.error(`[klockcode] job host failed: ${error?.message ?? error}`);
 });
 app.on("before-quit", () => {
   terminalManager.disposeAll();
@@ -3988,7 +3989,7 @@ ipcMain.handle("meow:save-provider-prefs", (_event, prefs) => {
   if (typeof prefs?.providerId === "string" && prefs.providerId) {
     next.providerId = prefs.providerId;
   }
-  // 记忆总开关：只写盘（启动时经 MEOWCODE_MEMORY 传给 server），
+  // 记忆总开关：只写盘（启动时经 KLOCKCODE_MEMORY 传给 server），
   // 实时生效走 /config/memory，由渲染层另行调用——绝不走 saveSettings
   if (typeof prefs?.memoryEnabled === "boolean") {
     next.memoryEnabled = prefs.memoryEnabled;
@@ -4261,7 +4262,7 @@ ipcMain.handle("meow:save-preferences", (_event, prefs) => {
 });
 
 ipcMain.handle("meow:get-app-info", () => ({
-  name: "MeowCode",
+  name: "KlockCode",
   version: app.getVersion(),
   electron: process.versions.electron ?? "",
   chrome: process.versions.chrome ?? "",
@@ -4434,7 +4435,7 @@ let activeUpdateDownload = null;
 ipcMain.handle("meow:download-update", async (_event, payload) => {
   const url = String(payload?.url || "");
   if (!/^https?:\/\//i.test(url)) throw new Error("下载地址不合法");
-  const fileName = safeAssetFileName(String(payload?.fileName || "MeowCode-Setup.exe"));
+  const fileName = safeAssetFileName(String(payload?.fileName || "KlockCode-Setup.exe"));
 
   const current = activeUpdateDownload;
   if (current) {
@@ -4612,18 +4613,18 @@ if (!hasSingleInstanceLock) {
       await browserHost.start();
     } catch (error) {
       // 桥起不来不阻塞应用启动：agent 侧浏览器工具会自动降级为不可用
-      console.error("[MeowCode] Failed to start browser host:", error);
+      console.error("[KlockCode] Failed to start browser host:", error);
     }
     try {
       await computerHost.start();
     } catch (error) {
       // 桥起不来不阻塞应用启动：agent 侧电脑控制工具会自动降级为不可用
-      console.error("[MeowCode] Failed to start computer host:", error);
+      console.error("[KlockCode] Failed to start computer host:", error);
     }
     try {
       await startServer();
     } catch (error) {
-      console.error("[MeowCode] Failed to start agent server:", error);
+      console.error("[KlockCode] Failed to start agent server:", error);
       if (mainWindow) {
         mainWindow.webContents.send("meow:event", {
           type: "error",

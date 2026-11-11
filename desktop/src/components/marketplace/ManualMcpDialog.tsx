@@ -354,7 +354,7 @@ export function ManualMcpDialog({
                     // 不走 agent 内 OAuth——那条路在 Undermind 上会卡 DCR/回调。
                     if (/undermind\.ai/i.test(next)) {
                       setOauth(false);
-                      setHeadersJson('{\n  "Authorization": "Bearer ${MEOWCODE_UNDERMIND_TOKEN}"\n}');
+                      setHeadersJson('{\n  "Authorization": "Bearer ${KLOCKCODE_UNDERMIND_TOKEN}"\n}');
                     }
                   }}
                 />
@@ -419,7 +419,7 @@ export function ManualMcpDialog({
                   <input
                     className="mc-dialog__input"
                     value={clientId}
-                    placeholder="meowcode-pre-registered"
+                    placeholder="klockcode-pre-registered"
                     spellCheck={false}
                     onChange={(event) => setClientId(event.target.value)}
                   />

@@ -56,7 +56,7 @@ describe("parseAnnouncement", () => {
 
 describe("createNoticeController", () => {
   it("启动先展示缓存，刷新后更新并落盘", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-notice-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-notice-"));
     const cachePath = path.join(dir, "announcement.json");
     await writeFile(
       cachePath,
@@ -91,7 +91,7 @@ describe("createNoticeController", () => {
   });
 
   it("拉取失败保留当前公告，不推空更新", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-notice-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-notice-"));
     const updates: Array<{ id?: string } | null> = [];
     let fail = false;
     const fetchImpl = vi.fn(async () => {
@@ -116,7 +116,7 @@ describe("createNoticeController", () => {
   });
 
   it("关闭后按 id 落盘：重启仍隐藏，换新 id 重新出现", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-notice-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-notice-"));
     const cachePath = path.join(dir, "announcement.json");
     const makeFetch = (id: string) =>
       vi.fn(async () => ({
@@ -148,7 +148,7 @@ describe("createNoticeController", () => {
   });
 
   it("关闭后再次刷新不会把 dismissedId 冲掉，依旧保持隐藏", async () => {
-    const dir = await mkdtemp(path.join(tmpdir(), "meowcode-notice-"));
+    const dir = await mkdtemp(path.join(tmpdir(), "klockcode-notice-"));
     const cachePath = path.join(dir, "announcement.json");
     const makeFetch = () =>
       vi.fn(async () => ({

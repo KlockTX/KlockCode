@@ -168,7 +168,7 @@ describe("notificationTitle", () => {
   it("falls back to the untitled string", () => {
     expect(notificationTitle("修复托盘菜单", "未命名会话")).toBe("修复托盘菜单");
     expect(notificationTitle("  ", "未命名会话")).toBe("未命名会话");
-    expect(notificationTitle(null, "")).toBe("MeowCode");
+    expect(notificationTitle(null, "")).toBe("KlockCode");
   });
 });
 

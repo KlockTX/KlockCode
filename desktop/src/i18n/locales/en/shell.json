@@ -25,7 +25,7 @@
   "approval": {
     "title": "Permission required",
     "requestSubagent": "Subagent \"{{name}}\" wants to use {{tool}}.",
-    "requestApp": "MeowCode wants to use {{tool}}.",
+    "requestApp": "KlockCode wants to use {{tool}}.",
     "stale": "The file changed during approval. The preview below was regenerated, please confirm again.",
     "risk": "High-risk command",
     "diff": "Proposed changes",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}}m {{seconds}}s"
   },
   "closeDialog": {
-    "title": "What should MeowCode do when you close the window?",
-    "desc": "MeowCode will keep running in the background. You can reopen it from the system tray.",
+    "title": "What should KlockCode do when you close the window?",
+    "desc": "KlockCode will keep running in the background. You can reopen it from the system tray.",
     "remember": "Remember my choice (change it in Settings → General)",
     "cancel": "Cancel",
     "tray": "Minimize to tray",
@@ -218,7 +218,7 @@
     "aria": "Context usage"
   },
   "bootSplash": {
-    "aria": "Starting MeowCode"
+    "aria": "Starting KlockCode"
   },
   "island": {
     "connecting": "Connecting…",
@@ -238,7 +238,7 @@
     "dropHint": "Drop to attach"
   },
   "star": {
-    "title": "Star MeowCode on GitHub",
+    "title": "Star KlockCode on GitHub",
     "body": "Pwease give me a little star~",
     "dismiss": "No thanks",
     "accept": "Sure!"

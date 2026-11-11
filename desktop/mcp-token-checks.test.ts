@@ -36,16 +36,16 @@ function jsonResponse(status: number, body: string): Response {
 describe("mcp-token-checks", () => {
   it("成组表：飞书双凭据成组，单值条目自成一组", () => {
     expect(MANUAL_MCP_CREDENTIAL_GROUPS).toContainEqual([
-      "MEOWCODE_LARK_APP_ID",
-      "MEOWCODE_LARK_APP_SECRET",
+      "KLOCKCODE_LARK_APP_ID",
+      "KLOCKCODE_LARK_APP_SECRET",
     ]);
-    expect(credentialGroupOf("MEOWCODE_LARK_APP_SECRET")).toEqual([
-      "MEOWCODE_LARK_APP_ID",
-      "MEOWCODE_LARK_APP_SECRET",
+    expect(credentialGroupOf("KLOCKCODE_LARK_APP_SECRET")).toEqual([
+      "KLOCKCODE_LARK_APP_ID",
+      "KLOCKCODE_LARK_APP_SECRET",
     ]);
-    expect(credentialGroupOf("MEOWCODE_FIGMA_TOKEN")).toEqual(["MEOWCODE_FIGMA_TOKEN"]);
+    expect(credentialGroupOf("KLOCKCODE_FIGMA_TOKEN")).toEqual(["KLOCKCODE_FIGMA_TOKEN"]);
     // 组代表（校验登记名）= 组内第一个成员
-    expect(credentialCheckName("MEOWCODE_LARK_APP_SECRET")).toBe("MEOWCODE_LARK_APP_ID");
+    expect(credentialCheckName("KLOCKCODE_LARK_APP_SECRET")).toBe("KLOCKCODE_LARK_APP_ID");
   });
 
   it("飞书校验：code=0 通过", async () => {
@@ -53,8 +53,8 @@ describe("mcp-token-checks", () => {
       jsonResponse(200, JSON.stringify({ code: 0, tenant_access_token: "t", expire: 7200 })),
     );
     const result = await validateManualMcpToken(
-      "MEOWCODE_LARK_APP_ID",
-      { MEOWCODE_LARK_APP_ID: "cli_x", MEOWCODE_LARK_APP_SECRET: "s" },
+      "KLOCKCODE_LARK_APP_ID",
+      { KLOCKCODE_LARK_APP_ID: "cli_x", KLOCKCODE_LARK_APP_SECRET: "s" },
       { fetchImpl: fetchImpl as unknown as typeof fetch },
     );
     expect(result.ok).toBe(true);
@@ -68,8 +68,8 @@ describe("mcp-token-checks", () => {
       jsonResponse(200, JSON.stringify({ code: 21001, msg: "Access denied due to platform policy." })),
     );
     const result = await validateManualMcpToken(
-      "MEOWCODE_LARK_APP_ID",
-      { MEOWCODE_LARK_APP_ID: "cli_x", MEOWCODE_LARK_APP_SECRET: "bad" },
+      "KLOCKCODE_LARK_APP_ID",
+      { KLOCKCODE_LARK_APP_ID: "cli_x", KLOCKCODE_LARK_APP_SECRET: "bad" },
       { fetchImpl: fetchImpl as unknown as typeof fetch },
     );
     expect(result.ok).toBe(false);
@@ -81,8 +81,8 @@ describe("mcp-token-checks", () => {
       jsonResponse(200, JSON.stringify({ code: 0 })),
     );
     await validateManualMcpToken(
-      "MEOWCODE_LARK_APP_ID",
-      { MEOWCODE_LARK_APP_ID: "cli_x" },
+      "KLOCKCODE_LARK_APP_ID",
+      { KLOCKCODE_LARK_APP_ID: "cli_x" },
       { fetchImpl: fetchImpl as unknown as typeof fetch },
     );
     const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
@@ -92,8 +92,8 @@ describe("mcp-token-checks", () => {
   it("figma 校验：token 走 X-Figma-Token 头（values 化后行为不变）", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, "{}"));
     const result = await validateManualMcpToken(
-      "MEOWCODE_FIGMA_TOKEN",
-      { MEOWCODE_FIGMA_TOKEN: "tok" },
+      "KLOCKCODE_FIGMA_TOKEN",
+      { KLOCKCODE_FIGMA_TOKEN: "tok" },
       { fetchImpl: fetchImpl as unknown as typeof fetch },
     );
     expect(result.ok).toBe(true);
@@ -104,8 +104,8 @@ describe("mcp-token-checks", () => {
   it("HTTP 401 → 校验失败", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(401, "{}"));
     const result = await validateManualMcpToken(
-      "MEOWCODE_FIGMA_TOKEN",
-      { MEOWCODE_FIGMA_TOKEN: "bad" },
+      "KLOCKCODE_FIGMA_TOKEN",
+      { KLOCKCODE_FIGMA_TOKEN: "bad" },
       { fetchImpl: fetchImpl as unknown as typeof fetch },
     );
     expect(result.ok).toBe(false);

@@ -24,7 +24,7 @@ function createClient(account, auth, overrides = {}) {
     port: account.imap.port,
     secure: account.imap.secure !== false,
     auth: { user: account.email, pass: auth?.password ?? "" },
-    clientInfo: { name: "MeowCode", version: APP_VERSION, vendor: "MeowCode" },
+    clientInfo: { name: "KlockCode", version: APP_VERSION, vendor: "KlockCode" },
     disableAutoIdle: true,
     logger: false,
     connectionTimeout: CONNECT_TIMEOUT_MS,

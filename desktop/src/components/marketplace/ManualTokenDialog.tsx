@@ -8,21 +8,21 @@ import "./PlatformOauthDialog.css";
 
 /** 环境变量名是发给后端的标识符，表里只存对应的词条 key */
 const TOKEN_LABEL_KEYS: Record<string, string> = {
-  MEOWCODE_FIGMA_TOKEN: "manualToken.labelFigma",
+  KLOCKCODE_FIGMA_TOKEN: "manualToken.labelFigma",
   LUCKIN_MCP_TOKEN: "manualToken.labelLuckin",
-  MEOWCODE_LARK_APP_ID: "manualToken.labelLarkAppId",
-  MEOWCODE_LARK_APP_SECRET: "manualToken.labelLarkSecret",
+  KLOCKCODE_LARK_APP_ID: "manualToken.labelLarkAppId",
+  KLOCKCODE_LARK_APP_SECRET: "manualToken.labelLarkSecret",
 };
 
 const TOKEN_HINT_KEYS: Record<string, string> = {
-  MEOWCODE_FIGMA_TOKEN: "manualToken.hintFigma",
+  KLOCKCODE_FIGMA_TOKEN: "manualToken.hintFigma",
   LUCKIN_MCP_TOKEN: "manualToken.hintLuckin",
-  MEOWCODE_LARK_APP_ID: "manualToken.hintLarkAppId",
-  MEOWCODE_LARK_APP_SECRET: "manualToken.hintLarkSecret",
+  KLOCKCODE_LARK_APP_ID: "manualToken.hintLarkAppId",
+  KLOCKCODE_LARK_APP_SECRET: "manualToken.hintLarkSecret",
 };
 
 /** 非敏感凭据（App ID 之类的公开标识）：明文输入而不是密码框 */
-const PLAIN_ENV_NAMES = new Set(["MEOWCODE_LARK_APP_ID"]);
+const PLAIN_ENV_NAMES = new Set(["KLOCKCODE_LARK_APP_ID"]);
 
 /**
  * 手动令牌弹窗：给没有 OAuth 通道的 MCP（如 Figma Context）粘贴访问令牌。

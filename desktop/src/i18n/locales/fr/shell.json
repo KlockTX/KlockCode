@@ -25,7 +25,7 @@
   "approval": {
     "title": "Autorisation requise",
     "requestSubagent": "Le sous-agent « {{name}} » souhaite utiliser {{tool}}.",
-    "requestApp": "MeowCode souhaite utiliser {{tool}}.",
+    "requestApp": "KlockCode souhaite utiliser {{tool}}.",
     "stale": "Le fichier a été modifié pendant la validation. L’aperçu ci-dessous a été régénéré, veuillez confirmer à nouveau.",
     "risk": "Commande à risque",
     "diff": "Aperçu des modifications",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}} min {{seconds}} s"
   },
   "closeDialog": {
-    "title": "Que doit faire MeowCode lorsque vous fermez la fenêtre ?",
-    "desc": "MeowCode continuera de fonctionner en arrière-plan. Vous pourrez le rouvrir depuis la zone de notification.",
+    "title": "Que doit faire KlockCode lorsque vous fermez la fenêtre ?",
+    "desc": "KlockCode continuera de fonctionner en arrière-plan. Vous pourrez le rouvrir depuis la zone de notification.",
     "remember": "Mémoriser mon choix (modifiable dans Paramètres → Général)",
     "cancel": "Annuler",
     "tray": "Réduire dans la zone de notification",
@@ -218,7 +218,7 @@
     "aria": "Utilisation du contexte"
   },
   "bootSplash": {
-    "aria": "Démarrage de MeowCode"
+    "aria": "Démarrage de KlockCode"
   },
   "island": {
     "connecting": "Connexion…",
@@ -238,7 +238,7 @@
     "dropHint": "Déposez pour joindre"
   },
   "star": {
-    "title": "Mettez une étoile à MeowCode",
+    "title": "Mettez une étoile à KlockCode",
     "body": "S'il te plaît, offre-moi une petite étoile~",
     "dismiss": "Non merci",
     "accept": "D'accord"

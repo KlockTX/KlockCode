@@ -16,20 +16,21 @@ const path = require("node:path");
 const { pickInstallerAsset, normalizeAssets } = require("./update-download.cjs");
 
 const GITCODE_OWNER = "MuLiuSaMa";
-const GITCODE_REPO = "MeowCode";
+/** 发布源：派生版本应指向自己的 Release 仓库；改这里即可，与上游 MeowCode 发布解耦。 */
+const GITCODE_REPO = "KlockCode";
 const GITCODE_WEB = "https://gitcode.com";
 /**
  * 更新接口用的只读令牌：只用于 release 查询走认证、规避匿名限流。
  *
  * 绝不在源码里写死 —— 本仓库是公开的，任何提交过的 token 都应视为已泄露。
  * 读取顺序：
- *   1. 环境变量 MEOWCODE_GITCODE_UPDATE_TOKEN（CI / 临时调试）
+ *   1. 环境变量 KLOCKCODE_GITCODE_UPDATE_TOKEN（CI / 临时调试）
  *   2. 打包资源 resources/icons/gitcode-update-token.txt
  *   3. 仓库内 resources/gitcode-update-token.txt（开发用，.gitignore 已挡）
- *   4. 用户目录 ~/.meowcode/gitcode-update-token.txt
+ *   4. 用户目录 ~/.klockcode/gitcode-update-token.txt
  * 全部缺失时退回匿名请求（可能被限流，但仍能工作）。
  */
-const TOKEN_ENV = "MEOWCODE_GITCODE_UPDATE_TOKEN";
+const TOKEN_ENV = "KLOCKCODE_GITCODE_UPDATE_TOKEN";
 const TOKEN_FILE = "gitcode-update-token.txt";
 const UPDATE_TIMEOUT_MS = 8_000;
 
@@ -63,7 +64,7 @@ function resolveGitcodeToken() {
     candidates.push(path.join(process.resourcesPath, TOKEN_FILE));
   }
   candidates.push(path.join(__dirname, "..", "resources", TOKEN_FILE));
-  candidates.push(path.join(os.homedir(), ".meowcode", TOKEN_FILE));
+  candidates.push(path.join(os.homedir(), ".klockcode", TOKEN_FILE));
 
   for (const file of candidates) {
     const token = readTokenFile(file);

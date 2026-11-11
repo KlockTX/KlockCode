@@ -73,6 +73,10 @@
     "connectPickNode": "Primeiro selecione um nó e depois clique em “Conectar”",
     "dirty": "Há alterações não salvas"
   },
+  "findings": {
+    "title": "Avisos semânticos ({{n}})",
+    "dismiss": "Dispensar"
+  },
   "toolbar": {
     "addTier": "Nível",
     "addGate": "Checkpoint",

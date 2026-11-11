@@ -53,7 +53,7 @@ type UiStatePatch = Omit<Partial<UiState>, "drafts"> & {
   drafts?: Record<string, { text: string; updatedAt: string } | null>;
 };
 
-/** 公告（主进程拉取 notice_meowcode.json → 标题栏上方的公告条） */
+/** 公告（主进程拉取 notice_klockcode.json → 标题栏上方的公告条） */
 type AnnouncementPayload = {
   id: string;
   title: string;
@@ -190,7 +190,7 @@ declare global {
         /** 命令沙箱设置（实时生效走 PUT /config/sandbox） */
         sandbox?: {
           enabled?: boolean;
-          mode?: "workspace-write";
+          mode?: "workspace-write" | "read-only";
           writableRoots?: string[];
           allowTemp?: boolean;
           grantTimeoutMs?: number;

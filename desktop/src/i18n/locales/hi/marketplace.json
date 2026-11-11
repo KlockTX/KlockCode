@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "प्लगइन मार्केटप्लेस नेविगेशन",
     "heading": "प्लगइन मार्केटप्लेस",
-    "subtitle": "प्लगइन, स्किल और MCP खोजें और इंस्टॉल करें, और MeowCode की क्षमता बढ़ाएँ।",
+    "subtitle": "प्लगइन, स्किल और MCP खोजें और इंस्टॉल करें, और KlockCode की क्षमता बढ़ाएँ।",
     "back": "चैट पर लौटें"
   },
   "entryType": {
@@ -131,7 +131,7 @@
     "disconnect": {
       "desc": "इस मशीन पर सेव {{platform}} टोकन हट जाएगा और {{platform}} MCP का कनेक्शन तुरंत टूट जाएगा।",
       "envHint": "टोकन को पूरी तरह निष्क्रिय करने के लिए संबंधित प्लेटफ़ॉर्म की एक्सेस टोकन सेटिंग में जाकर उसे हटाएँ।",
-      "platformHint": "प्लेटफ़ॉर्म पर बना अथॉराइज़ेशन रिकॉर्ड अपने आप नहीं घटा; पूरी तरह घटाने के लिए {{platform}} सेटिंग → अथॉराइज़्ड ऐप्स में से MeowCode हटाएँ।",
+      "platformHint": "प्लेटफ़ॉर्म पर बना अथॉराइज़ेशन रिकॉर्ड अपने आप नहीं घटा; पूरी तरह घटाने के लिए {{platform}} सेटिंग → अथॉराइज़्ड ऐप्स में से KlockCode हटाएँ।",
       "title": "{{platform}} का अथॉराइज़ेशन हटाएँ"
     },
     "empty": {
@@ -147,7 +147,7 @@
     "pluginConfirm": {
       "accept": "जोखिम समझता हूँ — इंस्टॉल करें",
       "checkSource": "इंस्टॉल करने से पहले स्रोत पर भरोसा होने की पुष्टि करें।",
-      "desc": "कम्युनिटी प्लगइन TypeScript सोर्स कोड हैं। इंस्टॉल होने के बाद वे सीधे आपके MeowCode एजेंट प्रोसेस में चलते हैं और आधिकारिक प्लगइन जैसे ही अधिकार पाते हैं (फ़ाइल पढ़ना-लिखना, कमांड चलाना आदि)। MeowCode कम्युनिटी प्लगइन को sandbox में अलग नहीं करता।",
+      "desc": "कम्युनिटी प्लगइन TypeScript सोर्स कोड हैं। इंस्टॉल होने के बाद वे सीधे आपके KlockCode एजेंट प्रोसेस में चलते हैं और आधिकारिक प्लगइन जैसे ही अधिकार पाते हैं (फ़ाइल पढ़ना-लिखना, कमांड चलाना आदि)। KlockCode कम्युनिटी प्लगइन को sandbox में अलग नहीं करता।",
       "homepage": "प्रोजेक्ट पेज",
       "title": "कम्युनिटी प्लगइन “{{name}}” इंस्टॉल करें?"
     },
@@ -173,9 +173,9 @@
     "connectTitle": "GitHub OAuth से कनेक्ट करें",
     "connected": "GitHub कनेक्ट हो गया; GitHub MCP टूल लोड हो रहे हैं।",
     "copyCodeAria": "डिवाइस कोड कॉपी करें",
-    "desc": "GitHub के OAuth डिवाइस फ़्लो से MeowCode को अथॉराइज़ करें। टोकन इस मशीन पर एन्क्रिप्ट होकर सेव होता है और सिर्फ़ GitHub MCP के लिए इस्तेमाल होता है।",
+    "desc": "GitHub के OAuth डिवाइस फ़्लो से KlockCode को अथॉराइज़ करें। टोकन इस मशीन पर एन्क्रिप्ट होकर सेव होता है और सिर्फ़ GitHub MCP के लिए इस्तेमाल होता है।",
     "deviceFlowStep": "<0>GitHub App सेटिंग्स</0> में Enable device flow चुनें",
-    "moduleMissing": "GitHub लॉगिन मॉड्यूल अभी लोड नहीं हुआ है। MeowCode को पूरी तरह बंद कर फिर चालू करें और दोबारा कोशिश करें।",
+    "moduleMissing": "GitHub लॉगिन मॉड्यूल अभी लोड नहीं हुआ है। KlockCode को पूरी तरह बंद कर फिर चालू करें और दोबारा कोशिश करें।",
     "openInBrowser": "ब्राउज़र में खोलें",
     "permissions": "ज़रूरत के हिसाब से रिपॉज़िटरी अधिकार दें: Contents, Issues, Pull requests, Actions आदि",
     "prereq": "अथॉराइज़ करने से पहले पुष्टि करें कि GitHub App में ये पूरे हैं:",
@@ -192,7 +192,7 @@
     "awaitingBrowser": "ब्राउज़र में अथॉराइज़ेशन का इंतज़ार…",
     "awaitingUser": "इंतज़ार है कि आप ब्राउज़र में अथॉराइज़ेशन पूरा करें…",
     "cancelAuth": "अथॉराइज़ेशन रद्द करें",
-    "clientIdHint": "यहाँ डिफ़ॉल्ट रूप से MeowCode के अंतर्निहित ऐप का Client ID है। अपना ऐप इस्तेमाल करें तो यहाँ और नीचे Secret दोनों ऐप पेज के मान से बदल दें — मेल न खाए तो टोकन एक्सचेंज फेल होगा (401)।",
+    "clientIdHint": "यहाँ डिफ़ॉल्ट रूप से KlockCode के अंतर्निहित ऐप का Client ID है। अपना ऐप इस्तेमाल करें तो यहाँ और नीचे Secret दोनों ऐप पेज के मान से बदल दें — मेल न खाए तो टोकन एक्सचेंज फेल होगा (401)।",
     "clientIdLabel": "Client ID (नीचे दिए Client Secret वाले ही ऐप से संबंधित हो)",
     "clientIdPlaceholder": "OAuth ऐप का Client ID",
     "connectHint": "“सीधे कनेक्ट करें” दबाने पर {{platform}} का अथॉराइज़ेशन पेज सिस्टम ब्राउज़र में खुलेगा और पूरा होने पर अपने आप इसी मशीन पर लौटेगा — टोकन पेस्ट करने की ज़रूरत नहीं।",
@@ -201,9 +201,9 @@
     "connected": "{{platform}} कनेक्ट हो गया; MCP टूल लोड हो रहे हैं।",
     "copyClientIdAria": "Client ID कॉपी करें",
     "copyRedirectAria": "कॉलबैक पता कॉपी करें",
-    "desc": "{{platform}} OAuth से सीधे अथॉराइज़ करें: दबाने पर अथॉराइज़ेशन पेज सिस्टम ब्राउज़र में खुलेगा और पूरा होने पर MeowCode में वापस आ जाएगा। क्रेडेंशियल सिर्फ़ इस मशीन पर सेव होते हैं और {{platform}} MCP कनेक्ट करने के लिए इस्तेमाल होते हैं।",
+    "desc": "{{platform}} OAuth से सीधे अथॉराइज़ करें: दबाने पर अथॉराइज़ेशन पेज सिस्टम ब्राउज़र में खुलेगा और पूरा होने पर KlockCode में वापस आ जाएगा। क्रेडेंशियल सिर्फ़ इस मशीन पर सेव होते हैं और {{platform}} MCP कनेक्ट करने के लिए इस्तेमाल होते हैं।",
     "directTitle": "सीधा कनेक्शन: ब्राउज़र से {{platform}} अथॉराइज़ करें, टोकन पेस्ट करने की ज़रूरत नहीं",
-    "moduleMissing": "OAuth मॉड्यूल अभी लोड नहीं हुआ है। MeowCode को पूरी तरह बंद कर फिर चालू करें।",
+    "moduleMissing": "OAuth मॉड्यूल अभी लोड नहीं हुआ है। KlockCode को पूरी तरह बंद कर फिर चालू करें।",
     "opening": "खोला जा रहा है…",
     "openingBrowser": "ब्राउज़र खुल रहा है…",
     "pasteToken": "टोकन पेस्ट करें",
@@ -216,7 +216,7 @@
     "requireToken": "कम से कम एक टोकन भरें।",
     "restoreClientId": "अंतर्निहित Client ID बहाल करें",
     "saveAndConnect": "सेव करें और कनेक्ट करें",
-    "secretFilePath": "Secret को %APPDATA%\\MeowCode\\oauth-apps.json में भी रख सकते हैं (यह रिपॉज़िटरी में नहीं जाता)",
+    "secretFilePath": "Secret को %APPDATA%\\KlockCode\\oauth-apps.json में भी रख सकते हैं (यह रिपॉज़िटरी में नहीं जाता)",
     "secretLabel": "Client Secret (टोकन एक्सचेंज के लिए {{platform}} इसे ज़रूर माँगता है; एक बार भरना है)",
     "secretPlaceholder": "OAuth ऐप का Client Secret",
     "setupHint": "यह फ़ॉर्म एक ही बार दिखता है: टोकन एक्सचेंज में {{platform}} को Client Secret चाहिए (प्लेटफ़ॉर्म बिना सीक्रेट के PKCE सपोर्ट नहीं करता), इसलिए एक बार भरने के बाद यह इस मशीन पर एन्क्रिप्ट होकर सेव हो जाता है। “सेव करें और कनेक्ट करें” दबाते ही ब्राउज़र खुल जाता है; उसके बाद हर “{{platform}} कनेक्ट करें” सीधे ब्राउज़र खोलता है, यह फ़ॉर्म दोबारा नहीं दिखता।",
@@ -305,11 +305,11 @@
     "empty": "还没有手动添加的条目。用上方按钮把本地技能目录、插件文件或 MCP 配置加进来。",
     "import": {
       "skillTitle": "添加本地技能",
-      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.meowcode/skills/ 并即刻生效。",
+      "skillDesc": "选择技能目录里的 SKILL.md，整个目录会复制到 ~/.klockcode/skills/ 并即刻生效。",
       "pickSkill": "SKILL.md 文件",
       "pickSkillBtn": "选择 SKILL.md",
       "pluginTitle": "添加本地插件",
-      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.meowcode/plugins/ 并在本机执行。",
+      "pluginDesc": "插件是 TypeScript/JavaScript 源码，导入后会复制到 ~/.klockcode/plugins/ 并在本机执行。",
       "pickPlugin": "插件源码文件或目录",
       "pickFileBtn": "选择文件",
       "pickDirBtn": "选择目录",
@@ -321,7 +321,7 @@
     },
     "mcp": {
       "title": "添加 MCP 服务",
-      "desc": "手动添加一个 MCP server：配置写入 ~/.meowcode/mcp.json，保存后自动连接。",
+      "desc": "手动添加一个 MCP server：配置写入 ~/.klockcode/mcp.json，保存后自动连接。",
       "idLabel": "名称（id）*",
       "navLabel": "कनेक्शन मोड",
       "navStdio": "स्थानीय कमांड",
@@ -332,7 +332,7 @@
       "urlLabel": "服务地址 *",
       "headersLabel": "请求头（JSON，可选）",
       "envLabel": "环境变量（JSON，可选）",
-      "envHint": "支持 ${VAR} 形式引用 MeowCode 进程环境变量。",
+      "envHint": "支持 ${VAR} 形式引用 KlockCode 进程环境变量。",
       "jsonLabel": "MCP 配置（JSON）",
       "jsonHint": "接受 {\"mcpServers\": {…}} 包裹（可一次添加多个）或单个 server 对象。",
       "jsonInvalid": "不是合法的 JSON。",
@@ -347,11 +347,11 @@
       "toggleAria": "启停 MCP {{id}}",
       "authGroup": "प्रमाणीकरण",
       "oauthToggle": "OAuth ब्राउज़र साइन-इन (रिमोट MCP)",
-      "oauthHint": "पहले कनेक्ट पर ब्राउज़र खुलेगा; टोकन ~/.meowcode/mcp-oauth/ में सेव होता है।",
+      "oauthHint": "पहले कनेक्ट पर ब्राउज़र खुलेगा; टोकन ~/.klockcode/mcp-oauth/ में सेव होता है।",
       "oauthScopesLabel": "OAuth स्कोप (वैकल्पिक, स्पेस/कॉमा)",
       "oauthClientIdLabel": "OAuth क्लाइंट ID (वैकल्पिक, प्री-रजिस्टर्ड)",
       "oauthCimdLabel": "OAuth क्लाइंट मेटाडेटा URL (वैकल्पिक)",
-      "oauthCimdHint": "खाली छोड़ने पर MeowCode आधिकारिक CIMD दस्तावेज़ उपयोग होगा।"
+      "oauthCimdHint": "खाली छोड़ने पर KlockCode आधिकारिक CIMD दस्तावेज़ उपयोग होगा।"
     }
   },
   "sources": {

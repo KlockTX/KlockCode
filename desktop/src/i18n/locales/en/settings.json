@@ -2,7 +2,7 @@
   "language": {
     "section": "Language",
     "title": "Display language",
-    "description": "Choose the language MeowCode shows its interface in. Applies immediately, no restart needed.",
+    "description": "Choose the language KlockCode shows its interface in. Applies immediately, no restart needed.",
     "system": "System"
   },
   "speech": {
@@ -99,7 +99,7 @@
     "empty": "No rules yet",
     "emptyHint": "Click Create to add your first rule",
     "noWorkspace": "Select a workspace first",
-    "noWorkspaceHint": "Rules are stored in the project's .meowcode/rules directory.",
+    "noWorkspaceHint": "Rules are stored in the project's .klockcode/rules directory.",
     "clickToEdit": "Click to edit this rule",
     "deleteAria": "Delete rule \"{{name}}\"",
     "confirmDeleteAria": "Click again to confirm deleting rule \"{{name}}\"",
@@ -170,9 +170,9 @@
       "user": "Personal memory",
       "project": "Project memory"
     },
-    "descUser": "Long-term memory kept across workspaces: your preferences, recurring workflows, lessons learned. Stored in ~/.meowcode/memory/. The index is injected when a new chat starts, and the AI reads and writes entries with the memory tools.",
-    "descProject": "Memory specific to the current workspace, stored in the project's .meowcode/memory/ (not committed to git).",
-    "descProjectNamed": "Memory specific to the current workspace ({{workspace}}), stored in the project's .meowcode/memory/ (not committed to git).",
+    "descUser": "Long-term memory kept across workspaces: your preferences, recurring workflows, lessons learned. Stored in ~/.klockcode/memory/. The index is injected when a new chat starts, and the AI reads and writes entries with the memory tools.",
+    "descProject": "Memory specific to the current workspace, stored in the project's .klockcode/memory/ (not committed to git).",
+    "descProjectNamed": "Memory specific to the current workspace ({{workspace}}), stored in the project's .klockcode/memory/ (not committed to git).",
     "count_one": "{{count}} memory stored",
     "count_other": "{{count}} memories stored",
     "count_few": "{{count}} memories stored",
@@ -224,7 +224,7 @@
     "repo": "Repository",
     "openInBrowser": "Open in browser",
     "sponsor": "Support",
-    "sponsorHint": "If MeowCode has been useful to you, feel free to support the author by scanning a QR code.",
+    "sponsorHint": "If KlockCode has been useful to you, feel free to support the author by scanning a QR code.",
     "qrAlt": "{{name}} payment QR code",
     "sponsors": {
       "wechat": "WeChat Pay",
@@ -232,7 +232,7 @@
     },
     "upToDate": "You're already on the latest version",
     "checkFailed": "Update check failed: {{error}}",
-    "sponsorList": "Sponsors (MeowCode, NexBox, OpenMD, LingTab)"
+    "sponsorList": "Sponsors (KlockCode, NexBox, OpenMD, LingTab)"
   },
   "actions": {
     "add": "Add",
@@ -606,6 +606,8 @@
     "modeFullDesc": "The Agent can read and write files outside the workspace.",
     "modeWorkspace": "Workspace write",
     "modeWorkspaceDesc": "Commands can only write to the workspace and extra writable roots.",
+    "modeReadOnly": "Read-only",
+    "modeReadOnlyDesc": "Commands cannot write any file, including the workspace — read and execute only.",
     "deleteField": "Deletion confirmation",
     "deleteDesc": "Only applies in workspace-write mode; full access skips deletion confirmation by default.",
     "unsupported": "The command sandbox is only available on Windows.",
@@ -616,6 +618,7 @@
     "confirmEnable": "Switch",
     "cancel": "Cancel",
     "enabled": "Switched to workspace-write (first grant {{ms}} ms)",
+    "enabledReadOnly": "Switched to read-only sandbox (first probe {{ms}} ms)",
     "saveFailed": "Failed to save sandbox settings",
     "loadFailed": "Failed to load sandbox settings"
   },

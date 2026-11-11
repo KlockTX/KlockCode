@@ -98,13 +98,13 @@ export function McpRow({
 }) {
   const { t } = useTranslation("marketplace");
   const requiresGithub =
-    entry.type === "mcp" && (entry.requiresEnv ?? []).includes("MEOWCODE_GITHUB_TOKEN");
+    entry.type === "mcp" && (entry.requiresEnv ?? []).includes("KLOCKCODE_GITHUB_TOKEN");
   const githubReady = !requiresGithub || githubConnected === true || entry.envReady !== false;
   const showGithubConnect = Boolean(
     requiresGithub && onConnectGithub && (!githubReady || state?.status === "failed"),
   );
   const otherEnvNames = (entry.requiresEnv ?? []).filter(
-    (name) => name !== "MEOWCODE_GITHUB_TOKEN",
+    (name) => name !== "KLOCKCODE_GITHUB_TOKEN",
   );
   const oauthPlatform =
     entry.type === "mcp" ? MCP_ENV_PLATFORMS[(entry.requiresEnv ?? [])[0] ?? ""] : undefined;

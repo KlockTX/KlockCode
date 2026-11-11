@@ -787,3 +787,70 @@
   font-size: var(--fs-xs);
   line-height: 1.7;
 }
+
+/* 语义提示条：结构合法但运行时不按图跑——是提示不是错误，所以用警告色而不是 danger */
+.mc-harness__findings {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--warning, var(--border));
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--fs-caption);
+}
+
+.mc-harness__findings-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--warning, var(--fg));
+  font-weight: var(--fw-medium);
+}
+
+.mc-harness__findings-dismiss {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--fg-subtle);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mc-harness__findings-dismiss:hover {
+  color: var(--fg);
+}
+
+.mc-harness__findings ul {
+  margin: 6px 0 0;
+  padding: 0 0 0 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.mc-harness__findings li {
+  color: var(--fg-subtle);
+  line-height: 1.45;
+}
+
+.mc-harness__findings li[data-severity="error"] {
+  color: var(--danger, var(--fg));
+}
+
+.mc-harness__findings li button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mc-harness__findings li button:disabled {
+  cursor: default;
+}
+
+.mc-harness__findings-more {
+  margin: 4px 0 0;
+  color: var(--fg-subtle);
+}

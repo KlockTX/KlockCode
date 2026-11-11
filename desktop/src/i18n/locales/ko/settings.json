@@ -2,7 +2,7 @@
   "language": {
     "section": "언어",
     "title": "화면 언어",
-    "description": "MeowCode 인터페이스의 표시 언어를 선택합니다. 재시작 없이 즉시 적용됩니다.",
+    "description": "KlockCode 인터페이스의 표시 언어를 선택합니다. 재시작 없이 즉시 적용됩니다.",
     "system": "시스템 설정"
   },
   "speech": {
@@ -109,9 +109,9 @@
       "user": "개인 메모리",
       "project": "프로젝트 메모리"
     },
-    "descUser": "작업 공간을 넘어 유지되는 장기 메모리입니다. 선호하는 방식, 자주 쓰는 워크플로, 경험을 ~/.meowcode/memory/ 에 저장하고 새 대화가 시작될 때 색인을 자동으로 주입합니다. AI가 메모리 도구로 필요할 때 읽고 씁니다.",
-    "descProject": "현재 작업 공간 전용 메모리입니다. 프로젝트의 .meowcode/memory/ 에 저장되며 git에는 포함되지 않습니다.",
-    "descProjectNamed": "현재 작업 공간({{workspace}}) 전용 메모리입니다. 프로젝트의 .meowcode/memory/ 에 저장되며 git에는 포함되지 않습니다.",
+    "descUser": "작업 공간을 넘어 유지되는 장기 메모리입니다. 선호하는 방식, 자주 쓰는 워크플로, 경험을 ~/.klockcode/memory/ 에 저장하고 새 대화가 시작될 때 색인을 자동으로 주입합니다. AI가 메모리 도구로 필요할 때 읽고 씁니다.",
+    "descProject": "현재 작업 공간 전용 메모리입니다. 프로젝트의 .klockcode/memory/ 에 저장되며 git에는 포함되지 않습니다.",
+    "descProjectNamed": "현재 작업 공간({{workspace}}) 전용 메모리입니다. 프로젝트의 .klockcode/memory/ 에 저장되며 git에는 포함되지 않습니다.",
     "count_one": "메모리 {{count}}개 저장됨",
     "count_other": "메모리 {{count}}개 저장됨",
     "count_few": "메모리 {{count}}개 저장됨",
@@ -167,7 +167,7 @@
     "repo": "오픈소스 저장소",
     "openInBrowser": "브라우저에서 열기",
     "sponsor": "후원",
-    "sponsorHint": "MeowCode가 도움이 되었다면 QR 코드를 스캔해 작성자를 응원해 주세요.",
+    "sponsorHint": "KlockCode가 도움이 되었다면 QR 코드를 스캔해 작성자를 응원해 주세요.",
     "qrAlt": "{{name}} 결제 QR 코드",
     "sponsors": {
       "wechat": "위챗페이",
@@ -175,7 +175,7 @@
     },
     "upToDate": "이미 최신 버전입니다",
     "checkFailed": "버전 확인 실패: {{error}}",
-    "sponsorList": "후원자 목록 (MeowCode, NexBox, OpenMD, LingTab)"
+    "sponsorList": "후원자 목록 (KlockCode, NexBox, OpenMD, LingTab)"
   },
   "actions": {
     "add": "추가",
@@ -452,7 +452,7 @@
     "empty": "아직 규칙이 없습니다",
     "emptyHint": "만들기를 클릭하여 첫 규칙을 추가하세요",
     "noWorkspace": "먼저 워크스페이스를 선택하세요",
-    "noWorkspaceHint": "규칙은 프로젝트의 .meowcode/rules 디렉터리에 저장됩니다.",
+    "noWorkspaceHint": "규칙은 프로젝트의 .klockcode/rules 디렉터리에 저장됩니다.",
     "clickToEdit": "이 규칙을 편집하려면 클릭하세요",
     "deleteAria": "규칙 \"{{name}}\" 삭제",
     "confirmDeleteAria": "규칙 \"{{name}}\" 삭제를 확인하려면 다시 클릭하세요",
@@ -606,6 +606,8 @@
     "modeFullDesc": "Agent가 워크스페이스 밖의 파일도 읽고 쓸 수 있습니다.",
     "modeWorkspace": "워크스페이스 쓰기",
     "modeWorkspaceDesc": "명령은 워크스페이스와 추가 쓰기 가능 루트에만 쓸 수 있습니다.",
+    "modeReadOnly": "읽기 전용",
+    "modeReadOnlyDesc": "명령은 작업 공간을 포함해 어떤 파일도 쓸 수 없습니다(읽기와 실행만 가능).",
     "deleteField": "파일 삭제 확인",
     "deleteDesc": "워크스페이스 쓰기 모드에서만 적용됩니다. 전체 액세스에서는 삭제 확인을 기본적으로 건너뜁니다.",
     "unsupported": "명령 샌드박스는 Windows에서만 사용할 수 있습니다.",
@@ -616,6 +618,7 @@
     "confirmEnable": "전환",
     "cancel": "취소",
     "enabled": "워크스페이스 쓰기로 전환했습니다(첫 권한 부여 {{ms}} ms)",
+    "enabledReadOnly": "읽기 전용 샌드박스로 전환했습니다(첫 프로브 {{ms}} ms)",
     "saveFailed": "샌드박스 설정 저장 실패",
     "loadFailed": "샌드박스 설정 읽기 실패"
   },

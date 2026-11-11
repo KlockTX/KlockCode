@@ -50,7 +50,7 @@ function safeAssetFileName(name) {
     .pop()
     .replace(/[<>:"/\\|?*\x00-\x1f]/g, "_")
     .trim();
-  return base || "MeowCode-Setup.exe";
+  return base || "KlockCode-Setup.exe";
 }
 
 /** 把 release.assets 规整成 {name,url,size} 列表 */

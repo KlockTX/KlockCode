@@ -90,11 +90,11 @@ export function AboutSection({
     <div className="mc-settings__inner">
       <div className="mc-about">
         <div className="mc-about__head">
-          <img className="mc-about__logo" src={logoUrl} alt="MeowCode" draggable={false} />
+          <img className="mc-about__logo" src={logoUrl} alt="KlockCode" draggable={false} />
           <img
             className="mc-about__wordmark"
             src={wordmark}
-            alt="MeowCode"
+            alt="KlockCode"
             draggable={false}
           />
         </div>
@@ -137,7 +137,7 @@ export function AboutSection({
               title={t("about.openInBrowser")}
               onClick={() => void window.meow.openExternal(SITE_URL)}
             >
-              meowcode.cn
+              klockcode.cn
               <LuArrowUpRight size={12} />
             </button>
           </FieldRow>

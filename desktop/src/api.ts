@@ -890,7 +890,8 @@ export type GithubDevicePollResult =
 
 export type SandboxSettings = {
   enabled: boolean;
-  mode: "workspace-write";
+  /** workspace-write：工作区可写；read-only：完全不授予写权限（含工作区） */
+  mode: "workspace-write" | "read-only";
   /** 工作区之外的额外可写根（绝对路径） */
   writableRoots: string[];
   allowTemp: boolean;
@@ -1011,9 +1012,9 @@ export type SetMcpCredentialsResult = {
 export type OauthPlatform = "gitee" | "gitcode" | "gitcode-community" | "undermind";
 
 export const MCP_ENV_PLATFORMS: Record<string, OauthPlatform> = {
-  MEOWCODE_GITEE_TOKEN: "gitee",
-  MEOWCODE_UNDERMIND_TOKEN: "undermind",
-  MEOWCODE_GITCODE_TOKEN: "gitcode",
+  KLOCKCODE_GITEE_TOKEN: "gitee",
+  KLOCKCODE_UNDERMIND_TOKEN: "undermind",
+  KLOCKCODE_GITCODE_TOKEN: "gitcode",
 };
 
 export const MCP_PLATFORM_LABELS: Record<OauthPlatform, string> = {
@@ -1081,7 +1082,7 @@ export type PluginManifestView = {
   version: string;
   apiVersion: 2;
   permissions: PluginPermission[];
-  engines?: { meowcode?: string };
+  engines?: { klockcode?: string };
 };
 
 export type PluginDescriptor = {
@@ -1400,7 +1401,7 @@ export async function clearAllMemories(
 /**
  * 记忆总开关（运行中实时生效；落盘走 saveProviderPrefs）。
  * 关闭后：不自动蒸馏、不注入记忆索引、不下发 memory_* 工具；
- * 记忆文件仍留在 ~/.meowcode/memory 与 .meowcode/memory，可用普通文件操作读取。
+ * 记忆文件仍留在 ~/.klockcode/memory 与 .klockcode/memory，可用普通文件操作读取。
  */
 export async function getMemoryEnabled(): Promise<{ enabled: boolean }> {
   return api<{ enabled: boolean }>("/config/memory");
@@ -2069,6 +2070,17 @@ export type HarnessDocument = {
 /** 架构图 id：内置三档（standard/minimal/complex）或自定义架构（custom-1 …） */
 export type HarnessArchitectureId = string;
 
+/**
+ * 架构图语义提示（服务端 lint）：结构合法、但跑起来不会按你画的跑。
+ * `severity:"error"` 表示这张图会让 admit 直接拒绝或车道永远推不动。
+ */
+export type HarnessFinding = {
+  code: string;
+  severity: "error" | "warning";
+  message: string;
+  nodeId?: string;
+};
+
 /** 左栏「主 Agent」列表项 */
 export type HarnessArchitectureSummary = {
   id: HarnessArchitectureId;
@@ -2152,23 +2164,35 @@ export async function fetchHarnessDetail(
   workspace?: string,
   profile?: HarnessArchitectureId,
   options?: { seed?: boolean },
-): Promise<{ document: HarnessDocument; agentPrompt: string }> {
+): Promise<{ document: HarnessDocument; agentPrompt: string; findings: HarnessFinding[] }> {
   const params = new URLSearchParams();
   if (workspace) params.set("workspace", workspace);
   if (profile) params.set("profile", profile);
   if (options?.seed) params.set("seed", "1");
   const query = params.toString() ? `?${params.toString()}` : "";
-  const body = await api<{ document: HarnessDocument; agentPrompt?: string }>(`/harness${query}`);
-  return { document: body.document, agentPrompt: body.agentPrompt ?? "" };
+  const body = await api<{
+    document: HarnessDocument;
+    agentPrompt?: string;
+    findings?: HarnessFinding[];
+  }>(`/harness${query}`);
+  return {
+    document: body.document,
+    agentPrompt: body.agentPrompt ?? "",
+    findings: body.findings ?? [],
+  };
 }
 
-/** PUT /harness —— 服务端结构校验，非法文档抛错且不落盘 */
+/**
+ * PUT /harness —— 服务端结构校验，非法文档抛错且不落盘。
+ * 保存成功也会带回语义提示（`findings`）：结构合法但运行时不按你画的跑的情况，
+ * 必须当场说清楚，而不是等任务卡住才发现。
+ */
 export async function saveHarness(
   workspace: string | undefined,
   profile: HarnessArchitectureId | undefined,
   document: HarnessDocument,
-): Promise<void> {
-  await api("/harness", {
+): Promise<{ pendingReload: boolean; findings: HarnessFinding[] }> {
+  const body = await api<{ pendingReload?: boolean; findings?: HarnessFinding[] }>("/harness", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -2177,6 +2201,7 @@ export async function saveHarness(
       document,
     }),
   });
+  return { pendingReload: body.pendingReload === true, findings: body.findings ?? [] };
 }
 
 /** 内置角色注册表（只读）：架构图角色节点的面板数据源。 */

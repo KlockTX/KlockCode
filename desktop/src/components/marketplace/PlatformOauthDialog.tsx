@@ -14,14 +14,14 @@ const PLATFORM_CALLBACKS: Record<string, string> = {
 
 /** 环境变量名是发给后端的标识符，表里只存对应的词条 key */
 const TOKEN_LABEL_KEYS: Record<string, string> = {
-  MEOWCODE_GITEE_TOKEN: "oauth.tokenLabelGitee",
-  MEOWCODE_GITCODE_TOKEN: "oauth.tokenLabelGitcode",
+  KLOCKCODE_GITEE_TOKEN: "oauth.tokenLabelGitee",
+  KLOCKCODE_GITCODE_TOKEN: "oauth.tokenLabelGitcode",
 };
 
 type Phase = "setup" | "connect" | "starting" | "pending" | "success" | "error" | "pat";
 
 /**
- * Gitee / GitCode「直接连接」：Client ID 内置（MeowCode 官方应用），
+ * Gitee / GitCode「直接连接」：Client ID 内置（KlockCode 官方应用），
  * 点一下就用系统浏览器打开授权页，本地 127.0.0.1 回跳换 token。
  * 两个平台换 token 强制校验 client_secret（不支持 PKCE），所以首次需填一次 Secret（加密存本机）。
  * 仍保留手动粘贴 PAT 的兜底入口。

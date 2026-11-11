@@ -6,9 +6,9 @@
  *
  * 商店身份来自 Partner Center →「产品标识」，缺省值已按当前产品写死，
  * 仍可用环境变量覆盖（换产品/换账号时不用改代码）：
- *   MEOWCODE_MSIX_IDENTITY_NAME            Package/Identity/Name
- *   MEOWCODE_MSIX_PUBLISHER                Package/Identity/Publisher（CN=…）
- *   MEOWCODE_MSIX_PUBLISHER_DISPLAY_NAME   Package/Properties/PublisherDisplayName
+ *   KLOCKCODE_MSIX_IDENTITY_NAME            Package/Identity/Name
+ *   KLOCKCODE_MSIX_PUBLISHER                Package/Identity/Publisher（CN=…）
+ *   KLOCKCODE_MSIX_PUBLISHER_DISPLAY_NAME   Package/Properties/PublisherDisplayName
  * 三个值任一与商店不一致都会被拒收。
  *
  * 资源图来自 resources/appx（node scripts/make-msix-assets.mjs 生成）。
@@ -27,12 +27,12 @@ module.exports = {
     target: [{ target: "appx", arch: ["x64"] }],
   },
   appx: {
-    applicationId: "MeowCode",
-    identityName: process.env.MEOWCODE_MSIX_IDENTITY_NAME || "MuLiuSaMa.MeowCode",
+    applicationId: "KlockCode",
+    identityName: process.env.KLOCKCODE_MSIX_IDENTITY_NAME || "MuLiuSaMa.KlockCode",
     publisher:
-      process.env.MEOWCODE_MSIX_PUBLISHER || "CN=30F199CB-855A-42F4-96A9-F43088B508BF",
-    publisherDisplayName: process.env.MEOWCODE_MSIX_PUBLISHER_DISPLAY_NAME || "MuLiu_SaMa",
-    displayName: "MeowCode",
+      process.env.KLOCKCODE_MSIX_PUBLISHER || "CN=30F199CB-855A-42F4-96A9-F43088B508BF",
+    publisherDisplayName: process.env.KLOCKCODE_MSIX_PUBLISHER_DISPLAY_NAME || "MuLiu_SaMa",
+    displayName: "KlockCode",
     // 商店包最低 Win10 1809（MSIX 容器），上限按当前 SDK 标注
     minVersion: "10.0.17763.0",
     maxVersionTested: "10.0.26100.0",

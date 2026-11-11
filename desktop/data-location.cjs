@@ -17,12 +17,12 @@ const DATA_ENTRIES = [
 ];
 
 function defaultDataDir(appData) {
-  return path.join(appData, "MeowCode");
+  return path.join(appData, "KlockCode");
 }
 
 /** 自定义位置指针放在 userData 外面，移动数据时不会被一起搬走 */
 function locationPointerPath(appData) {
-  return path.join(appData, "MeowCode-location.json");
+  return path.join(appData, "KlockCode-location.json");
 }
 
 function readDataLocation(appData) {

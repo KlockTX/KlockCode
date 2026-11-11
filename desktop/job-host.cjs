@@ -1,6 +1,6 @@
 /**
  * agent 后台任务控制面：loopback HTTP + token，只暴露终端管理器的安全子集。
- * 参考 browser-host 范式（MEOWCODE_BROWSER_HOST）：agent server 通过 env 拿到
+ * 参考 browser-host 范式（KLOCKCODE_BROWSER_HOST）：agent server 通过 env 拿到
  * baseUrl/token 后直接调用；渲染层仍走 IPC（meow:term-*），两边共享同一 PTY。
  */
 const http = require("node:http");

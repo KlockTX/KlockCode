@@ -678,7 +678,7 @@ export function ConversationPanel({
                                   title={session.worktree.branch}
                                 >
                                   <LuGitBranch size={11} />
-                                  <span>{session.worktree.branch.replace(/^meowcode\//, "")}</span>
+                                  <span>{session.worktree.branch.replace(/^klockcode\//, "")}</span>
                                 </span>
                               ) : null}
                               <span className="mc-convpanel__itemtime">

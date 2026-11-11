@@ -57,7 +57,7 @@ export function SideChatTab({
   const [sideId, setSideId] = useState<string | null>(null);
   const [providerId, setProviderId] = useState("");
   const [sideEffort, setSideEffort] = useState("");
-  const [permissionMode, setPermissionMode] = useState<PermissionMode>("auto");
+  const [permissionMode, setPermissionMode] = useState<PermissionMode>("ask");
   /** 会话模式（plan / goal）与主对话各自独立 */
   const [chatMode, setChatMode] = useState<SessionMode>("default");
   /** 计划文档路径：非空时 Composer 顶部显示确认面板 */

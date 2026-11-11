@@ -25,7 +25,7 @@
   "approval": {
     "title": "Berechtigung erforderlich",
     "requestSubagent": "Subagent „{{name}}“ möchte {{tool}} verwenden.",
-    "requestApp": "MeowCode möchte {{tool}} verwenden.",
+    "requestApp": "KlockCode möchte {{tool}} verwenden.",
     "stale": "Die Datei wurde während der Bestätigung geändert. Die Vorschau unten wurde neu erzeugt, bitte erneut bestätigen.",
     "risk": "Riskanter Befehl",
     "diff": "Änderungsvorschau",
@@ -172,8 +172,8 @@
     "durationMinutes": "{{minutes}} min {{seconds}} s"
   },
   "closeDialog": {
-    "title": "Was soll MeowCode beim Schließen des Fensters tun?",
-    "desc": "MeowCode läuft im Hintergrund weiter. Sie können es über das System-Tray erneut öffnen.",
+    "title": "Was soll KlockCode beim Schließen des Fensters tun?",
+    "desc": "KlockCode läuft im Hintergrund weiter. Sie können es über das System-Tray erneut öffnen.",
     "remember": "Meine Auswahl merken (änderbar unter Einstellungen → Allgemein)",
     "cancel": "Abbrechen",
     "tray": "In das Tray minimieren",
@@ -218,7 +218,7 @@
     "aria": "Kontextauslastung"
   },
   "bootSplash": {
-    "aria": "MeowCode wird gestartet"
+    "aria": "KlockCode wird gestartet"
   },
   "island": {
     "connecting": "Verbinde…",
@@ -238,7 +238,7 @@
     "dropHint": "Zum Anhängen ablegen"
   },
   "star": {
-    "title": "Gib MeowCode einen Star",
+    "title": "Gib KlockCode einen Star",
     "body": "Bitte, bitte, schenk mir ein kleines Sternchen~",
     "dismiss": "Nee, danke",
     "accept": "Klar!"

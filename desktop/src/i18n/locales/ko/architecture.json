@@ -73,6 +73,10 @@
     "connectPickNode": "노드를 먼저 선택한 뒤 “연결”을 클릭하세요",
     "dirty": "저장되지 않은 변경 사항"
   },
+  "findings": {
+    "title": "의미상 주의 ({{n}}건)",
+    "dismiss": "닫기"
+  },
   "toolbar": {
     "addTier": "계층",
     "addGate": "게이트",

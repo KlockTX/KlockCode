@@ -675,7 +675,7 @@ export default function App() {
       prev.filter((item) => !(item.kind === chip.kind && item.id === chip.id)),
     );
   }, []);
-  const [permissionMode, setPermissionMode] = useState<PermissionMode>("auto");
+  const [permissionMode, setPermissionMode] = useState<PermissionMode>("ask");
   /** 会话模式（plan / goal）与审批模式互相独立 */
   const [chatMode, setChatMode] = useState<SessionMode>("default");
   /** 主 Agent 档位（会话级）：标准 / 极简 / 复杂 */
@@ -811,7 +811,7 @@ export default function App() {
   /** 左栏宽度：与右侧检查器同一套拖拽交互，localStorage 记忆 */
   const [listWidth, setListWidth] = useState(() => {
     try {
-      const saved = Number(window.localStorage.getItem("meowcode:listWidth"));
+      const saved = Number(window.localStorage.getItem("klockcode:listWidth"));
       if (Number.isFinite(saved) && saved > 0) {
         return clampListWidth(saved, INSPECTOR_MIN_WIDTH, true);
       }
@@ -824,7 +824,7 @@ export default function App() {
   /** 右侧面板宽度：可拖拽调节，localStorage 记忆（下限 240，上限随窗口与左栏收窄） */
   const [inspectorWidth, setInspectorWidth] = useState(() => {
     try {
-      const saved = Number(window.localStorage.getItem("meowcode:inspectorWidth"));
+      const saved = Number(window.localStorage.getItem("klockcode:inspectorWidth"));
       if (Number.isFinite(saved) && saved > 0) return clampInspectorWidth(saved, listWidth);
     } catch {
       // 存储不可用
@@ -875,7 +875,7 @@ export default function App() {
     inspectorWidthLive.current = drag.lastWidth;
     setInspectorWidth(drag.lastWidth);
     try {
-      window.localStorage.setItem("meowcode:inspectorWidth", String(Math.round(drag.lastWidth)));
+      window.localStorage.setItem("klockcode:inspectorWidth", String(Math.round(drag.lastWidth)));
     } catch {
       // 存储失败忽略
     }
@@ -929,7 +929,7 @@ export default function App() {
     listWidthLive.current = drag.lastWidth;
     setListWidth(drag.lastWidth);
     try {
-      window.localStorage.setItem("meowcode:listWidth", String(Math.round(drag.lastWidth)));
+      window.localStorage.setItem("klockcode:listWidth", String(Math.round(drag.lastWidth)));
     } catch {
       // 存储失败忽略
     }
@@ -1508,7 +1508,7 @@ export default function App() {
       setSessionTitle(current.title ?? null);
       setPlan(current.plan ?? null);
       setPermissionMode(
-        current.approvalMode === "default" ? "ask" : (current.approvalMode ?? "auto"),
+        current.approvalMode === "default" ? "ask" : (current.approvalMode ?? "ask"),
       );
       // 历史回放不推断确认面板：切会话/重载后清空，等下一次写计划再弹
       chatModeRef.current = current.mode ?? "default";
@@ -3566,7 +3566,7 @@ export default function App() {
           await setSpeechStyle(nextSpeechStyle);
         } catch (err) {
           pushError(
-            `语色已保存，重启 MeowCode 后生效：${err instanceof Error ? err.message : String(err)}`,
+            `语色已保存，重启 KlockCode 后生效：${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }

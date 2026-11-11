@@ -87,7 +87,7 @@ async function buildRawMessage(account, payload) {
     })),
     inReplyTo: payload.inReplyTo || undefined,
     references: payload.references || undefined,
-    headers: { "X-Mailer": "MeowCode" },
+    headers: { "X-Mailer": "KlockCode" },
   });
   if (!Buffer.isBuffer(info.message)) throw new Error("raw message build failed");
   return { raw: info.message, messageId: info.messageId || "" };

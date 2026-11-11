@@ -2,7 +2,7 @@
   "language": {
     "section": "言語",
     "title": "表示言語",
-    "description": "MeowCode のインターフェース表示言語を選択します。再起動なしで即時に反映されます。",
+    "description": "KlockCode のインターフェース表示言語を選択します。再起動なしで即時に反映されます。",
     "system": "システムに従う"
   },
   "speech": {
@@ -109,9 +109,9 @@
       "user": "個人メモリ",
       "project": "プロジェクトメモリ"
     },
-    "descUser": "ワークスペースをまたいで保持される長期メモリです。あなたの好み、よく使うワークフロー、経験を ~/.meowcode/memory/ に保存し、新しいチャットの開始時にインデックスを自動で注入します。AI はメモリツールを使って必要に応じて読み書きします。",
-    "descProject": "現在のワークスペース専用のメモリです。プロジェクトの .meowcode/memory/ に保存され、git には入りません。",
-    "descProjectNamed": "現在のワークスペース（{{workspace}}）専用のメモリです。プロジェクトの .meowcode/memory/ に保存され、git には入りません。",
+    "descUser": "ワークスペースをまたいで保持される長期メモリです。あなたの好み、よく使うワークフロー、経験を ~/.klockcode/memory/ に保存し、新しいチャットの開始時にインデックスを自動で注入します。AI はメモリツールを使って必要に応じて読み書きします。",
+    "descProject": "現在のワークスペース専用のメモリです。プロジェクトの .klockcode/memory/ に保存され、git には入りません。",
+    "descProjectNamed": "現在のワークスペース（{{workspace}}）専用のメモリです。プロジェクトの .klockcode/memory/ に保存され、git には入りません。",
     "count_one": "メモリ {{count}} 件",
     "count_other": "メモリ {{count}} 件",
     "count_few": "メモリ {{count}} 件",
@@ -167,7 +167,7 @@
     "repo": "オープンソースリポジトリ",
     "openInBrowser": "ブラウザーで開く",
     "sponsor": "サポート",
-    "sponsorHint": "MeowCode が役に立っていたら、QR コードを読み取って作者を支援できます。",
+    "sponsorHint": "KlockCode が役に立っていたら、QR コードを読み取って作者を支援できます。",
     "qrAlt": "{{name}}の支払い用 QR コード",
     "sponsors": {
       "wechat": "WeChat Pay",
@@ -175,7 +175,7 @@
     },
     "upToDate": "すでに最新バージョンです",
     "checkFailed": "バージョン確認に失敗しました：{{error}}",
-    "sponsorList": "スポンサー一覧（MeowCode、NexBox、OpenMD、LingTab）"
+    "sponsorList": "スポンサー一覧（KlockCode、NexBox、OpenMD、LingTab）"
   },
   "actions": {
     "add": "追加",
@@ -452,7 +452,7 @@
     "empty": "ルールはまだありません",
     "emptyHint": "「作成」をクリックして最初のルールを追加",
     "noWorkspace": "先にワークスペースを選択してください",
-    "noWorkspaceHint": "ルールはプロジェクトの .meowcode/rules ディレクトリに保存されます。",
+    "noWorkspaceHint": "ルールはプロジェクトの .klockcode/rules ディレクトリに保存されます。",
     "clickToEdit": "クリックしてこのルールを編集",
     "deleteAria": "ルール「{{name}}」を削除",
     "confirmDeleteAria": "ルール「{{name}}」の削除を確認するにはもう一度クリック",
@@ -606,6 +606,8 @@
     "modeFullDesc": "Agent はワークスペース外のファイルも読み書きできます。",
     "modeWorkspace": "ワークスペース書き込み",
     "modeWorkspaceDesc": "コマンドはワークスペースと追加の書き込み可能ルートにのみ書き込めます。",
+    "modeReadOnly": "読み取り専用",
+    "modeReadOnlyDesc": "コマンドはワークスペースを含め一切のファイルに書き込めません（読み取りと実行のみ）。",
     "deleteField": "ファイル削除の確認",
     "deleteDesc": "ワークスペース書き込みモードでのみ有効です。フルアクセスでは削除確認を既定でスキップします。",
     "unsupported": "コマンドサンドボックスは Windows でのみ利用できます。",
@@ -616,6 +618,7 @@
     "confirmEnable": "切り替える",
     "cancel": "キャンセル",
     "enabled": "ワークスペース書き込みに切り替えました（初回許可 {{ms}} ms）",
+    "enabledReadOnly": "読み取り専用サンドボックスに切り替えました（初回プローブ {{ms}} ms）",
     "saveFailed": "サンドボックス設定の保存に失敗しました",
     "loadFailed": "サンドボックス設定の読み込みに失敗しました"
   },

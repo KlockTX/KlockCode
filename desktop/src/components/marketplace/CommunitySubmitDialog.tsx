@@ -662,7 +662,7 @@ export function CommunitySubmitDialog({
                   <input
                     className="mc-dialog__input"
                     value={requiresEnv}
-                    placeholder="MEOWCODE_XXX_TOKEN, MEOWCODE_YYY_TOKEN"
+                    placeholder="KLOCKCODE_XXX_TOKEN, KLOCKCODE_YYY_TOKEN"
                     spellCheck={false}
                     onChange={(event) => setRequiresEnv(event.target.value)}
                   />

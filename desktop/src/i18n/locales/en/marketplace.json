@@ -2,7 +2,7 @@
   "nav": {
     "ariaLabel": "Plugin marketplace navigation",
     "heading": "Plugin Marketplace",
-    "subtitle": "Discover and install plugins, skills and MCP servers to extend what MeowCode can do.",
+    "subtitle": "Discover and install plugins, skills and MCP servers to extend what KlockCode can do.",
     "back": "Back to chat"
   },
   "entryType": {
@@ -122,11 +122,11 @@
     "empty": "No manually added items yet. Use the button above to add a local skill folder, plugin file, or MCP config.",
     "import": {
       "skillTitle": "Add a local skill",
-      "skillDesc": "Pick the SKILL.md inside your skill folder; the whole folder is copied to ~/.meowcode/skills/ and takes effect immediately.",
+      "skillDesc": "Pick the SKILL.md inside your skill folder; the whole folder is copied to ~/.klockcode/skills/ and takes effect immediately.",
       "pickSkill": "SKILL.md file",
       "pickSkillBtn": "Choose SKILL.md",
       "pluginTitle": "Add a local plugin",
-      "pluginDesc": "Plugins are TypeScript/JavaScript sources; they are copied to ~/.meowcode/plugins/ and run locally.",
+      "pluginDesc": "Plugins are TypeScript/JavaScript sources; they are copied to ~/.klockcode/plugins/ and run locally.",
       "pickPlugin": "Plugin source file or folder",
       "pickFileBtn": "Choose file",
       "pickDirBtn": "Choose folder",
@@ -138,7 +138,7 @@
     },
     "mcp": {
       "title": "Add an MCP server",
-      "desc": "Add an MCP server manually: the config is written to ~/.meowcode/mcp.json and connects automatically after saving.",
+      "desc": "Add an MCP server manually: the config is written to ~/.klockcode/mcp.json and connects automatically after saving.",
       "idLabel": "Name (id) *",
       "navLabel": "Connection mode",
       "navStdio": "Local command",
@@ -149,7 +149,7 @@
       "urlLabel": "Server URL *",
       "headersLabel": "Headers (JSON, optional)",
       "envLabel": "Environment variables (JSON, optional)",
-      "envHint": "Supports ${VAR} references to MeowCode process environment variables.",
+      "envHint": "Supports ${VAR} references to KlockCode process environment variables.",
       "jsonLabel": "MCP config (JSON)",
       "jsonHint": "Accepts a {\"mcpServers\": {…}} wrapper (adds several at once) or a bare server object.",
       "jsonInvalid": "Invalid JSON.",
@@ -164,11 +164,11 @@
       "toggleAria": "Toggle MCP {{id}}",
       "authGroup": "Authentication",
       "oauthToggle": "OAuth browser sign-in (remote MCP)",
-      "oauthHint": "The first connect opens a browser for sign-in; the token is stored locally in ~/.meowcode/mcp-oauth/ and never enters the chat.",
+      "oauthHint": "The first connect opens a browser for sign-in; the token is stored locally in ~/.klockcode/mcp-oauth/ and never enters the chat.",
       "oauthScopesLabel": "OAuth scopes (optional, space/comma separated)",
       "oauthClientIdLabel": "OAuth client ID (optional, pre-registered)",
       "oauthCimdLabel": "OAuth client metadata URL (optional)",
-      "oauthCimdHint": "Leave empty to use the official MeowCode CIMD document (meowcode.cn/.well-known/oauth-client). Set an empty string to disable the CIMD fallback."
+      "oauthCimdHint": "Leave empty to use the official KlockCode CIMD document (klockcode.cn/.well-known/oauth-client). Set an empty string to disable the CIMD fallback."
     }
   },
   "body": {
@@ -189,7 +189,7 @@
     "disconnect": {
       "desc": "This deletes the {{platform}} token stored on this machine and disconnects the {{platform}} MCP right away.",
       "envHint": "To revoke the token completely, delete it in the access token settings of that platform.",
-      "platformHint": "The authorization record on the platform is not revoked automatically; to revoke it, remove MeowCode from {{platform}} settings → Authorized apps.",
+      "platformHint": "The authorization record on the platform is not revoked automatically; to revoke it, remove KlockCode from {{platform}} settings → Authorized apps.",
       "title": "Disconnect {{platform}}"
     },
     "empty": {
@@ -205,7 +205,7 @@
     "pluginConfirm": {
       "accept": "I understand the risk — install",
       "checkSource": "Make sure you trust the source before installing.",
-      "desc": "Community plugins are TypeScript source. Once installed they run directly inside your MeowCode agent process, with the same permissions as official plugins (reading and writing files, running commands, and so on). MeowCode does not sandbox community plugins.",
+      "desc": "Community plugins are TypeScript source. Once installed they run directly inside your KlockCode agent process, with the same permissions as official plugins (reading and writing files, running commands, and so on). KlockCode does not sandbox community plugins.",
       "homepage": "Project page",
       "title": "Install the community plugin “{{name}}”?"
     },
@@ -231,9 +231,9 @@
     "connectTitle": "Connect using GitHub OAuth",
     "connected": "GitHub is connected. Loading GitHub MCP tools.",
     "copyCodeAria": "Copy device code",
-    "desc": "Authorize MeowCode through the GitHub OAuth device flow. The token is encrypted and stored on this machine, and is only used for GitHub MCP.",
+    "desc": "Authorize KlockCode through the GitHub OAuth device flow. The token is encrypted and stored on this machine, and is only used for GitHub MCP.",
     "deviceFlowStep": "In your <0>GitHub App settings</0>, turn on Enable device flow",
-    "moduleMissing": "The GitHub sign-in module is not loaded yet. Restart MeowCode completely and try again.",
+    "moduleMissing": "The GitHub sign-in module is not loaded yet. Restart KlockCode completely and try again.",
     "openInBrowser": "Open in browser",
     "permissions": "Grant repository permissions such as Contents, Issues, Pull requests and Actions as needed",
     "prereq": "Before authorizing, make sure the GitHub App has:",
@@ -250,7 +250,7 @@
     "awaitingBrowser": "Waiting for authorization in the browser…",
     "awaitingUser": "Waiting for you to finish authorizing in the browser…",
     "cancelAuth": "Cancel authorization",
-    "clientIdHint": "This is the Client ID of the app built into MeowCode. If you use your own app, change both this and the Secret below to the values on the app page — a mismatched pair fails the token exchange (401).",
+    "clientIdHint": "This is the Client ID of the app built into KlockCode. If you use your own app, change both this and the Secret below to the values on the app page — a mismatched pair fails the token exchange (401).",
     "clientIdLabel": "Client ID (must belong to the same app as the Client Secret below)",
     "clientIdPlaceholder": "Client ID of the OAuth app",
     "connectHint": "“Connect now” opens the {{platform}} authorization page in your system browser and redirects back to this machine afterwards — no token pasting needed.",
@@ -259,9 +259,9 @@
     "connected": "{{platform}} is connected. Loading MCP tools.",
     "copyClientIdAria": "Copy Client ID",
     "copyRedirectAria": "Copy callback URL",
-    "desc": "Authorize directly with {{platform}} OAuth: clicking the button opens the authorization page in your system browser and returns to MeowCode when you are done. Credentials stay on this machine and are only used to connect {{platform}} MCP.",
+    "desc": "Authorize directly with {{platform}} OAuth: clicking the button opens the authorization page in your system browser and returns to KlockCode when you are done. Credentials stay on this machine and are only used to connect {{platform}} MCP.",
     "directTitle": "Connect directly: authorize {{platform}} in the browser, no token pasting",
-    "moduleMissing": "The OAuth module is not loaded yet. Restart MeowCode and try again.",
+    "moduleMissing": "The OAuth module is not loaded yet. Restart KlockCode and try again.",
     "opening": "Opening…",
     "openingBrowser": "Opening the browser…",
     "pasteToken": "Paste token",
@@ -274,7 +274,7 @@
     "requireToken": "Fill in at least one token.",
     "restoreClientId": "Restore built-in Client ID",
     "saveAndConnect": "Save and connect",
-    "secretFilePath": "You can also keep the Secret in %APPDATA%\\MeowCode\\oauth-apps.json (never committed)",
+    "secretFilePath": "You can also keep the Secret in %APPDATA%\\KlockCode\\oauth-apps.json (never committed)",
     "secretLabel": "Client Secret ({{platform}} requires it for the token exchange; fill it in once)",
     "secretPlaceholder": "Client Secret of the OAuth app",
     "setupHint": "You only see this form once: {{platform}} requires a Client Secret for the token exchange (the platform does not support PKCE), so it is filled in on the first run and encrypted on this machine. “Save and connect” opens the browser straight away; from then on every “Connect {{platform}}” goes straight to the browser without this form.",

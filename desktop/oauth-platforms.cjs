@@ -15,10 +15,10 @@ const OAUTH_PLATFORMS = {
     tokenUrl: "https://gitee.com/oauth/token",
     scope: "user_info projects pull_requests issues notes",
     localCallbackPath: "/oauth/gitee/callback",
-    tokenEnv: "MEOWCODE_GITEE_TOKEN",
+    tokenEnv: "KLOCKCODE_GITEE_TOKEN",
     appSetupUrl: "https://gitee.com/oauth/applications",
     appSetupHint: "Gitee 设置 → 第三方应用 → 创建应用",
-    /** MeowCode 内置应用 Client ID（公开信息） */
+    /** KlockCode 内置应用 Client ID（公开信息） */
     defaultClientId: "cbe8604db051ea4fc5e21b6952330cb194e24c1cbd2e7c1bcb1fd34cc44e7dcd",
     /** 内置应用 Client Secret：用于开箱即用的一键授权；设置页 / 环境变量 / 本机文件可覆盖 */
     defaultClientSecret: "c421e08bc98a61c5628592030801449952b1fde28ddadb57a1bd3f6a203127f2",
@@ -29,10 +29,10 @@ const OAUTH_PLATFORMS = {
     tokenUrl: "https://gitcode.com/oauth/token",
     scope: "user_info projects pull_requests issues",
     localCallbackPath: "/oauth/gitcode/callback",
-    tokenEnv: "MEOWCODE_GITCODE_TOKEN",
+    tokenEnv: "KLOCKCODE_GITCODE_TOKEN",
     appSetupUrl: "https://gitcode.com/settings/applications",
     appSetupHint: "GitCode 设置 → 应用管理 → 创建应用",
-    /** MeowCode 内置应用 Client ID（公开信息） */
+    /** KlockCode 内置应用 Client ID（公开信息） */
     defaultClientId: "b23b63eaf5764ea9a95e2613e5bf918a",
     /** 内置应用 Client Secret：用于开箱即用的一键授权；设置页 / 环境变量 / 本机文件可覆盖 */
     defaultClientSecret: "05f760d694a241278ab86c42ef5f12da",
@@ -47,10 +47,10 @@ const OAUTH_PLATFORMS = {
     tokenUrl: "https://api.undermind.ai/o/token/",
     scope: "mcp",
     localCallbackPath: "/callback",
-    tokenEnv: "MEOWCODE_UNDERMIND_TOKEN",
+    tokenEnv: "KLOCKCODE_UNDERMIND_TOKEN",
     appSetupUrl: "https://www.undermind.ai/mcp",
     appSetupHint: "Undermind MCP（CIMD / 公共客户端）",
-    /** 暂借 OpenCode 公开 CIMD 文档当 client_id（loopback 任意端口）；发布 meowcode.cn 后可换回 */
+    /** 暂借 OpenCode 公开 CIMD 文档当 client_id（loopback 任意端口）；发布 klockcode.cn 后可换回 */
     defaultClientId: "https://opencode.ai/oauth/opencode/client.json",
     pkce: true,
     publicClient: true,
@@ -61,7 +61,7 @@ const OAUTH_PLATFORMS = {
     tokenUrl: "https://gitcode.com/oauth/token",
     scope: "user_info projects pull_requests",
     localCallbackPath: "/oauth/gitcode-community/callback",
-    tokenEnv: "MEOWCODE_GITCODE_COMMUNITY_TOKEN",
+    tokenEnv: "KLOCKCODE_GITCODE_COMMUNITY_TOKEN",
     appSetupUrl: "https://gitcode.com/settings/applications",
     appSetupHint: "GitCode 设置 → 应用管理 → 创建应用",
     defaultClientId: "0cdb15925d064724a031159253a33dde",
@@ -100,7 +100,7 @@ async function postForm(url, params, fetchImpl = fetch) {
     headers: {
       accept: "application/json",
       "content-type": "application/x-www-form-urlencoded",
-      "user-agent": "MeowCode",
+      "user-agent": "KlockCode",
     },
     body: new URLSearchParams(params).toString(),
   });
@@ -210,7 +210,7 @@ async function verifyClientCredentials(
       {
         client_id: clientId,
         client_secret: clientSecret,
-        code: "meowcode-credential-probe",
+        code: "klockcode-credential-probe",
         redirect_uri: redirectUri,
         grant_type: "authorization_code",
       },

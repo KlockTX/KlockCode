@@ -73,6 +73,10 @@
     "connectPickNode": "先選取一個節點，再點「連線」",
     "dirty": "有未儲存的修改"
   },
+  "findings": {
+    "title": "語意提示（{{n}} 條）",
+    "dismiss": "知道了"
+  },
   "toolbar": {
     "addTier": "層級",
     "addGate": "閘門",

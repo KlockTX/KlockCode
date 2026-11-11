@@ -10,19 +10,19 @@
  */
 
 const MANUAL_MCP_TOKEN_CHECKS = {
-  MEOWCODE_GITEE_TOKEN: {
+  KLOCKCODE_GITEE_TOKEN: {
     url: (values) =>
-      `https://gitee.com/api/v5/user?access_token=${encodeURIComponent(values.MEOWCODE_GITEE_TOKEN ?? "")}`,
+      `https://gitee.com/api/v5/user?access_token=${encodeURIComponent(values.KLOCKCODE_GITEE_TOKEN ?? "")}`,
     headers: () => ({}),
   },
-  MEOWCODE_GITCODE_TOKEN: {
+  KLOCKCODE_GITCODE_TOKEN: {
     url: (values) =>
-      `https://api.gitcode.com/api/v5/user?access_token=${encodeURIComponent(values.MEOWCODE_GITCODE_TOKEN ?? "")}`,
+      `https://api.gitcode.com/api/v5/user?access_token=${encodeURIComponent(values.KLOCKCODE_GITCODE_TOKEN ?? "")}`,
     headers: () => ({}),
   },
-  MEOWCODE_FIGMA_TOKEN: {
+  KLOCKCODE_FIGMA_TOKEN: {
     url: () => "https://api.figma.com/v1/me",
-    headers: (values) => ({ "X-Figma-Token": values.MEOWCODE_FIGMA_TOKEN ?? "" }),
+    headers: (values) => ({ "X-Figma-Token": values.KLOCKCODE_FIGMA_TOKEN ?? "" }),
   },
   LUCKIN_MCP_TOKEN: {
     url: () => "https://gwmcp.lkcoffee.com/order/user/mcp",
@@ -40,21 +40,21 @@ const MANUAL_MCP_TOKEN_CHECKS = {
         params: {
           protocolVersion: "2025-03-26",
           capabilities: {},
-          clientInfo: { name: "MeowCode", version: "1.0.0" },
+          clientInfo: { name: "KlockCode", version: "1.0.0" },
         },
         id: 1,
       }),
   },
   // 飞书自建应用：App ID + App Secret 成对校验。校验登记在 APP_ID 名下（组代表），
   // ensure 组校验时会把 SECRET 一起传进 values。
-  MEOWCODE_LARK_APP_ID: {
+  KLOCKCODE_LARK_APP_ID: {
     url: () => "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
     method: "POST",
     headers: () => ({ "content-type": "application/json" }),
     body: (values) =>
       JSON.stringify({
-        app_id: values.MEOWCODE_LARK_APP_ID ?? "",
-        app_secret: values.MEOWCODE_LARK_APP_SECRET ?? "",
+        app_id: values.KLOCKCODE_LARK_APP_ID ?? "",
+        app_secret: values.KLOCKCODE_LARK_APP_SECRET ?? "",
       }),
     // 飞书端点凭据错误也回 HTTP 200：必须判 body.code（0 = 成功）
     evaluate: (_response, body) => {
@@ -70,7 +70,7 @@ const MANUAL_MCP_TOKEN_CHECKS = {
 };
 
 /** 成组凭据（组内全部 env 缺一不可）；未列入的名字自成一组。 */
-const MANUAL_MCP_CREDENTIAL_GROUPS = [["MEOWCODE_LARK_APP_ID", "MEOWCODE_LARK_APP_SECRET"]];
+const MANUAL_MCP_CREDENTIAL_GROUPS = [["KLOCKCODE_LARK_APP_ID", "KLOCKCODE_LARK_APP_SECRET"]];
 
 /** 某个 env 名所在的凭据组（未成组的名字返回单元素数组）。 */
 function credentialGroupOf(name) {
@@ -95,7 +95,7 @@ async function validateManualMcpToken(name, values, { fetchImpl = fetch } = {}) 
   try {
     const response = await fetchImpl(check.url(values), {
       method: check.method ?? "GET",
-      headers: { accept: "application/json", "user-agent": "MeowCode", ...check.headers(values) },
+      headers: { accept: "application/json", "user-agent": "KlockCode", ...check.headers(values) },
       body: check.body ? check.body(values) : undefined,
       signal: AbortSignal.timeout(15_000),
     });

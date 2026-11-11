@@ -73,6 +73,10 @@
     "connectPickNode": "Select a node first, then click “Connect”",
     "dirty": "Unsaved changes"
   },
+  "findings": {
+    "title": "Semantic hints ({{n}})",
+    "dismiss": "Dismiss"
+  },
   "toolbar": {
     "addTier": "Tier",
     "addGate": "Gate",

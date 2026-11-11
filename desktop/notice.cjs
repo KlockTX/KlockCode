@@ -1,7 +1,7 @@
 /**
  * 公告（主进程专用，纯 CJS，便于 main.cjs 直接 require 和单测覆盖）。
  *
- * 数据源：NexBox 数据仓的 notice_meowcode.json（Gitee 直连，国内可访问），
+ * 数据源：NexBox 数据仓的 notice_klockcode.json（Gitee 直连，国内可访问），
  * 约定与 NexBox 一致：{ version, announce_list: [...] }。
  * 取 announce_list 里第一条 enabled 的公告推给渲染层，显示在标题栏里；
  * 拉取失败 / 文件为空时视为「没有公告」，保留磁盘缓存兜底，绝不打扰启动。

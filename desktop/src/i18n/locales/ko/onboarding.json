@@ -14,7 +14,7 @@
     "title": "언어 선택",
     "label": "언어",
     "previewLabel": "언어 미리보기",
-    "previewText": "안녕하세요, MeowCode에 오신 것을 환영합니다.",
+    "previewText": "안녕하세요, KlockCode에 오신 것을 환영합니다.",
     "systemMeta": "시스템 설정 · 현재 {{language}}",
     "selectedMeta": "인터페이스 언어 · {{language}}"
   },
@@ -51,7 +51,7 @@
   },
   "finish": {
     "title": "준비 완료",
-    "desc": "설정이 완료되었습니다. 이제 MeowCode를 사용할 수 있습니다.",
+    "desc": "설정이 완료되었습니다. 이제 KlockCode를 사용할 수 있습니다.",
     "noProvider": "아직 구성된 모델이 없습니다. 나중에 설정 → 모델에서 추가할 수 있습니다."
   }
 }

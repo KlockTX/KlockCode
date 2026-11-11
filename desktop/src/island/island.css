@@ -248,7 +248,7 @@ button.mc-skillchip.island-chip {
   border-radius: 4px;
 }
 
-/* 岛里助手消息不带「MeowCode」标签行，正文排版（.mc-markdown）与主窗口完全同源，不做任何缩放 */
+/* 岛里助手消息不带「KlockCode」标签行，正文排版（.mc-markdown）与主窗口完全同源，不做任何缩放 */
 
 .island-error {
   align-self: stretch;
