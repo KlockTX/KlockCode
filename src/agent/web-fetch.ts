@@ -3,6 +3,7 @@ import { gfm } from "@joplin/turndown-plugin-gfm";
 import { buildAuthHeaders, fetchWithRetry, mergeExtraHeaders } from "./http.js";
 import type { ProviderConfig } from "./types.js";
 import { EXTERNAL_WEB_CONTENT_NOTICE } from "./web-search.js";
+import { APP_VERSION } from "../version.js";
 
 /**
  * 网页正文抓取：
@@ -18,7 +19,7 @@ const MAX_BODY_CHARS = 100_000;
 const MAX_REDIRECTS = 5;
 /** 整个抓取（重定向 + 响应头 + 正文）的硬上限：卡住的站点不能拖死整个回合。 */
 const WEB_FETCH_TIMEOUT_MS = 10_000;
-const USER_AGENT = "KlockCode/1.2.1 (+https://github.com/MuLiuSaMa/MeowCode)";
+const USER_AGENT = `KlockCode/${APP_VERSION} (+https://github.com/MuLiuSaMa/MeowCode)`;
 const DEEPSEEK_FETCH_ENDPOINT = "https://api.deepseek.com/v1/tools/fetch";
 
 export type WebFetchOutcome = {

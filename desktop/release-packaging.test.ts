@@ -29,6 +29,8 @@ function loadHooks() {
       if (id === "node:path") return path;
       if (id === "node:child_process") return { execFileSync };
       if (id === "node:fs") return { rmSync, existsSync: () => true, readFileSync: () => Buffer.alloc(0), writeFileSync: vi.fn() };
+      // 版本兜底从根 package.json 读，不能再写死字面量（发版时漏改过一次）
+      if (id === "../package.json") return requireFromTest("../package.json");
       if (id === "resedit") return {
         NtExecutable: { from: () => ({ generate: () => new ArrayBuffer(0) }) },
         NtExecutableResource: { from: () => ({ entries: [], outputResource: vi.fn() }) },

@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const ResEdit = require("resedit");
 const { execFileSync } = require("node:child_process");
+const FALLBACK_VERSION = require("../package.json").version;
 
 /** 2052 = 中文（简体），与 scripts/brand-electron.mjs 的开发态产物保持一致 */
 const VERSION_LANG = 2052;
@@ -77,7 +78,7 @@ exports.afterPack = async function afterPack(context) {
   applyVersionInfo(exePath, {
     author,
     copyright,
-    version: appInfo?.version || "1.2.1",
+    version: appInfo?.version || FALLBACK_VERSION,
   });
   execFileSync(process.execPath, [path.join(__dirname, "../scripts/release-smoke.mjs"), context.appOutDir], {
     stdio: "inherit",

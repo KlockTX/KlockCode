@@ -6,6 +6,7 @@ import { mkdirSync, existsSync, statSync, realpathSync } from "node:fs";
 import { readFile, readdir, rm, stat, unlink, writeFile, cp } from "node:fs/promises";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { AgentRuntime, isApprovalMode, isSessionMode } from "../agent/runtime.js";
+import { APP_VERSION } from "../version.js";
 import { listProviderModels, resolveProviderModelsOptions } from "../agent/models-list.js";
 import { composeMail, type MailComposeContext } from "../agent/mail-compose.js";
 import { MAX_POLISH_INPUT_CHARS } from "../agent/prompt-polish.js";
@@ -204,7 +205,7 @@ import type {
   TurnStatus,
 } from "../agent/types.js";
 
-const APP_VERSION = "1.2.1";
+
 const DEFAULT_SESSIONS_DIR = path.join(os.homedir(), "AppData", "Roaming", "KlockCode", "agent", "sessions");
 
 /** 插件命令 chip 的展示标记：首行是名称/插件/命令，空行后才是实际 `/command` 文本 */
