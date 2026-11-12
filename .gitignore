@@ -9,6 +9,8 @@ desktop/release/
 desktop/release-verify*/
 /installer-output/
 desktop/renderer/
+# 构建前 vite 要清空 renderer，安全删除守卫会拦下批量删除；先改名挪开再重建，别让残骸进版本库
+desktop/renderer-stale-*/
 desktop/.vite/
 *.tsbuildinfo
 /.tmp-*/

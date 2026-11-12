@@ -13,7 +13,7 @@ export function TitleBar({ forceDark = false, announcements = false }: { forceDa
   const [maximized, setMaximized] = useState(false);
   const { resolved } = useTheme();
   const { t } = useTranslation("shell");
-  // 浅色主题下白字标会看不见，换黑色字标（两份资源尺寸一致，2217×377）
+  // 浅色主题下白字标会看不见，换黑色字标（两份资源尺寸一致，2812×377）
   const wordmark = forceDark || resolved === "dark" ? wordmarkUrl : wordmarkBlackUrl;
 
   useEffect(() => {

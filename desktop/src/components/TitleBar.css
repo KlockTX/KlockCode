@@ -22,7 +22,7 @@
   min-width: 0;
   pointer-events: none;
 }
-/* 「KlockCode」字标，明暗各一份（均为 2217×377，已裁掉透明留白） */
+/* 「<KlockCode/>」字标，明暗各一份（均为 2812×377，已裁掉透明留白，见 scripts/draw-wordmark.ps1） */
 .mc-titlebar__wordmark {
   height: 18px;
   width: auto;

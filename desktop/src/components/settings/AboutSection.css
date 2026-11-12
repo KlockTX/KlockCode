@@ -23,7 +23,7 @@
   filter: drop-shadow(0 6px 16px rgb(0 0 0 / 0.22));
 }
 
-/* 文字 Logo：和左上角标题栏同一份资源（2217×377），按高度给宽 */
+/* 文字 Logo：和左上角标题栏同一份资源（2812×377），按高度给宽 */
 .mc-about__wordmark {
   height: 26px;
   width: auto;
