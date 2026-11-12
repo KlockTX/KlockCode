@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 应用图标（exe / 任务管理器 / 任务栏）：始终从 resources/icon.png 的完整 Logo
- * 按每个 DPI 尺寸单独渲染，不做裁切、镜像、阈值或任何改绘。
+ * 按每个 DPI 尺寸用最近邻单独渲染，保留像素块硬边，不做裁切或改绘。
  * Windows 125% 缩放会请求 20px（原 icon.ico 缺这个尺寸，导致图标被放大发糊）。
  * 生成后运行 node scripts/make-tray-icons.mjs，再完全退出应用并运行
  * node scripts/brand-electron.mjs --force 重打 exe。
@@ -10,7 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pngToIco from "png-to-ico";
-import { encodePng, readPng, resample } from "./lib/icon-png.mjs";
+import { encodePng, readPng, resampleNearest } from "./lib/icon-png.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(repoRoot, "resources", "icon.png");
@@ -24,7 +24,7 @@ async function main() {
   if (src.width !== src.height) {
     throw new Error(`resources/icon.png 必须是正方形，当前 ${src.width}x${src.height}`);
   }
-  const pngs = SIZES.map((size) => encodePng(resample(src, size)));
+  const pngs = SIZES.map((size) => encodePng(resampleNearest(src, size)));
   fs.writeFileSync(outPath, await pngToIco(pngs));
   console.log(`[make-app-icon] resources/icon.ico <- ${SIZES.join(", ")} px（完整 Logo）`);
 }

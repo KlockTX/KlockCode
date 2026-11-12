@@ -2,21 +2,16 @@
   <img src="./KlockCode.png" alt="KlockCode — A programming agent whose architecture you can tweak freely" width="100%">
 </p>
 
-<h1 align="center">KlockCode —— 可自由修改架构的Agent</h1>
+<h1 align="center">KlockCode —— 可自由修改架构的 Agent</h1>
 
 <p align="center">
-  <a href="https://meowcode.cn"><img alt="官网" src="https://img.shields.io/badge/%E5%AE%98%E7%BD%91-meowcode.cn-1f6feb?style=flat-square"></a>
-  <a href="https://github.com/MuLiuSaMa/MeowCode"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-%E4%BB%93%E5%BA%93-181717?style=flat-square&amp;logo=github&amp;logoColor=white"></a>
-  <a href="https://gitee.com/muliuawa/MeowCode"><img alt="Gitee" src="https://img.shields.io/badge/Gitee-%E4%BB%93%E5%BA%93-C71D23?style=flat-square&amp;logo=gitee&amp;logoColor=white"></a>
-  <a href="https://gitcode.com/MuLiuSaMa/MeowCode"><img alt="GitCode" src="https://img.shields.io/badge/GitCode-%E4%BB%93%E5%BA%93-1677FF?style=flat-square&amp;logo=gitcode&amp;logoColor=white"></a>
-  <img alt="Stars" src="https://img.shields.io/github/stars/MuLiuSaMa/MeowCode?style=flat-square&amp;logo=github&amp;color=e3b341">
-  <img alt="Downloads" src="https://img.shields.io/github/downloads/MuLiuSaMa/MeowCode/total?style=flat-square&amp;logo=github&amp;label=%E4%B8%8B%E8%BD%BD%E9%87%8F&amp;color=2ea043">
-  <img alt="QQ群 1128483595" src="https://img.shields.io/badge/QQ%E7%BE%A4-1128483595-12B7F5?style=flat-square&amp;logo=tencentqq&amp;logoColor=white">
+  <a href="https://github.com/KlockTX/KlockCode/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/KlockTX/KlockCode?style=flat-square&amp;color=f5b942"></a>
+  <a href="https://github.com/KlockTX/KlockCode/releases/latest"><img alt="Downloads" src="https://img.shields.io/github/downloads/KlockTX/KlockCode/total?style=flat-square&amp;logo=github&amp;color=2ea043"></a>
+  <a href="https://github.com/KlockTX/KlockCode/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/KlockTX/KlockCode?style=flat-square&amp;logo=github&amp;color=e3b341"></a>
+  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue?style=flat-square"></a>
 </p>
 
-> **KlockCode 是基于 [MeowCode](https://github.com/MuLiuSaMa/MeowCode) 的派生版本**，原作者 MuLiu_SaMa，继续以 **GPL-3.0-or-later** 发布。上方徽章与仓库链接指向上游项目，用于保留归属；代码内指向上游官网 / OAuth well-known / 公告的服务端点予以保留（部署派生版本时应替换为自有端点）；更新检查已指向 `KlockCode` 自有 Release 仓库，需自行创建。品牌信息统一由根 `package.json` 的 `brand` 字段维护。
->
-> **从上游升级**：`MEOWCODE_*` 环境变量在启动时会自动回退映射到 `KLOCKCODE_*`（新值优先）；工作区 `.meowcode/` 与用户级 `~/.meowcode/` 不会被自动改写，请显式运行 `pnpm migrate:config <工作区> --apply`（默认预演）完成一次性复制，原目录保留可回滚。
+> **归属**：KlockCode 是 [MuLiuSaMa/MeowCode](https://github.com/MuLiuSaMa/MeowCode) 的派生版本，原作者 MuLiu_SaMa，继续以 **GPL-3.0-or-later** 发布；`LICENSE` 与上游署名完整保留。
 
 一个**架构可以随你改**的本地编程 Agent 桌面应用。
 
@@ -130,11 +125,24 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 
 ### 编排可视化
 
-![](./assets/agent-architecture.png)
+```mermaid
+flowchart LR
+  ROOT["主 Agent · main"]
+  ROOT -->|agent-tier| T0["T0 · 声明即完成"]
+  ROOT -->|agent-tier| T1["T1 · 单车道"]
+  ROOT -->|agent-tier| T2["T2 · 多车道"]
+  T1 -->|tier-gate 1| G4["G4 实现"]
+  T1 -->|tier-gate 2| G5["G5 评审"]
+  T1 -->|tier-gate 3| G6["G6 验证"]
+  T1 -->|tier-gate 4| G7["G7 终审"]
+  G4 -->|gate-role| R1["implementer"]
+  G5 -->|gate-role| R2["reviewer"]
+  G6 -->|gate-role| R3["fresh-verifier"]
+  G7 -->|gate-role| R4["juror"]
+  G7 -.->|"onFail: loop-to:G4"| G4
+```
 
-Agent 架构编辑器
-
-主 Agent 与子 Agent 的关系、层级（T0 / T1 / T2）、门禁条件、可用工具与系统提示词都是可编辑的节点。改完保存即生效，不用改代码，也不用重新编译。
+架构编辑器里的节点与连线（示意）。主 Agent、子 Agent、层级（T0 / T1 / T2）、门禁条件、可用工具与系统提示词都是可编辑节点；存盘后在**下一个回合边界**重新装载，不用改代码，也不用重新编译。
 
 ### 运行时分三层
 
@@ -196,6 +204,9 @@ pnpm dev:desktop
 | `pnpm package:msix` | 构建并打出微软商店 MSIX（未签名，输出到 `desktop/release`） |
 | `pnpm test:msix` | 本地签名并侧载安装最新 MSIX（签名 + 信任证书 + 安装 + 启动） |
 | `pnpm make:msix-assets` | 从 `resources/icon.png` 重新生成商店瓦片图 |
+| `node scripts/draw-brand-mark.mjs` | 重绘像素风品牌标记（`resources/icon.png`，64×64 逻辑格） |
+| `scripts/draw-brand-banner.ps1`（Windows） | 重绘 README 顶部横幅（`KlockCode.png`，需先跑上一条） |
+| `scripts/draw-benchmark-chart.ps1`（Windows） | 重绘「实测」对比图（`assets/benchmark-token-cache.png`） |
 
 ## 打包发布
 
@@ -287,6 +298,12 @@ pnpm build:agent
 pnpm --filter @klockcode/desktop typecheck
 pnpm test
 ```
+
+## 从上游升级
+
+`MEOWCODE_*` 环境变量在启动时会自动回退映射到 `KLOCKCODE_*`（新值优先）；工作区 `.meowcode/` 与用户级 `~/.meowcode/` 不会被自动改写，请显式运行 `pnpm migrate:config <工作区> --apply`（默认预演）完成一次性复制，原目录保留可回滚。
+
+代码里指向上游官网 / OAuth well-known / 公告的服务端点予以保留，部署派生版本时应替换为自有端点；更新检查已指向 KlockCode 自有的 Release 仓库。品牌信息统一由根 `package.json` 的 `brand` 字段维护。
 
 ## 许可证
 

@@ -11,7 +11,7 @@
 ## 本地起步
 
 ```powershell
-git clone https://github.com/MuLiuSaMa/MeowCode.git
+git clone https://github.com/KlockTX/KlockCode.git
 cd KlockCode
 pnpm install
 pnpm dev:desktop
@@ -146,7 +146,7 @@ style(diff): diff 增删色换成更鲜艳的绿/红
 
 **安全漏洞**
 
-不要开公开 Issue。请通过上游项目官网 [meowcode.cn](https://meowcode.cn) 上的联系方式私下告知原作者；派生版本自身的安全问题请直接联系本仓库维护者。
+不要开公开 Issue。本仓库的安全问题请用 GitHub 的私密漏洞报告（Security → Report a vulnerability）私下告知维护者；若问题来自上游代码，也请同步告知上游维护者。
 
 ## 一点约定
 

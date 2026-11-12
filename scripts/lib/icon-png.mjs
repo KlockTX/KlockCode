@@ -128,3 +128,25 @@ export function resample(src, size) {
   }
   return out;
 }
+
+/**
+ * 最近邻重采样：像素画专用。
+ * Lanczos 会在硬边之间插值出一圈半透明灰边，把"一格一色"的像素画抹成糊图；
+ * 这里直接取源像素，缩到多小都保持整块硬边（细节会自然消失，但不会脏）。
+ */
+export function resampleNearest(src, size) {
+  const out = new PNG({ width: size, height: size });
+  for (let y = 0; y < size; y += 1) {
+    const sy = Math.min(src.height - 1, Math.floor(((y + 0.5) * src.height) / size));
+    for (let x = 0; x < size; x += 1) {
+      const sx = Math.min(src.width - 1, Math.floor(((x + 0.5) * src.width) / size));
+      const from = (sy * src.width + sx) * 4;
+      const to = (y * size + x) * 4;
+      out.data[to] = src.data[from];
+      out.data[to + 1] = src.data[from + 1];
+      out.data[to + 2] = src.data[from + 2];
+      out.data[to + 3] = src.data[from + 3];
+    }
+  }
+  return out;
+}

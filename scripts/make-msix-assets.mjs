@@ -3,14 +3,14 @@
  * 生成微软商店（MSIX）需要的图片资源：resources/appx/*.png
  *
  * 尺寸按 AppxManifest 的资源清单（正方形瓦片 + 商店 Logo），全部由
- * resources/icon.png 用同一套 Lanczos 重采样得到，不做裁切或改绘。
+ * resources/icon.png 用最近邻重采样得到（像素画不能用 Lanczos），不做裁切或改绘。
  * 换了 Logo 之后重跑一次即可：
  *   node scripts/make-msix-assets.mjs
  */
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPng, readPng, resample, writePng } from "./lib/icon-png.mjs";
+import { createPng, readPng, resampleNearest, writePng } from "./lib/icon-png.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourcePath = path.join(repoRoot, "resources", "icon.png");
@@ -29,7 +29,7 @@ function wideTile(src) {
   const height = 150;
   const iconSize = 132;
   const canvas = createPng(width, height);
-  const icon = resample(src, iconSize);
+  const icon = resampleNearest(src, iconSize);
   const offsetX = Math.floor((width - iconSize) / 2);
   const offsetY = Math.floor((height - iconSize) / 2);
   for (let y = 0; y < iconSize; y++) {
@@ -52,7 +52,7 @@ function main() {
   }
   fs.mkdirSync(outDir, { recursive: true });
   for (const [name, size] of Object.entries(ASSETS)) {
-    writePng(path.join(outDir, name), resample(src, size));
+    writePng(path.join(outDir, name), resampleNearest(src, size));
     console.log(`[make-msix-assets] ${name} <- ${size}x${size}`);
   }
   writePng(path.join(outDir, "Wide310x150Logo.png"), wideTile(src));
