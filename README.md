@@ -204,7 +204,7 @@ pnpm dev:desktop
 | `pnpm package:msix` | 构建并打出微软商店 MSIX（未签名，输出到 `desktop/release`） |
 | `pnpm test:msix` | 本地签名并侧载安装最新 MSIX（签名 + 信任证书 + 安装 + 启动） |
 | `pnpm make:msix-assets` | 从 `resources/icon.png` 重新生成商店瓦片图 |
-| `node scripts/draw-brand-mark.mjs` | 重绘像素风品牌标记（`resources/icon.png`，64×64 逻辑格） |
+| `node scripts/draw-brand-mark.mjs` | 重绘像素风品牌标记（`icon.png` 64 格完整版 + `icon-small.png` 16 格小尺寸版） |
 | `scripts/draw-brand-banner.ps1`（Windows） | 重绘 README 顶部横幅（`KlockCode.png`，需先跑上一条） |
 | `scripts/draw-benchmark-chart.ps1`（Windows） | 重绘「实测」对比图（`assets/benchmark-token-cache.png`） |
 

@@ -2,8 +2,9 @@
 /**
  * 生成微软商店（MSIX）需要的图片资源：resources/appx/*.png
  *
- * 尺寸按 AppxManifest 的资源清单（正方形瓦片 + 商店 Logo），全部由
- * resources/icon.png 用最近邻重采样得到（像素画不能用 Lanczos），不做裁切或改绘。
+ * 尺寸按 AppxManifest 的资源清单（正方形瓦片 + 商店 Logo），用最近邻重采样
+ * （像素画不能用 Lanczos）。<=48px 取 16 格简化版 icon-small.png，大图取 icon.png，
+ * 与 make-app-icon.mjs 保持同一套小尺寸规则。
  * 换了 Logo 之后重跑一次即可：
  *   node scripts/make-msix-assets.mjs
  */
@@ -13,8 +14,9 @@ import { fileURLToPath } from "node:url";
 import { createPng, readPng, resampleNearest, writePng } from "./lib/icon-png.mjs";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sourcePath = path.join(repoRoot, "resources", "icon.png");
-const outDir = path.join(repoRoot, "resources", "appx");
+const resources = path.join(repoRoot, "resources");
+const outDir = path.join(resources, "appx");
+const SMALL_MAX = 48;
 
 /** 文件名与像素尺寸必须与 AppxManifest 的引用一致（electron-builder 按文件名映射）。 */
 const ASSETS = {
@@ -46,16 +48,17 @@ function wideTile(src) {
 }
 
 function main() {
-  const src = readPng(sourcePath);
-  if (src.width !== src.height) {
-    throw new Error(`resources/icon.png 必须是正方形，当前 ${src.width}x${src.height}`);
+  const large = readPng(path.join(resources, "icon.png"));
+  const small = readPng(path.join(resources, "icon-small.png"));
+  for (const [name, png] of [["icon.png", large], ["icon-small.png", small]]) {
+    if (png.width !== png.height) throw new Error(`${name} 必须是正方形，当前 ${png.width}x${png.height}`);
   }
   fs.mkdirSync(outDir, { recursive: true });
   for (const [name, size] of Object.entries(ASSETS)) {
-    writePng(path.join(outDir, name), resampleNearest(src, size));
+    writePng(path.join(outDir, name), resampleNearest(size <= SMALL_MAX ? small : large, size));
     console.log(`[make-msix-assets] ${name} <- ${size}x${size}`);
   }
-  writePng(path.join(outDir, "Wide310x150Logo.png"), wideTile(src));
+  writePng(path.join(outDir, "Wide310x150Logo.png"), wideTile(large));
   console.log("[make-msix-assets] Wide310x150Logo.png <- 310x150（132px 居中）");
 }
 
