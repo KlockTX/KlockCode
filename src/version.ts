@@ -9,4 +9,4 @@
  * 现在所有消费方都 import 这个常量；version.test.ts 把它与根 package.json 和
  * desktop/package.json 钉在一起 —— 下次漏改会在测试里失败，而不是在发版末尾。
  */
-export const APP_VERSION = "1.3.0";
+export const APP_VERSION = "1.3.1";
