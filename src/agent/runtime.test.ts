@@ -1465,7 +1465,14 @@ describe("AgentRuntime browser tools", () => {
     // 14 个内置工具 + admit + read_video + diagnostics + memory 三件 + tool_search
     // + web_fetch（localhost 没有搜索后端，web_search 被撤下）
     // + job / git / delete_file / move_file / apply_patch
-    expect(plainTools).toHaveLength(27);
+    // 27 → 21：job / read_video / context_status / diagnostics / apply_patch / list_dir
+    // 改为延迟加载。它们仍在册、按名仍可调用 —— 这条断言钉的是「广告出去多少个」，
+    // 不是「能用多少个」，所以下面逐条确认它们确实没被广告出去。
+    expect(plainTools).toHaveLength(21);
+    const advertised = plainTools.map((tool) => tool.function.name);
+    for (const deferred of ["job", "read_video", "context_status", "diagnostics", "apply_patch", "list_dir"]) {
+      expect(advertised).not.toContain(deferred);
+    }
   });
 
   it("dispatches browser tool calls to the host without approval and emits tool events", async () => {

@@ -112,8 +112,50 @@ function toolResult(output: string, ok = true): ToolResult {
   return { output: truncated.output, ok };
 }
 
-/** tool_search 的实现：按关键词检索全部在册动态工具，命中的延迟工具提升回可见区。 */
-function searchDynamicTools(args: Record<string, unknown>): ToolResult {
+/**
+ * 默认延迟加载的内置工具：schema 不进 tools 段，按名仍可调用。
+ *
+ * 入选标准两条同时满足才收：
+ *  1. **本会话大概率用不到**，或提示词已指向更优替代品
+ *     （list_dir → glob/grep，apply_patch → edit_file/multi_edit）；
+ *  2. **缺了不致命**：tool_search 一次即可召回，召回后本会话保持可见。
+ *
+ * 刻意**不**收 move_file / delete_file：单次任务里就会用上，省 92~125 token
+ * 却要多花一个回合（整个上下文重发一次）。回本点是 n = 上下文 / 节省量，
+ * 短任务上净亏 —— 收益必须来自「几乎用不到」，而不是「用得少」。
+ *
+ * 这六项合计约 808 token/回合（固定前缀 5,654 的 14%）。
+ * KLOCKCODE_DEFER_BUILTIN_TOOLS=0 可整体关掉，回到全量常驻。
+ */
+export const DEFERRED_BUILTIN_TOOLS: ReadonlySet<string> = new Set([
+  "job",
+  "read_video",
+  "context_status",
+  "diagnostics",
+  "apply_patch",
+  "list_dir",
+]);
+
+/** 延迟加载是否启用（默认启用；显式 0/false 关闭）。 */
+export function builtinDeferralEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw = (env.KLOCKCODE_DEFER_BUILTIN_TOOLS ?? "").trim().toLowerCase();
+  return raw !== "0" && raw !== "false";
+}
+
+/** 按名直查内置工具定义（召回时用它的名字与描述做匹配）。 */
+function builtinDefinitionByName(name: string): ToolDefinition | undefined {
+  if (name === admitToolDefinition.function.name) return admitToolDefinition;
+  return toolDefinitions.find((definition) => definition.function.name === name);
+}
+
+/**
+ * tool_search 的实现：检索**动态工具 + 被延迟的内置工具**，命中的延迟项提升回可见区。
+ *
+ * 两类延迟语义一致（在册、按名可调用、schema 不发），差别只在提升状态放在哪：
+ * 动态工具是模块级（它们本来就是全局注册表），内置工具是 runtime 级
+ * （延迟是会话级策略，见 ToolRunOptions.promoteBuiltinTool）。
+ */
+function searchRegisteredTools(args: Record<string, unknown>, options: ToolRunOptions = {}): ToolResult {
   const query = String(args.query ?? "").trim();
   if (!query) return toolResult("tool_search requires a non-empty `query`.", false);
   const limit = Math.min(Math.max(Number(args.limit) || 5, 1), 10);
@@ -123,26 +165,52 @@ function searchDynamicTools(args: Record<string, unknown>): ToolResult {
     .filter(Boolean);
   if (!tokens.length) return toolResult("tool_search requires a non-empty `query`.", false);
 
-  const scored: { name: string; score: number; description: string; deferred: boolean }[] = [];
-  for (const [name, tool] of dynamicTools) {
-    const description = tool.definition.function.description ?? "";
+  const scoreOf = (name: string, description: string): number => {
+    let score = 0;
     const haystackName = name.toLowerCase();
     const haystackDesc = description.toLowerCase();
-    let score = 0;
     for (const token of tokens) {
       if (haystackName.includes(token)) score += 3;
       else if (haystackDesc.includes(token)) score += 1;
     }
+    return score;
+  };
+
+  const scored: {
+    name: string;
+    score: number;
+    description: string;
+    deferred: boolean;
+    builtin: boolean;
+  }[] = [];
+  for (const [name, tool] of dynamicTools) {
+    const description = tool.definition.function.description ?? "";
+    const score = scoreOf(name, description);
     if (score > 0) {
-      scored.push({ name, score, description, deferred: deferredDynamicTools.has(name) });
+      scored.push({ name, score, description, deferred: deferredDynamicTools.has(name), builtin: false });
     }
   }
+  // 被延迟的内置工具：模型看不到它们的 schema，所以同样要能被搜到
+  for (const name of options.deferredBuiltinTools?.() ?? []) {
+    const definition = builtinDefinitionByName(name);
+    if (!definition) continue;
+    const description = definition.function.description ?? "";
+    const score = scoreOf(name, description);
+    if (score > 0) scored.push({ name, score, description, deferred: true, builtin: true });
+  }
   if (!scored.length) {
-    const all = [...dynamicTools.keys()].sort();
+    const deferredBuiltins = [...(options.deferredBuiltinTools?.() ?? [])].sort();
+    const registered = [...dynamicTools.keys()].sort();
+    const parts = [
+      registered.length
+        ? `Registered tools: ${registered.join(", ")}.`
+        : "Registered tools: (none).",
+      deferredBuiltins.length
+        ? `Builtin tools not advertised this session (callable once surfaced): ${deferredBuiltins.join(", ")}.`
+        : "",
+    ].filter(Boolean);
     return toolResult(
-      `No registered tool matches "${query}". Registered tools: ${
-        all.join(", ") || "(none)"
-      }. Deferred tools are also listed above — try tool_search again with a keyword from their names.`,
+      `No registered tool matches "${query}". ${parts.join(" ")} Try a keyword from those names.`.trim(),
     );
   }
   // deferred 优先展示（那是模型看不到的），同级再按分数、名字排序
@@ -153,7 +221,12 @@ function searchDynamicTools(args: Record<string, unknown>): ToolResult {
   const lines: string[] = [];
   const promoted: string[] = [];
   for (const hit of scored.slice(0, limit)) {
-    if (hit.deferred && promoteDynamicTool(hit.name)) promoted.push(hit.name);
+    if (hit.deferred) {
+      const raised = hit.builtin
+        ? (options.promoteBuiltinTool?.(hit.name) ?? false)
+        : promoteDynamicTool(hit.name);
+      if (raised) promoted.push(hit.name);
+    }
     lines.push(`- ${hit.name}: ${hit.description}`);
   }
   const header = promoted.length
@@ -1231,6 +1304,17 @@ export type ToolRunOptions = {
   webFetch?: (url: string, signal?: AbortSignal) => Promise<WebFetchOutcome>;
   /** 后台任务管理器（桌面端走 job-host，CLI/测试走本地子进程） */
   jobs?: JobManager;
+  /**
+   * 内置工具延迟加载的回调面（由 runtime 注入）：
+   * tool_search 命中被延迟的内置工具时调用，返回 true 表示本轮已提升 ——
+   * schema 从下一次请求起追加到工具目录末尾（缓存安全），本会话不再撤回。
+   *
+   * 状态必须由 runtime 持有而不是模块级：延迟是会话级策略，模块级状态会让
+   * 「A 会话召回过的工具」在 B 会话里白白多广告一份，省下来的又还回去了。
+   */
+  promoteBuiltinTool?: (name: string) => boolean;
+  /** 当前被延迟的内置工具名：tool_search 用它们补全可发现性。 */
+  deferredBuiltinTools?: () => readonly string[];
 };
 
 /**
@@ -1301,7 +1385,7 @@ export async function executeTool(
     }
     switch (name) {
       case "tool_search":
-        return searchDynamicTools(args);
+        return searchRegisteredTools(args, options);
       case "web_search": {
         const query = typeof args.query === "string" ? args.query.trim() : "";
         if (!query) return { ok: false, output: 'web_search requires a non-empty "query".' };

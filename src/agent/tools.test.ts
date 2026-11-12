@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from "vitest";
 import { estimateTokens } from "./context";
 import { previewEditDiff } from "./diff";
 import {
+  DEFERRED_BUILTIN_TOOLS,
+  builtinDeferralEnabled,
   commandEnv,
   decodeCommandOutput,
   degradeStructuredOutput,
@@ -1402,5 +1404,64 @@ describe("knownToolNames", () => {
     }
     expect(known.has("browser_navigate")).toBe(true);
     expect(known.has("admit")).toBe(true);
+  });
+});
+
+describe("内置工具延迟加载", () => {
+  it("集合里每个名字都真实存在：拼错等于白省一轮却悄悄丢能力", () => {
+    // 名字写错不会编译失败、也不会报错，只会让某个工具「既没被广告、也搜不到」。
+    const known = knownToolNames();
+    for (const name of DEFERRED_BUILTIN_TOOLS) {
+      expect(known.has(name), `${name} 不存在于工具表`).toBe(true);
+    }
+  });
+
+  it("只收几乎用不到的工具：核心工具与提示词点名的工具都不在集合里", () => {
+    // 回本点 n = 上下文 / 节省量：省 90~230 token 却要多花一个回合（整个上下文重发），
+    // 所以选的是「几乎用不到」，不是「用得少」。写操作工具一次任务就会用上，一律不收。
+    for (const name of ["read_file", "write_file", "edit_file", "multi_edit", "run_command", "task", "tool_search"]) {
+      expect(DEFERRED_BUILTIN_TOOLS.has(name), `${name} 是核心工具`).toBe(false);
+    }
+    for (const name of ["delete_file", "move_file"]) {
+      expect(DEFERRED_BUILTIN_TOOLS.has(name), `${name} 单次任务就会用上，延迟是净亏`).toBe(false);
+    }
+  });
+
+  it("tool_search 能召回被延迟的内置工具，并说明下一轮可见", async () => {
+    const promoted: string[] = [];
+    const search = await executeTool("tool_search", { query: "list dir" }, "", {
+      deferredBuiltinTools: () => [...DEFERRED_BUILTIN_TOOLS],
+      promoteBuiltinTool: (name) => {
+        promoted.push(name);
+        return true;
+      },
+    });
+
+    expect(search.ok).toBe(true);
+    expect(promoted).toContain("list_dir");
+    expect(search.output).toContain("Promoted for your next turn");
+  });
+
+  it("无回调面时不参与检索：内置工具的召回只走 runtime 注入这一条路", async () => {
+    // 工具单测直调（旧行为）必须完全不变：动态工具那套仍然照旧工作。
+    const search = await executeTool("tool_search", { query: "list dir" });
+    expect(search.ok).toBe(true);
+    expect(search.output).not.toContain("list_dir");
+  });
+
+  it("无命中时把被延迟的内置工具也列出来兜底", async () => {
+    const miss = await executeTool("tool_search", { query: "zzz-no-such-keyword" }, "", {
+      deferredBuiltinTools: () => ["job", "read_video"],
+    });
+    expect(miss.ok).toBe(true);
+    expect(miss.output).toContain("No registered tool matches");
+    expect(miss.output).toContain("job, read_video");
+  });
+
+  it("KLOCKCODE_DEFER_BUILTIN_TOOLS=0/false 可整体关掉，其余值一律启用", () => {
+    expect(builtinDeferralEnabled({} as NodeJS.ProcessEnv)).toBe(true);
+    expect(builtinDeferralEnabled({ KLOCKCODE_DEFER_BUILTIN_TOOLS: "1" } as NodeJS.ProcessEnv)).toBe(true);
+    expect(builtinDeferralEnabled({ KLOCKCODE_DEFER_BUILTIN_TOOLS: "0" } as NodeJS.ProcessEnv)).toBe(false);
+    expect(builtinDeferralEnabled({ KLOCKCODE_DEFER_BUILTIN_TOOLS: "FALSE" } as NodeJS.ProcessEnv)).toBe(false);
   });
 });

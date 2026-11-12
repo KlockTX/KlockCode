@@ -45,6 +45,7 @@ Electron + React 负责界面，Agent 内核跑在本地 HTTP/SSE 服务里，UI
 -   命令沙箱（Windows，可选：设置 → 沙箱）：`run_command` 换成受限令牌 + 工作区 ACL 运行，OS 层拒绝，不靠命令自己守规矩。两档语义——`workspace-write` 只能写工作区与额外可写根（私有 temp 单独授权、执行后删除），`read-only` 不授予任何写权限（连工作区也不能改，也不再发放 temp）。写/删被拦会单独询问是否在沙箱外重试一次，不会静默放行。**默认关闭**：`workspace-write` 会往你的工作区写入常驻 ACL 与 Low 完整性标签，这是会改动仓库目录的副作用，所以由设置页显式确认开启；只读模式不写任何 ACL，可直接切换。切回完全访问后 ACL 保留但不再生效，设置页可一键撤销。真机回归：`pnpm test:sandbox`（会真改临时目录 ACL，故不并入 `pnpm test`）。
 -   写后验证：写类工具成功后自动跑 `.klockcode/verify.json` 声明的 typecheck / lint / test，失败结果压缩后附在工具回执里，模型同一回合内修复。
 -   子 Agent（`task`）：每回合最多 3 个并发，可后台运行，子 Agent 的写操作审批记在父会话上。
+-   工具清单按会话瘦身：`job` / `read_video` / `context_status` / `diagnostics` / `apply_patch` / `list_dir` 默认不发 schema（每回合省约 810 token，占工具表 16%），但**按名仍可调用**；模型需要时用 `tool_search` 召回，召回后追加到工具目录末尾，不重写前面的字节，所以前缀缓存不失效。`KLOCKCODE_DEFER_BUILTIN_TOOLS=0` 可关掉。
 
 **多 Agent 编排**
 
@@ -204,6 +205,7 @@ pnpm dev:desktop
 | `pnpm package:msix` | 构建并打出微软商店 MSIX（未签名，输出到 `desktop/release`） |
 | `pnpm test:msix` | 本地签名并侧载安装最新 MSIX（签名 + 信任证书 + 安装 + 启动） |
 | `pnpm make:msix-assets` | 从 `resources/icon.png` 重新生成商店瓦片图 |
+| `pnpm report:tokens` | 读会话日志，出四项 token 拆分与缓存命中率（优化前先看它，别凭感觉改提示词） |
 | `node scripts/draw-brand-mark.mjs` | 重绘像素风品牌标记（`icon.png` 64 格完整版 + `icon-small.png` 16 格小尺寸版） |
 | `scripts/draw-brand-banner.ps1`（Windows） | 重绘 README 顶部横幅（`KlockCode.png`，需先跑上一条） |
 | `scripts/draw-benchmark-chart.ps1`（Windows） | 重绘「实测」对比图（`assets/benchmark-token-cache.png`） |

@@ -83,6 +83,8 @@ import {
   withinPlansDir,
 } from "./tool-invocation.js";
 import {
+  DEFERRED_BUILTIN_TOOLS,
+  builtinDeferralEnabled,
   executeTool,
   isDynamicToolRequiringApproval,
   isToolParallelSafe,
@@ -953,6 +955,12 @@ export class AgentRuntime {
   }) => void | Promise<void>;
   /** 工具白名单：Explore 子 Agent 只挂只读工具 */
   private allowedTools: Set<string> | null;
+  /**
+   * 被延迟加载的内置工具（会话级）：schema 不进 tools 段，按名仍可调用。
+   * tool_search 命中后永久移出本集合 —— 目录以「新增」追加到末尾，缓存前缀不重写。
+   * 每会话重置（见 newSession）：上一个会话召回过的工具不该让新会话继续付费。
+   */
+  private deferredBuiltinTools = new Set<string>();
   /** 禁止 run_code 宿主写桥（验证类角色：能跑命令、不能改文件） */
   private denyHostWrites = false;
   /** 插件注册表（server 启动时注入；null = 未启用插件系统，hook 直通） */
@@ -1174,6 +1182,10 @@ export class AgentRuntime {
     this.systemPrompt = options.systemPrompt ?? BASE_SYSTEM_PROMPT;
     this.customSystemPrompt = options.systemPrompt !== undefined;
     this.allowedTools = options.allowedTools ? new Set(options.allowedTools) : null;
+    // 延迟加载只作用于根 runtime：子 Agent 的 allowedTools 是自己那份短清单，
+    // 撤掉其中的定义会让它的白名单变成空话（还会白丢一个回合去 tool_search）。
+    this.deferredBuiltinTools =
+      builtinDeferralEnabled() && !this.allowedTools ? new Set(DEFERRED_BUILTIN_TOOLS) : new Set<string>();
     this.denyHostWrites = options.denyHostWrites === true;
     this.injectInstructions = options.injectInstructions ?? true;
     this.instructionSettings = options.instructionSettings ?? {};
@@ -1871,8 +1883,40 @@ export class AgentRuntime {
         "[klockcode] dynamic tool schemas exceeded the 8k budget; overflow tools are deferred (call tool_search to surface them) — disable unused MCP servers to reduce the split",
       );
     }
+    // 内置工具的延迟加载：schema 不发，但按名仍可执行（工具表本身不删，执行路径按名分派）。
+    // 放在所有白名单之后、目录组装之前：延迟只是「广告策略」，不改变能力边界。
+    if (this.deferredBuiltinTools.size) {
+      base = base.filter((definition) => !this.deferredBuiltinTools.has(definition.function.name));
+    }
     const combined = this.browserHost ? [...base, ...browser] : base;
     return [...combined, ...pluginTools];
+  }
+
+  /**
+   * 延迟加载的回调面：三处 executeTool 调用点共用一份。
+   * 各写一份的后果不是编译错，而是「某个分支里 tool_search 召回不了」——
+   * 这类只在一条路径上静默失效的偏差，这套 harness 已经踩过（见 tool-invocation 的注释）。
+   */
+  private get builtinDeferralFace(): Pick<
+    ToolRunOptions,
+    "promoteBuiltinTool" | "deferredBuiltinTools"
+  > {
+    if (!this.deferredBuiltinTools.size) return {};
+    return {
+      promoteBuiltinTool: (name: string) => this.promoteBuiltinTool(name),
+      deferredBuiltinTools: () => [...this.deferredBuiltinTools],
+    };
+  }
+
+  /**
+   * tool_search 命中后提升被延迟的内置工具。
+   * 只改广告清单，不改执行：工具表本身没删，按名分派一直有效。
+   * 返回 true 表示这次真的发生了提升（目录下轮以「新增」追加到末尾，前缀不重写）。
+   */
+  private promoteBuiltinTool(name: string): boolean {
+    if (!this.deferredBuiltinTools.has(name)) return false;
+    this.deferredBuiltinTools.delete(name);
+    return true;
   }
 
   /** 原始工具表的重建键：任一输入变化（MCP 增删、档位、provider 列表）才重算。 */
@@ -1889,6 +1933,9 @@ export class AgentRuntime {
       this.browserHost ? 1 : 0,
       this.governance,
       this.allowedTools ? [...this.allowedTools].sort().join(",") : "",
+      // 延迟集合参与缓存键：tool_search 提升一个工具后 computeTools 的产出变了，
+      // 键不变就会一直返回旧清单 —— 模型搜到了却永远等不到它的 schema。
+      [...this.deferredBuiltinTools].sort().join(","),
       this.providers
         .map(
           (provider) =>
@@ -2212,6 +2259,12 @@ export class AgentRuntime {
     // 新会话 = 缓存本来就是冷的：工具目录整体重建，顺带应用所有延后的删除/改写。
     this.toolCatalog = null;
     this.rawToolsCache = null;
+    // 延迟加载跟着会话走：上一个会话召回过的工具，不该让这个会话继续为它的 schema 付费。
+    // 目录本来就要整体重建，重置不会额外损失一次缓存。
+    this.deferredBuiltinTools =
+      builtinDeferralEnabled() && !this.allowedTools
+        ? new Set(DEFERRED_BUILTIN_TOOLS)
+        : new Set<string>();
     this.emittedCacheStates.clear();
     this.providerRequestMeta.clear();
     this.currentRequest = null;
@@ -2295,6 +2348,12 @@ export class AgentRuntime {
     // 新会话 = 缓存本来就是冷的：工具目录整体重建，顺带应用所有延后的删除/改写。
     this.toolCatalog = null;
     this.rawToolsCache = null;
+    // 延迟加载跟着会话走：上一个会话召回过的工具，不该让这个会话继续为它的 schema 付费。
+    // 目录本来就要整体重建，重置不会额外损失一次缓存。
+    this.deferredBuiltinTools =
+      builtinDeferralEnabled() && !this.allowedTools
+        ? new Set(DEFERRED_BUILTIN_TOOLS)
+        : new Set<string>();
     this.emittedCacheStates.clear();
     this.providerRequestMeta.clear();
     this.currentRequest = null;
@@ -5300,6 +5359,7 @@ export class AgentRuntime {
       vision: this.toolVisionEnabled(),
       shrinkImage: this.imageShrinker(),
       jobs: this.jobManager,
+      ...this.builtinDeferralFace,
       // 批量读复用已读区间：整份读过的文件只回一行占位
       readCoverage: (target) =>
         this.loopGuard.fullyCovered(session.cwd, messages, target, allowOutsideWorkspace),
@@ -7610,6 +7670,7 @@ export class AgentRuntime {
           shrinkImage: this.imageShrinker(),
           sandbox,
           jobs: this.jobManager,
+          ...this.builtinDeferralFace,
           // 不把宿主桥再传下去：防止 run_code → run_code 的递归
         }),
     );
@@ -8482,6 +8543,7 @@ export class AgentRuntime {
           pdfDocuments: this.toolPdfEnabled(),
           shrinkImage: this.imageShrinker(),
           jobs: this.jobManager,
+          ...this.builtinDeferralFace,
           // 批量读复用已读区间：整份读过的文件只回一行占位
           readCoverage: (target) =>
             this.loopGuard.fullyCovered(session.cwd, messages, target, allowOutsideWorkspace),

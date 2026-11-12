@@ -31,6 +31,7 @@
     "package": "pnpm build && pnpm --filter @klockcode/desktop package:win",
     "package:msix": "pnpm build && pnpm --filter @klockcode/desktop package:msix",
     "make:msix-assets": "node scripts/make-msix-assets.mjs",
+    "report:tokens": "node scripts/token-report.mjs",
     "test:msix": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/msix-test-sign.ps1",
     "test:msix:sign": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/msix-test-sign.ps1 -NoInstall",
     "test:msix:uninstall": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/msix-test-sign.ps1 -Uninstall",

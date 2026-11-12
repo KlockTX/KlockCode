@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { estimateTokens, estimateToolDefinitionsTokens } from "./context.js";
 import { COMPACTION_INSTRUCTION, COMPACTION_SYSTEM_PROMPT, TOOL_DIGEST_SYSTEM_PROMPT } from "./compaction.js";
+import { AGENT_PROFILES } from "./agent-profiles.js";
 import { BASE_SYSTEM_PROMPT } from "./runtime.js";
 import {
+  DEFERRED_BUILTIN_TOOLS,
   listDynamicToolDefinitions,
   registerDynamicTool,
   toolDefinitions,
@@ -59,6 +61,41 @@ describe("prompt budget", () => {
     for (const heading of ["Goal, Progress, Files", "Do not paste full file contents"]) {
       expect(COMPACTION_SYSTEM_PROMPT).toContain(heading);
       expect(COMPACTION_INSTRUCTION).toContain(heading);
+    }
+  });
+});
+
+describe("builtin tool deferral budget", () => {
+  /** 同时也是普通英文词的工具名：裸词匹配会把正文当成工具引用。 */
+  const PROSE_TOOL_NAMES = new Set(["job"]);
+
+  it("净广告的 schema 预算：延迟之后才有的这部分余量不能再被吃回去", () => {
+    // 全量 5001 → 广告 4192（省 809，16.2%）。上面的 5000 上限管的是「工具表本身」，
+    // 这条管的是「实际发出去多少」——加了新工具就想办法延迟，而不是把这条上限往上推。
+    const advertised = toolDefinitions.filter(
+      (definition) => !DEFERRED_BUILTIN_TOOLS.has(definition.function.name),
+    );
+    expect(estimateTokens(JSON.stringify(advertised))).toBeLessThan(4_300);
+  });
+
+  it("被延迟的工具没有被任何系统提示词点名", async () => {
+    // 提示词让用、清单里却没有 = 模型对着一个看不见的工具反复试错。
+    // 这是延迟加载唯一的结构性风险，所以用「提示词文本」而不是白名单数组来判。
+    const { BUILTIN_AGENTS } = await import("./agent-definition.js");
+    const prompts = [
+      BASE_SYSTEM_PROMPT,
+      ...Object.values(AGENT_PROFILES).map((profile) => profile.prompt),
+      ...Object.values(BUILTIN_AGENTS).map((definition) => definition.systemPrompt),
+    ];
+    for (const name of DEFERRED_BUILTIN_TOOLS) {
+      // job 也是普通英文词：depth-prober 提示词里的 "Your job is to..." 是正文不是工具引用，
+      // 裸词匹配会误报。这类名字只在「像调用」的上下文里才算点名。
+      const pattern = PROSE_TOOL_NAMES.has(name)
+        ? new RegExp(`\\b${name}\\s*\\(`)
+        : new RegExp(`\\b${name}\\b`);
+      for (const prompt of prompts) {
+        expect(prompt, `提示词点名了被延迟的 ${name}，要么别延迟它，要么改提示词`).not.toMatch(pattern);
+      }
     }
   });
 });
